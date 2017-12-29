@@ -1,0 +1,7 @@
+# FIXED
+display_udl.obj: ../display_udl.c
+display_udl.obj: C:/Program\ Files/Texas\ Instruments/ccsv4/msp430/include/msp430x26x.h
+display_udl.obj: C:/Program\ Files/Texas\ Instruments/ccsv4/msp430/include/in430.h
+display_udl.obj: ../DataTypes.h
+display_udl.obj: ../lcd.h
+display_udl.obj: ../display.h

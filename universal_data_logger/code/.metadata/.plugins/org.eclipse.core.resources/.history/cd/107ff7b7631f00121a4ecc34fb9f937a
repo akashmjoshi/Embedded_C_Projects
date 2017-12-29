@@ -1,0 +1,82 @@
+#include "msp430x26x.h"
+//#include "main.h"
+#include "spi.h"
+#include "lcd.h"
+#include "display.h"
+#include "shift_data.h"
+
+extern unsigned int firstch_data, secondch_data, thirdch_data, fourthch_data;
+extern unsigned int chipselect_stat;
+
+/* Initialize and enable the SPI module */
+void spi_initialize()
+{
+//	P5DIR |= 0x1F;                            				/* Set all pins to outputs */
+//  	P5SEL |= 0x0E;                            				/* P5.2 = Slave Out Master In, P5.1 = Slave in Master Out */
+//  	  															/* P5.3 = UCB1CLK */ 
+  	UCB1CTL0 |= UCMST+UCSYNC+UCCKPL+UCMSB;    				/* 3-pin SPI mode, 8-bit comms, MSP430 is Master */
+  	UCB1CTL1 |= UCSSEL_2;                     				/* Use SMCLK as clock source */
+  	UCB1BR0 = 0x02;                           				/* Set prescaling value for bit clock /2 */
+  	UCB1BR1 = 0;                              
+  	UCA0MCTL = 0;                             				/* No modulation */
+  	UCB1CTL1 &= ~UCSWRST;	                     			/* **Initialize USCI state machine** */
+  	//UC1IE |= UCB1TXIE;                          			/* Enable USCI_A0 RX interrupt */
+
+//  	P5OUT &= 0xEF;                           				/* Now with SPI signals initialized, */
+//  	P5OUT |= 0x10;                            				/* reset slave */
+//  	P5OUT &= 0xEF;
+
+  //	/*discard_for_MISRA =*/ _BIS_SR(GIE);                 		/* enable interrupts */
+}
+
+/* Set the baud-rate divisor. The correct value is computed by dividing
+the clock rate by the desired baud rate. The minimum divisor allowed
+is 2. */
+void spi_set_divisor(unsigned int divisor)
+{
+	UCB1CTL1 |= UCSWRST; // Temporarily disable the SPI module
+	UCB1BR1 = divisor >> 8;
+	UCB1BR0 = divisor;
+	UCB1CTL1 &= ~UCSWRST; // Re-enable SPI
+}
+
+/* Assert the CS signal, active low (CS=0) */
+void spi_cs_assert()
+{
+unsigned int chipsel_data;
+chipsel_data=chipselect_stat & 0xFB;
+chip_sel(chipsel_data);	
+}
+
+/* Deassert the CS signal (CS=1) */
+void spi_cs_deassert()
+{
+unsigned int chipsel_data;
+chipsel_data=chipselect_stat | 0x04;
+chip_sel(chipsel_data);	
+}
+
+/* Send a single byte over the SPI port */
+void spi_send_byte(unsigned char input)
+{
+	UC1IFG &= ~UCB1TXIFG;
+	/* Send the byte */
+	UCB1TXBUF = input;
+	/* Wait for the byte to be sent */
+	while ((UCB1STAT & UCBUSY) == 1) { }
+}
+
+
+/* Receive a byte. Output an 0xFF (the bus idles high) to receive the byte */
+unsigned char spi_rcv_byte()
+{
+	unsigned char tmp;
+	UC1IFG &= ~UCB1RXIFG;
+	/* Send the byte */
+	UCB1TXBUF = 0xFF;
+	/* Wait for the byte to be received */
+	while ((UC1IFG & UCB1RXIFG) == 0) { }
+	tmp = UCB1RXBUF;
+	return (tmp);
+}
+

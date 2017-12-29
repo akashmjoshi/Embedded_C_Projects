@@ -1,0 +1,331 @@
+#include "msp430x26x.h"
+#include "LCD.h"
+#include "display.h"
+#include "DecodeSlave.h"
+
+void GetSlaveData();
+
+void SendDataToSlaveMoniter(uint8_t MonitorSlaveID,uint8_t Channel_no, uint16_t channel_val);
+
+uint8_t data_count = 0;
+uint8_t illegal_function_code_flag = 0;
+uint8_t illegal_address_flag = 0;
+uint8_t UART_TX_Buffer_1[50] ;   //Transmit Buffer
+
+uint16_t Channel_Database[16][5];
+uint16_t over_error_flags = 0x0000;
+uint16_t open_error_flags = 0x0000;
+uint16_t under_error_flags = 0x0000;
+
+extern uint8_t rx_led_flag;
+extern uint8_t CommFail[16];
+extern uint8_t relay_set1;
+extern uint8_t relay_set2;
+extern uint8_t relay_set3;
+extern uint8_t relay_set4;
+extern uint8_t relay_set5;
+extern uint8_t relay_set6;
+extern uint8_t relay_set7;
+extern uint8_t relay_set8;
+extern uint8_t CommFail_1;
+extern uint8_t CommFail_2;
+extern uint8_t CommFail_3;
+extern uint8_t CommFail_4;
+
+extern uint8_t menu;
+extern uint8_t ChannelSent;
+extern uint8_t timeout_flag ;
+extern uint8_t ReceivedByteCount;
+extern uint8_t comm_fail_relay_flag_1;
+extern uint8_t comm_fail_relay_flag_2;
+extern uint8_t comm_fail_relay_flag_3;
+extern uint8_t comm_fail_relay_flag_4;
+extern uint8_t UART_rcv_count ;
+extern uint8_t UART_RX_buf[50] ;      //Receive Buffer
+extern uint8_t UART_TX_Buffer[50] ;   //Transmit Buffer
+
+extern uint16_t modbus_use_channel_flag;
+extern uint16_t QueryCounter[16];
+extern uint32_t latch_flag;
+extern uint32_t relay_flags;
+extern uint32_t ack_flags;
+
+extern ModbusParameters Modbus_Channels[16];
+extern DisplayParameters Display_Channels[16];
+
+extern uint16_t PvAddress_Sent ;
+
+void GetSlaveData()
+{
+	unsigned int  temp_code1,temp_code2,temp_code3,i,j;
+    unsigned int  check,data_received;
+	unsigned int  temp_use_channel = 0x0001;
+				
+	if(timeout_flag)
+	{
+				
+		UART_rcv_count = 0;
+		check = modrtuChecksum ( UART_RX_buf, ReceivedByteCount-2 );
+		
+		temp_code1 = UART_RX_buf[ReceivedByteCount-2] ;
+   		temp_code2 = (unsigned int) (temp_code1 << 8) ;
+   		temp_code1 = UART_RX_buf[ReceivedByteCount-1] ;
+   		temp_code3 = (unsigned int)(temp_code2|temp_code1) ;
+   		
+   		if(check == (unsigned int)(temp_code3))
+   		{
+    		P5SEL |= 0X00;
+			P5DIR |= 0X01;
+			
+			rx_led_flag = 1;
+				
+		    switch (UART_RX_buf[1])
+	        {
+		        case MODBUS_READ_INPUTREGISTERS :
+		        
+		        	temp_use_channel = 0x0001;
+		        	
+		        	for(i=0;i<(UART_RX_buf[2]/2);i++) 
+		        	{
+		        		data_received = UART_RX_buf[data_count+3] << 8; 
+				        data_received |= (unsigned char)UART_RX_buf[data_count+4];
+				        
+				        for(j=0;j<16;j++)
+				        {
+				        	if(modbus_use_channel_flag & temp_use_channel)
+				        	{
+				        		if(Modbus_Channels[j].SlaveID ==  UART_RX_buf[0] && (Modbus_Channels[j].PvAddress ==  PvAddress_Sent))
+					        	{
+									if((QueryCounter[j] >= 10) && j <= 3)
+					        		{
+					        			comm_fail_relay_flag_1 = 0;
+					        			CommFail[j] = 0;
+										CommFail_1 = 0;
+					        		}
+									else if((QueryCounter[j] >= 10) && j >= 4 && j <= 7)
+									{
+					        			comm_fail_relay_flag_2 = 0;
+					        			CommFail[j] = 0;
+										CommFail_2 = 0;
+					        		}
+									else if((QueryCounter[j] >= 10) && j >= 8 && j <= 11)
+									{
+					        			comm_fail_relay_flag_3 = 0;
+					        			CommFail[j] = 0;
+										CommFail_3 = 0;
+					        		}
+									else if((QueryCounter[j] >= 10) && j >= 12 && j <= 15)
+									{
+					        			comm_fail_relay_flag_4 = 0;
+					        			CommFail[j] = 0;
+										CommFail_4 = 0;
+					        		}
+									
+									QueryCounter[j] = 0;
+					        		
+									Channel_Database[j][0] = data_received;
+					        		Channel_Database[j][1] = 0;// clear channel data base for PV2 
+					        		Channel_Database[j][2] = 0;// clear channel data base for PV3 
+					        		
+					        		if((Channel_Database[j][0] == OVER_ERROR) || (Channel_Database[j][0] == 16385))
+					        		{
+					        			Channel_Database[j][0] = OVER_ERROR;
+					        			over_error_flags |= (0x0001<<j);
+					        		}
+					        		else
+					        			over_error_flags &= ~(0x0001<<j);
+					        		
+					        		if((Channel_Database[j][0] == OPEN_ERROR) || (Channel_Database[j][0] == 16384))
+					        		{
+					        			Channel_Database[j][0] = OPEN_ERROR;
+					        			open_error_flags |= (0x0001<<j);
+					        		}
+					        		else
+					        			open_error_flags &= ~(0x0001<<j);
+					        		
+					        		if((Channel_Database[j][0] == UNDER_ERROR) || (Channel_Database[j][0] == 32768)|| (Channel_Database[j][0] == 16386))
+					        		{
+					        			Channel_Database[j][0] = UNDER_ERROR;			        			
+					        			under_error_flags |= (0x0001<<j);
+									}
+					        		else
+					        			under_error_flags &= ~(0x0001<<j);
+					        			
+					        	 	break;
+					        	}
+				        	}
+				        	temp_use_channel = temp_use_channel << 1;
+				        }
+				        data_count += 2;
+		        	} 
+		        	data_count = 0;
+		        	
+		        break;
+		        
+		        case MODBUS_READ_HOLDING_REGISTERS :
+		        
+		        	temp_use_channel = 0x0001;
+		        	
+		        	for(i=0;i<(UART_RX_buf[2]/2);i++)
+		        	{
+		        		data_received = UART_RX_buf[data_count+3] << 8;
+				        data_received |= (unsigned char)UART_RX_buf[data_count+4];
+				        
+				        for(j=0;j<16;j++)
+				        {
+				        	if(modbus_use_channel_flag & temp_use_channel)
+				        	{
+					        	if(Modbus_Channels[j].SlaveID ==  UART_RX_buf[0] && (Modbus_Channels[j].PvAddress ==  PvAddress_Sent))
+					        	{
+					        		if((QueryCounter[j] >= 10) && j <= 3)
+					        		{
+					        			comm_fail_relay_flag_1 = 0;
+										CommFail_1 = 0;
+										CommFail[j] = 0;
+					        		}
+									else if((QueryCounter[j] >= 10) && j >= 4 && j <= 7)
+									{
+					        			comm_fail_relay_flag_2 = 0;
+										CommFail_2 = 0;
+										CommFail[j] = 0;
+					        		}
+									else if((QueryCounter[j] >= 10) && j >= 8 && j <= 11)
+									{
+					        			comm_fail_relay_flag_3 = 0;
+										CommFail_3 = 0;
+										CommFail[j] = 0;
+					        		}
+									else if((QueryCounter[j] >= 10) && j >= 12 && j <= 15)
+									{
+					        			comm_fail_relay_flag_4 = 0;
+										CommFail_4 = 0;
+										CommFail[j] = 0;
+					        		}
+									
+					        		QueryCounter[j] = 0;
+					        		
+				        	 		Channel_Database[j][0] = data_received;
+				        	 		Channel_Database[j][1] = 0;// clear channel data base for PV2 
+					        		Channel_Database[j][2] = 0;// clear channel data base for PV3
+					        		
+					        		if((Channel_Database[j][0] == OVER_ERROR) || (Channel_Database[j][0] == 16385))
+					        		{
+					        			Channel_Database[j][0] = OVER_ERROR;
+					        			over_error_flags |= (0x0001<<j);
+					        		}
+					        		else
+					        			over_error_flags &= ~(0x0001<<j);
+					        		
+					        		if((Channel_Database[j][0] == OPEN_ERROR) || (Channel_Database[j][0] == 16384))
+					        		{
+					        			Channel_Database[j][0] = OPEN_ERROR;
+					        			open_error_flags |= (0x0001<<j);
+					        		}
+					        		else
+					        			open_error_flags &= ~(0x0001<<j);
+					        		
+					        		if((Channel_Database[j][0] == UNDER_ERROR) || (Channel_Database[j][0] == 32768)|| (Channel_Database[j][0] == 16386))
+					        		{
+					        			Channel_Database[j][0] = UNDER_ERROR;			        			
+					        			under_error_flags |= (0x0001<<j);
+									}
+					        		else
+					        			under_error_flags &= ~(0x0001<<j);
+					        		
+					        	 	break;
+					        	}
+				        	}
+				        	temp_use_channel = temp_use_channel << 1;
+				        }
+				        data_count += 2;
+		        	} 
+		        	data_count = 0;
+		        	
+			    break;
+			    
+	        }
+
+   		}
+   		timeout_flag = 0;
+
+	}
+}
+
+void SendDataToSlaveMoniter(uint8_t MonitorSlaveID,uint8_t Channel_no, uint16_t channel_val)
+{
+	uint16_t tempi,i;	
+	
+	UART_TX_Buffer_1[0] = MonitorSlaveID; 
+			
+	UART_TX_Buffer_1[1] = Channel_no;		
+					
+	UART_TX_Buffer_1[2] = channel_val >> 8;	
+	UART_TX_Buffer_1[3] = (uint8_t)channel_val;
+	
+	
+	UART_TX_Buffer_1[4] = (uint8_t)Display_Channels[Channel_no].dp;
+	
+		
+	UART_TX_Buffer_1[5] = (uint8_t)Display_Channels[Channel_no].units;
+	
+		
+	UART_TX_Buffer_1[6] = (uint8_t)Display_Channels[Channel_no].gas_no;
+	
+		
+	UART_TX_Buffer_1[7] = (uint8_t)Modbus_Channels[Channel_no].SlaveID;
+	
+	if(Channel_no <= 3)
+	{
+	  	UART_TX_Buffer_1[8] = relay_set1;
+	  	UART_TX_Buffer_1[9] = relay_set2;
+	}
+	else if(Channel_no >= 4 && Channel_no <= 7)
+	{
+	  	UART_TX_Buffer_1[8] = relay_set3;
+	  	UART_TX_Buffer_1[9] = relay_set4;
+	}
+	else if(Channel_no >= 8 && Channel_no <= 11)
+	{
+	  	UART_TX_Buffer_1[8] = relay_set5;
+	  	UART_TX_Buffer_1[9] = relay_set6;
+	}
+	else if(Channel_no >= 12 && Channel_no <= 15)
+	{
+	  	UART_TX_Buffer_1[8] = relay_set7;
+	  	UART_TX_Buffer_1[9] = relay_set8;
+	}
+	
+	UART_TX_Buffer_1[10] = (uint8_t)(latch_flag & 0x000000FF);
+	UART_TX_Buffer_1[11] = (uint8_t)((latch_flag & 0x0000FF00) >> 8);
+	UART_TX_Buffer_1[12] = (uint8_t)((latch_flag & 0x00FF0000) >> 16);
+	UART_TX_Buffer_1[13] = (uint8_t)((latch_flag & 0xFF000000) >> 24);
+	
+	UART_TX_Buffer_1[14] = (uint8_t)(ack_flags & 0x000000FF);
+	UART_TX_Buffer_1[15] = (uint8_t)((ack_flags & 0x0000FF00) >> 8);
+	UART_TX_Buffer_1[16] = (uint8_t)((ack_flags & 0x00FF0000) >> 16);
+	UART_TX_Buffer_1[17] = (uint8_t)((ack_flags & 0xFF000000) >> 24);
+	
+	UART_TX_Buffer_1[18] = (uint8_t)(relay_flags & 0x000000FF);
+	UART_TX_Buffer_1[19] = (uint8_t)((relay_flags & 0x0000FF00) >> 8);
+	UART_TX_Buffer_1[20] = (uint8_t)((relay_flags & 0x00FF0000) >> 16);
+	UART_TX_Buffer_1[21] = (uint8_t)((relay_flags & 0xFF000000) >> 24);
+	
+	UART_TX_Buffer_1[22] = (uint8_t)(modbus_use_channel_flag & 0x00FF);
+	UART_TX_Buffer_1[23] = (uint8_t)((modbus_use_channel_flag & 0xFF00) >> 8);
+	
+	UART_TX_Buffer_1[24] = 0x00;		//length High
+	UART_TX_Buffer_1[25] = 0x14;		//length low
+	
+	tempi = modrtuChecksum (UART_TX_Buffer_1, 26);
+    UART_TX_Buffer_1[26] = tempi >> 8;    			//msb of crc	0x84;//
+    UART_TX_Buffer_1[27] = (unsigned char)tempi;   //lsb of crc	0x0a;//
+    
+    P1OUT |= 0x10;
+    for ( i=0; i <= 27; i++ )
+    {
+  	  UCA1TXBUF = UART_TX_Buffer_1[i];
+  	  while (( UCA1STAT & UCBUSY ));
+    }
+    for(i=0;i<200;i++);
+    P1OUT &= ~0x10;
+}

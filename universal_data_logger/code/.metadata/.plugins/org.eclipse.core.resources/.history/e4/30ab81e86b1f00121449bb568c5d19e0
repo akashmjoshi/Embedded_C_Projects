@@ -1,0 +1,478 @@
+#include "msp430x26x.h"
+#include "DataTypes.h"
+#include "lcd.h"
+#include "display.h"
+#include "shift_data.h"
+#include "adc.h"
+#include "sd.h"
+#include "spi.h"
+#include "memory.h"
+#include "RTC.h"
+#include "Timer.h"
+#include "DecodeSlave.h"
+//#include "disp_udl.h"
+
+void UpdateLcd(void);
+void Clock_Init(void);
+void init_ports(void);
+void lcd_strt(void);
+void led_display(unsigned int first16LEDs,unsigned int second16LEDs,unsigned int third16LEDs,unsigned int fourth16LEDs, unsigned char set);
+
+extern uint8_t str[70];
+extern unsigned char regreadads[15]; 
+extern unsigned char regwriteads[15]; 
+extern sd_context_t sdc;
+extern uint8_t sd_buffer[512];
+
+
+extern uint8_t log_sec;
+extern uint8_t log_hour;
+extern uint8_t log_min;
+extern uint8_t log_trigger_start_year;
+extern uint8_t log_trigger_start_month;
+extern uint8_t log_trigger_start_date;
+extern uint8_t log_trigger_start_hour;
+extern uint8_t log_trigger_start_min;
+extern uint8_t log_trigger_stop_year;
+extern uint8_t log_trigger_stop_month;
+extern uint8_t log_trigger_stop_date;
+extern uint8_t log_trigger_stop_hour;
+
+
+
+extern uint8_t Time_Format;
+extern uint8_t Time_Stamp;
+extern uint8_t Seconds;
+extern uint8_t Minutes;
+extern uint8_t Hours;
+extern uint8_t Day;
+extern uint8_t Date;
+extern uint8_t Month;
+extern uint16_t Year;
+
+
+
+uint16_t monitor_counter = 0;
+
+unsigned int first_led,secnd_led,thrd_led,forth_led,relay_data;
+unsigned int firstch_data, secondch_data, thirdch_data, fourthch_data;
+unsigned int chipselect_stat;
+int chnl1_mode=1,chnl2_mode=3,chnl3_mode=5,chnl4_mode=2,chnl5_mode=6,chnl6_mode=7,chnl7_mode=2,chnl8_mode=5,current_mode,rot_mode;
+//unsigned long adc_msg;
+
+ 
+void main(void)
+{
+uint16_t device_verification;
+////
+uint8_t i=0,j=0,ok=0,Channel = 0;
+int ret;
+long dum,dum1,dum2;
+
+
+WDTCTL = WDTPW + WDTHOLD; 
+Clock_Init();
+init_ports();
+lcd_strt();
+first_led=secnd_led=thrd_led=forth_led=0x00;
+firstch_data=secondch_data=thirdch_data=fourthch_data=0x00;
+
+
+
+//led_display(first_led,secnd_led,thrd_led,forth_led, 1);
+
+P5OUT |=0x01;
+relay(0x06);
+
+firstch_data=0x00;
+secondch_data=0x00;
+thirdch_data=0x00;
+fourthch_data=0x00;
+channel_sel(firstch_data, secondch_data, thirdch_data,fourthch_data,1);
+
+
+LcdSendCmd_8bit(0x80);
+delay_ms(10);
+
+   
+sdc.timeout_write = PERIPH_CLOCKRATE/8;
+sdc.timeout_read = PERIPH_CLOCKRATE/20;
+sdc.busyflag = 0;
+
+	for (j=0; j<SD_INIT_TRY && ok != 1; j++)
+	{
+		ok = do_sd_initialize(&sdc);
+	}
+	
+sd_read_block (&sdc, 0, sd_buffer);		
+sd_wait_notbusy (&sdc);
+LcdPutCh_8bit('A');
+
+LcdSendCmd_8bit(0xC0);
+delay_ms(10);
+		
+device_verification = get_2_byte_value_from_sd(EEPROM_VERIFICATION_HI_ADD);
+
+
+dum=(long )device_verification;
+dum1=dum/10000;
+LcdPutCh_8bit((unsigned char)dum1+0x30);
+dum=dum%10000;
+dum1=dum/1000;
+LcdPutCh_8bit((unsigned char)dum1+0x30);
+dum=dum%1000;
+dum1=dum/100;
+LcdPutCh_8bit((unsigned char)dum1+0x30);
+dum=dum%100;
+dum1=dum/10;
+LcdPutCh_8bit((unsigned char)dum1+0x30);
+dum1=dum%10;
+LcdPutCh_8bit((unsigned char)dum1+0x30);
+
+
+
+	if(device_verification != 8811)
+		send_initial_sd_values();		/* Send initial sd values */
+	
+	get_initial_sd_values();
+
+//write_byte_to_sd(0x00, EEPROM_VERIFICATION_HI_ADD);
+//sd_read_block (&sdc, 0, sd_buffer);		
+//sd_wait_notbusy (&sdc);
+//
+//if(read_byte_from_sd(EEPROM_VERIFICATION_HI_ADD)==0x00)
+//LcdPutCh_8bit('A');
+//else
+//LcdPutCh_8bit('B');
+
+
+LcdSendCmd_8bit(0x90);
+delay_ms(10);
+
+
+//i=Hours/10;
+//LcdPutCh_8bit((unsigned char)i+0x30);
+//Hours=Hours%10;
+//LcdPutCh_8bit((unsigned char)Hours+0x30);
+//LcdPutCh_8bit('-');
+//i=Minutes/10;
+//LcdPutCh_8bit((unsigned char)i+0x30);
+//Minutes=Minutes%10;
+//LcdPutCh_8bit((unsigned char)Minutes+0x30);
+//LcdPutCh_8bit('-');
+//i=Seconds/10;
+//LcdPutCh_8bit((unsigned char)i+0x30);
+//Seconds=Seconds%10;
+//LcdPutCh_8bit((unsigned char)Seconds+0x30);
+//LcdPutCh_8bit('-');
+//LcdPutCh_8bit('-');
+
+//LcdPutCh_8bit((unsigned char)Date+0x30);
+//LcdPutCh_8bit((unsigned char)Month+0x30);
+//LcdPutCh_8bit((unsigned char)Day+0x30);
+//LcdPutCh_8bit((unsigned char)Time_Stamp+0x30);
+
+
+//for(i=0;i<=14;i++)
+//str[i]=regreadads[i]+0x30;
+//UpdateLcd();
+
+
+//    LcdPutCh_8bit(regreadads[2]+0x30);
+//    LcdPutCh_8bit(regreadads[3]+0x30);
+//    LcdPutCh_8bit(regreadads[4]+0x30);
+//P6OUT |=0x04;  
+//LcdSendCmd_8bit(0x80);
+//delay_ms(10);
+
+//ret=ADS1248CargaInicial();
+//
+//if(ret==0)
+//LcdPutCh_8bit('A');
+//else 
+//LcdPutCh_8bit('B');
+//rot_mode=1;
+//current_mode=1;
+
+//display_start(1);
+//UpdateLcd();
+//delay_ms(1580);
+//
+//display_start(2);
+//UpdateLcd();
+//delay_ms(1280);
+//
+//display_start(3);
+//for(i=9;i>0;i--)
+//{
+//str[56]=i+0x30;
+//UpdateLcd();
+//delay_ms(880);
+//}
+//Send_str("                ", 48);       
+
+while(1)
+{
+
+
+//switch(current_mode)
+//{
+//case 1:
+// display_chn1(chnl1_mode);
+// 
+// if((P2IN & 0x02)==0)
+//rot_mode = ~rot_mode;
+// 
+// if(rot_mode==1)
+// current_mode+=1;
+// else if((P2IN & 0x01)==0)
+// current_mode+=1;
+//
+//break;
+//
+//case 2:
+// 
+// display_chn2(chnl2_mode);
+// 
+// if((P2IN & 0x02)==0)
+//rot_mode = ~rot_mode;
+// 
+//  if(rot_mode==1)
+// current_mode+=1;
+// else if((P2IN & 0x01)==0)
+// current_mode+=1;
+//
+//break;
+//
+//case 3:
+// display_chn3(chnl3_mode);
+// 
+// if((P2IN & 0x02)==0)
+//rot_mode = ~rot_mode;
+// 
+//  if(rot_mode==1)
+// current_mode+=1;
+// else if((P2IN & 0x01)==0)
+// current_mode+=1;
+//
+//break;
+//
+//case 4:
+// display_chn4(chnl4_mode);
+// 
+// if((P2IN & 0x02)==0)
+//rot_mode = ~rot_mode;
+// 
+//  if(rot_mode==1)
+// current_mode+=1;
+// else if((P2IN & 0x01)==0)
+// current_mode+=1;
+//
+//break;
+//
+//case 5:
+// display_chn5(chnl5_mode);
+// 
+// if((P2IN & 0x02)==0)
+//rot_mode = ~rot_mode;
+// 
+//  if(rot_mode==1)
+// current_mode+=1;
+// else if((P2IN & 0x01)==0)
+// current_mode+=1;
+//
+//break;
+//
+//case 6:
+// display_chn6(chnl6_mode);
+// 
+// if((P2IN & 0x02)==0)
+//rot_mode = ~rot_mode;
+// 
+//  if(rot_mode==1)
+// current_mode+=1;
+// else if((P2IN & 0x01)==0)
+// current_mode+=1;
+//
+//break;
+//
+//case 7:
+// display_chn7(chnl7_mode);
+// 
+// if((P2IN & 0x02)==0)
+//rot_mode = ~rot_mode;
+// 
+//  if(rot_mode==1)
+// current_mode+=1;
+// else if((P2IN & 0x01)==0)
+// current_mode+=1;
+//
+//break;
+//
+//case 8:
+// display_chn8(chnl8_mode);
+// 
+// if((P2IN & 0x02)==0)
+//rot_mode = ~rot_mode;
+// 
+// if(rot_mode==1)
+// current_mode=1;
+// else if((P2IN & 0x01)==0)
+// current_mode=1;
+//
+//break;
+//}
+
+
+//adc_reading(2);
+//display_dummy(4);
+//str[35]=((msg & 0x0f0)>>4)+0x30;
+//str[36]=(msg & 0x00f)+0x30;
+//str[37]='.';
+//str[38]=(dpdata & 0x00f)+0x30;
+
+
+
+//UpdateLcd();
+//delay_ms(1080);
+
+
+
+//dum=ADS1248ReadData();
+//
+//LcdSendCmd_8bit(0x80);
+//delay_ms(10);
+//
+////code to covert data for the display of adc count
+//dum1=dum/1000000000;
+//LcdPutCh_8bit((unsigned char)dum1+0x30);
+//dum=dum%1000000000;
+//dum1=dum/100000000;
+//LcdPutCh_8bit((unsigned char)dum1+0x30);
+//dum=dum%100000000;
+//dum1=dum/10000000;
+//LcdPutCh_8bit((unsigned char)dum1+0x30);
+//dum=dum%10000000;
+//dum1=dum/1000000;
+//LcdPutCh_8bit((unsigned char)dum1+0x30);
+//dum=dum%1000000;
+//dum1=dum/100000;
+//LcdPutCh_8bit((unsigned char)dum1+0x30);
+//dum=dum%100000;
+//dum1=dum/10000;
+//LcdPutCh_8bit((unsigned char)dum1+0x30);
+//dum=dum%10000;
+//dum1=dum/1000;
+//LcdPutCh_8bit((unsigned char)dum1+0x30);
+//dum=dum%1000;
+//dum1=dum/100;
+//LcdPutCh_8bit((unsigned char)dum1+0x30);
+//dum=dum%100;
+//dum1=dum/10;
+//LcdPutCh_8bit((unsigned char)dum1+0x30);
+//dum1=dum%10;
+//LcdPutCh_8bit((unsigned char)dum1+0x30);
+
+
+LcdSendCmd_8bit(0x90);
+delay_ms(10);
+
+read_RTC();
+   		
+//LcdPutCh_8bit('C');
+//LcdSendCmd_8bit(0xC0);
+//delay_ms(10);
+
+i=Hours/10;
+LcdPutCh_8bit((unsigned char)i+0x30);
+Hours=Hours%10;
+LcdPutCh_8bit((unsigned char)Hours+0x30);
+LcdPutCh_8bit('-');
+i=Minutes/10;
+LcdPutCh_8bit((unsigned char)i+0x30);
+Minutes=Minutes%10;
+LcdPutCh_8bit((unsigned char)Minutes+0x30);
+LcdPutCh_8bit('-');
+i=Seconds/10;
+LcdPutCh_8bit((unsigned char)i+0x30);
+Seconds=Seconds%10;
+LcdPutCh_8bit((unsigned char)Seconds+0x30);
+
+
+
+    
+}
+
+}
+
+
+void Clock_Init(void)
+{
+	BCSCTL1 = 0xC7;
+	BCSCTL2 = 0x00;
+	BCSCTL3 = 0x20;
+}
+
+
+void lcd_strt()
+{
+   LcdSendCmd_8bit(0x38);
+   delay_ms(160);
+   LcdSendCmd_8bit(0x0C);
+   delay_ms(160);
+   LcdSendCmd_8bit(0x06);
+   delay_ms(160);
+   LcdSendCmd_8bit(0x01);
+   delay_ms(160);   
+	
+}	
+
+
+/*
+void data_conv()
+{
+//ADS1248CargaInicial();
+
+//if(ret==0)
+//LcdPutCh_8bit('A');
+//else 
+//LcdPutCh_8bit('B');
+
+dum=ADS1248ReadData();
+
+LcdSendCmd_8bit(0x80);
+delay_ms(10);
+
+//code to covert data for the display of adc count
+dum1=dum/1000000000;
+LcdPutCh_8bit((unsigned char)dum1+0x30);
+dum=dum%1000000000;
+dum1=dum/100000000;
+LcdPutCh_8bit((unsigned char)dum1+0x30);
+dum=dum%100000000;
+dum1=dum/10000000;
+LcdPutCh_8bit((unsigned char)dum1+0x30);
+dum=dum%10000000;
+dum1=dum/1000000;
+LcdPutCh_8bit((unsigned char)dum1+0x30);
+dum=dum%1000000;
+dum1=dum/100000;
+LcdPutCh_8bit((unsigned char)dum1+0x30);
+dum=dum%100000;
+dum1=dum/10000;
+LcdPutCh_8bit((unsigned char)dum1+0x30);
+dum=dum%10000;
+dum1=dum/1000;
+LcdPutCh_8bit((unsigned char)dum1+0x30);
+dum=dum%1000;
+dum1=dum/100;
+LcdPutCh_8bit((unsigned char)dum1+0x30);
+dum=dum%100;
+dum1=dum/10;
+LcdPutCh_8bit((unsigned char)dum1+0x30);
+dum1=dum%10;
+LcdPutCh_8bit((unsigned char)dum1+0x30);
+
+}
+*/
+

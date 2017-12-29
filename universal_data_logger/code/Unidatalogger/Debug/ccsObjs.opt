@@ -1,0 +1,1 @@
+"./shift_data.obj" "./port_setup.obj" "./display(new).obj" "./adc.obj" "./Unidatalogger.obj" "./UART.obj" "./TI_USCI_I2C_master.obj" "./RTC.obj" "./LCD.obj" -l"libc.a" "../lnk_msp430f2618.cmd" 

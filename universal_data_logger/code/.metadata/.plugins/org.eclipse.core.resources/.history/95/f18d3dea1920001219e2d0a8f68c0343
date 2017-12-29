@@ -1,0 +1,1 @@
+"../DecodeSlave.c" "../GetSlaveData.c" "../I2C_master.c" "../KeyScanning(new).c" "../RTC.c" "../SendRequest.c" "../Timer.c" "../Trigger_Alarm.c" "../UARTinit.c" "../adc.c" "../disp_udl.c" "../display(new).c" "../lcd.c" "../main_pro.c" "../memory.c" "../portsetup.c" "../sd.c" "../shift_data.c" "../spi.c" 

@@ -1,0 +1,1 @@
+"../LCD.c" "../RTC.c" "../TI_USCI_I2C_master.c" "../UART.c" "../Unidatalogger.c" "../adc.c" "../display(new).c" "../port_setup.c" "../shift_data.c" 

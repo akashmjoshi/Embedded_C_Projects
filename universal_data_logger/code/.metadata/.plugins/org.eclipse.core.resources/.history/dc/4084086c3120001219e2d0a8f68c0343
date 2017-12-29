@@ -1,0 +1,35 @@
+#ifndef DISPLAY_UDL_H_
+#define DISPLAY_UDL_H_
+
+
+void display_start(int mode);
+void display_chn1(int mode);
+void display_chn2(int mode);
+void display_chn3(int mode);
+void display_chn4(int mode);
+void display_chn5(int mode);
+void display_chn6(int mode);
+void display_chn7(int mode);
+void display_chn8(int mode);
+
+void display_rtc_menu(int mode);
+void display_enabl_menu(int mode);
+void display_alarm_menu(int mode);
+void display_input_menu(int mode);
+void display_scan_menu(int mode);
+void display_amb_menu(int mode);
+void display_modbus_menu(int mode);
+void display_log_menu(int mode);
+void display_mem_menu(int mode);
+void display_downld_menu(int mode);
+void display_exit(int mode);
+void operate_mode(void);
+void wait_inc_set(void);
+void wait_inc_set_shft(void);
+void wait_inc_shft();
+
+
+
+
+
+#endif /*DISPLAY_UDL_H_*/

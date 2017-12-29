@@ -1,0 +1,973 @@
+#include "msp430x26x.h"
+#include "DataTypes.h"
+#include "math.h"
+#include "memory.h"
+#include "lcd.h"
+#include "sd.h"
+#include "spi.h"
+#include "sdcomm_spi.h"
+#include "display.h"
+
+
+sd_context_t sdc;
+uint8_t sd_buffer[512];
+//////uint8_t InstrumentVersion = 01;
+uint8_t sd_overflow_flag = 0;
+uint8_t stop_log = 0;
+uint16_t address_val = 0;
+uint32_t log_count = 0;
+uint32_t SdSectorAddrs = 11;
+
+extern uint8_t StopLoggingFlag;
+extern uint8_t mode_flags_1;
+extern uint8_t log_sec;
+extern uint8_t log_hour;
+extern uint8_t log_min;
+extern uint8_t DeviceId;
+extern uint8_t backlit_select;
+extern uint8_t indication_flags;
+extern uint8_t indication_flags_2;
+extern uint8_t Slave_monitor_ID[5];
+extern uint8_t use_slave_monitor_flag;
+extern uint8_t Modbus_parity;
+extern uint8_t Modbus_stopbits;
+extern uint8_t Seconds_Log;
+extern uint8_t Minutes_Log;
+extern uint8_t Hours_Log;
+extern uint8_t Date_Log;
+extern uint8_t Month_Log;
+extern uint8_t log_interval_time;
+extern uint8_t log_interval_unit;
+extern uint8_t log_trigger;
+extern uint8_t log_trigger_start_year;
+extern uint8_t log_trigger_start_month;
+extern uint8_t log_trigger_start_date;
+extern uint8_t log_trigger_start_hour;
+extern uint8_t log_trigger_start_min;
+extern uint8_t log_trigger_stop_year;
+extern uint8_t log_trigger_stop_month;
+extern uint8_t log_trigger_stop_date;
+extern uint8_t log_trigger_stop_hour;
+extern uint8_t log_trigger_stop_min;
+extern uint16_t log_key_press_delay;
+extern uint16_t Year_Log;
+extern uint16_t auto_mode_time ;
+extern uint16_t auto_mode_time_counter;
+extern uint16_t comm_fail_relay_time;
+extern uint16_t comm_fail_relay_time_counter;
+extern uint16_t modbus_use_channel_flag  ;
+extern uint16_t modbus_channel_exit_flag ;
+extern uint16_t display_menu_exit_flag;
+extern uint16_t warm_time1;
+extern uint16_t warm_time_set;
+extern uint16_t code;
+extern uint16_t Channel_Database[16][5];
+extern uint8_t SerialYear;
+extern uint8_t SerialMonth;
+extern uint16_t SerialNumber;
+
+extern uint32_t log_interval_time1;
+extern uint32_t MaxLogCount;
+extern uint32_t Modbus_baudrate;
+extern uint32_t use_alarm_flag;
+extern uint32_t logic_flag;
+extern uint32_t latch_flag;
+extern uint32_t relay_flags;
+extern uint32_t FrameCount;
+extern uint32_t PreviousFrameCount;
+extern uint32_t CurrentReadSdSectorAddrs;
+extern uint32_t PreviousReadSdSectorAddrs ;
+
+extern DisplayParameters Display_Channels[16];
+extern AlarmParameters Alarm_Channels[16];
+extern ModbusParameters Modbus_Channels[16];
+extern NameParameters Name_List;
+
+/*---------------------------------------------------------------------------
+* Function name       : void write_byte_to_sd(uint16_t sd_address, uint8_t data_to_write_to_sd)
+*     returns         : -
+*     arg1            : uint16_t sd_address
+*     arg2            : uint8_t data_to_write_to_sd
+* Created by          : Nitin Singh
+* Date created        : 20/01/11
+* Description         : This function writes a byte 'data_to_write_to_sd'
+* to the sd at memory address 'sd_address'.
+* 
+*---------------------------------------------------------------------------*/
+
+void write_byte_to_sd(uint8_t data_to_write_to_sd, uint16_t offset_address)
+{
+	sd_buffer[offset_address] = (uint8_t)data_to_write_to_sd; 					/* record the msb */	
+}
+/*---------------------------------------------------------------------------
+* Function name       : uint8_t read_byte_from_sd(uint16_t sd_read_address)
+*     returns         : uint8_t
+*     arg1            : uint16_t sd_read_address
+*     arg2            : -
+*Created by          : Nitin Singh
+* Date created        : 20/01/11
+* Description         : This function returns a single byte read from the
+* sd at address 'sd_read_address'
+* 
+*---------------------------------------------------------------------------*/
+uint8_t read_byte_from_sd(uint16_t offset_address)
+{
+	return sd_buffer[offset_address];											/* return the received value from the sd */
+} 
+
+/*---------------------------------------------------------------------------
+* Function name       : void send_2_byte_value_to_sd(uint16_t value_to_send, uint16_t high_address)
+*     returns         : -
+*     arg1            : uint16_t value_to_send
+*     arg2            : uint16_t high_address
+* Created by          : Nitin Singh
+* Date created        : 20/01/11
+* Description         : Organises sending of a 2 byte value to an address
+* in the sd. 
+*---------------------------------------------------------------------------*/
+
+void send_2_byte_value_to_sd(uint16_t value_to_send, uint16_t high_address)
+{
+	sd_buffer[high_address] = (uint8_t) ((value_to_send >> 8) & 0x00FFu);		
+	sd_buffer[high_address + 1] = (uint8_t) (value_to_send & 0x00FFu);
+}
+
+/*---------------------------------------------------------------------------
+* Function name       : uint16_t get_2_byte_value_from_sd(uint16_t high_address)
+*     returns         : value_from_sd
+*     arg1            : high_address
+*     arg2            : 
+* Created by          : Nitin Singh
+* Date created        : 20/01/11
+* Description         : reads 2 bytes from the sd and returns the actual
+* value. 
+*---------------------------------------------------------------------------*/
+
+uint16_t get_2_byte_value_from_sd(uint16_t high_address)
+{
+	uint16_t value_from_sd = 0x0000u;
+	uint16_t temp;
+				
+	value_from_sd = sd_buffer[high_address];
+	value_from_sd =	value_from_sd << 8;
+	temp = sd_buffer[high_address + 1];			/* see sd.h for detailed table of sd contents */
+	value_from_sd |= temp;					/* assumes the low address is the next address, adds it on */
+	
+	return value_from_sd;
+}
+/*---------------------------------------------------------------------------
+* Function name       : void send_3_byte_value_to_sd(uint32_t value_to_send, uint16_t high_address)
+*     returns         : -
+*     arg1            : uint16_t value_to_send
+*     arg2            : uint16_t high_address
+* Created by          : Nitin Singh
+* Date created        : 20/01/11
+* Description         : Organises sending of a 3 byte value to an address
+* in the sd. 
+*---------------------------------------------------------------------------*/
+void send_3_byte_value_to_sd(uint32_t value_to_send, uint16_t high_address)
+{
+	sd_buffer[high_address]     = (uint8_t) ((value_to_send >> 16) & 0x000000FFul);
+	sd_buffer[high_address + 1] = (uint8_t) ((value_to_send >> 8) & 0x000000FFul);
+	sd_buffer[high_address + 2] = (uint8_t) (value_to_send & 0x000000FFul);
+		
+}
+
+/*---------------------------------------------------------------------------
+* Function name       : uint16_t get_3_byte_value_from_sd(uint16_t high_address)
+*     returns         : value_from_sd
+*     arg1            : high_address
+*     arg2            : 
+* Created by          : Nitin Singh
+* Date created        : 20/01/11
+* Description         : reads 3 bytes from the sd and returns the actual
+* value. 
+*---------------------------------------------------------------------------*/
+
+uint32_t get_3_byte_value_from_sd(uint16_t high_address)
+{
+	uint32_t value_from_sd = 0x00000000ul;
+	uint32_t temp;
+																
+	value_from_sd = sd_buffer[high_address];					
+	value_from_sd = value_from_sd << 8;											
+	temp = (uint32_t) sd_buffer[high_address + 1];	
+	value_from_sd |= temp;											
+	value_from_sd = value_from_sd << 8;													
+	temp = (uint32_t) sd_buffer[high_address + 2];
+	value_from_sd |=  temp;
+	
+	return value_from_sd;	
+}
+
+/////*---------------------------------------------------------------------------
+////* Function name       : void send_4_byte_value_to_sd(uint32_t value_to_send, uint16_t high_address)
+////*     returns         : -
+////*     arg1            : uint32_t value_to_send
+////*     arg2            : uint16_t high_address
+////* Created by          : Nitin Singh
+////* Date created        : 20/01/11
+////* Description         : Organises sending of a 4 byte value to an address
+////* in the sd. 
+////*---------------------------------------------------------------------------*/
+////void send_4_byte_value_to_sd(uint32_t value_to_send, uint16_t high_address)
+////{
+////	sd_buffer[high_address] = (uint8_t) ((value_to_send >> 24) & 0x000000FFul);
+////	sd_buffer[high_address + 1] = (uint8_t) ((value_to_send >> 16) & 0x000000FFul);
+////	sd_buffer[high_address + 2] = (uint8_t) ((value_to_send >> 8) & 0x000000FFul);
+////	sd_buffer[high_address + 3] = (uint8_t) (value_to_send & 0x000000FFul);
+////		
+////}
+////
+/////*---------------------------------------------------------------------------
+////* Function name       : uint16_t get_4_byte_value_from_sd(uint16_t high_address)
+////*     returns         : value_from_sd
+////*     arg1            : high_address
+////*     arg2            : 
+////* Created by          : Nitin Singh
+////* Date created        : 20/01/11
+////* Description         : reads 4 bytes from the sd and returns the actual
+////* value. 
+////*---------------------------------------------------------------------------*/
+////
+////uint32_t get_4_byte_value_from_sd(uint16_t high_address)
+////{
+////	uint32_t value_from_sd = 0x00000000ul;
+////	uint32_t temp;
+////																
+////	value_from_sd = sd_buffer[high_address];					
+////	value_from_sd = value_from_sd << 8;											
+////	temp = (uint32_t) sd_buffer[high_address + 1];	
+////	value_from_sd |= temp;											
+////	value_from_sd = value_from_sd << 8;													
+////	temp = (uint32_t) sd_buffer[high_address + 2];
+////	value_from_sd |=  temp;
+////	value_from_sd = value_from_sd << 8;													
+////	temp = (uint32_t) sd_buffer[high_address + 3];
+////	value_from_sd |=  temp;
+////	
+////	return value_from_sd;	
+////}
+
+
+void send_initial_sd_values(void)
+{	
+	uint8_t i=0;
+	
+	/*********************************** SECTOR 0 ***************************/
+	
+	write_byte_to_sd(0x00, INDI_FLAGS_3_LOGGING_STOP_ADD);
+	write_byte_to_sd(0x00, BACKLIT_SELECT_ADD);
+	write_byte_to_sd(0x00, INDI_FLAGS_2_START_STOP_COMM_ADD);
+	write_byte_to_sd(1, LOG_INTERVAL_TIME_ADD);
+	write_byte_to_sd(0, LOG_HOUR_ADD);
+	write_byte_to_sd(0, LOG_MINS_ADD);
+	write_byte_to_sd(1, LOG_SECS_ADD);
+	write_byte_to_sd(2, LOG_TRIGGER_ADD);
+	write_byte_to_sd(11, LOG_TRIGGER_START_YEAR_ADD);
+	write_byte_to_sd(1, LOG_TRIGGER_START_MONTH_ADD);
+	write_byte_to_sd(1, LOG_TRIGGER_START_DATE_ADD);
+	write_byte_to_sd(0, LOG_TRIGGER_START_HOUR_ADD);
+	write_byte_to_sd(0, LOG_TRIGGER_START_MINUTE_ADD);
+	write_byte_to_sd(11, LOG_TRIGGER_STOP_YEAR_ADD);
+	write_byte_to_sd(1, LOG_TRIGGER_STOP_MONTH_ADD);
+	write_byte_to_sd(1, LOG_TRIGGER_STOP_DATE_ADD);
+	write_byte_to_sd(0, LOG_TRIGGER_STOP_HOUR_ADD);
+	write_byte_to_sd(0, LOG_TRIGGER_STOP_MINUTE_ADD);
+	write_byte_to_sd(0x00, INDI_FLAGS_2_LOG_MODE_FLAG_ADD);
+	write_byte_to_sd(0x00, SD_OVERFLOW_FLAG_ADD);
+	write_byte_to_sd(0x00, MODE_FLAGS_1_FLAGS_ADD);
+////	write_byte_to_sd(0x00, USE_SLAVE_MONITOR_FLAG_ADD);
+////	write_byte_to_sd(1, MONITOR_1_SLAVE_ID_ADD);
+////	write_byte_to_sd(1, MONITOR_2_SLAVE_ID_ADD);
+////	write_byte_to_sd(VER_16CHANNEL_1PV, INSTRUMENT_VERSION_ADD);
+	write_byte_to_sd(1, DEVICE_ID_ADD);
+	write_byte_to_sd(1, SERIAL_YEAR_ADD);
+	write_byte_to_sd(1, SERIAL_MONTH_ADD);
+	
+	send_2_byte_value_to_sd(1, SERIAL_NUMBER_HI_ADD);
+	send_2_byte_value_to_sd(1, LOG_KEY_PRESS_DELAY_HI_ADD);
+	send_2_byte_value_to_sd(0x00, LOG_COUNT_HI_ADD);
+	send_2_byte_value_to_sd(0x00, LOG_COUNT_MID1_ADD);
+	send_2_byte_value_to_sd(0x0000, LOG_START_HI_ADD);
+	send_2_byte_value_to_sd(0x000B, LOG_START_MID1_ADD);
+	send_2_byte_value_to_sd(8811, EEPROM_VERIFICATION_HI_ADD);	
+	send_2_byte_value_to_sd(WARMUP_TIME, WARMUP_TIME_HI_ADD);
+	send_2_byte_value_to_sd(0, PASSWORD_HI_ADD);
+	send_2_byte_value_to_sd(0x0001, MAX_LOG_COUNT_HI_ADD); //Default Max Log count of 100000
+	send_2_byte_value_to_sd(0x86A0, MAX_LOG_COUNT_MID1_ADD);
+	send_2_byte_value_to_sd(0, FRAME_COUNT_HI_ADD);
+	send_2_byte_value_to_sd(0 , FRAME_COUNT_MID1_ADD);	
+	send_2_byte_value_to_sd(0 , PREVIOUS_FRAME_COUNT_HI_ADD);
+	send_2_byte_value_to_sd(0 , PREVIOUS_FRAME_COUNT_MID1_ADD);	
+	send_2_byte_value_to_sd(0 , CURRENT_READ_SECTOR_ADDRS_HI_ADD);
+	send_2_byte_value_to_sd(0x000A, CURRENT_READ_SECTOR_ADDRS_MID1_ADD);	
+	send_2_byte_value_to_sd(0 , PREVIOUS_READ_SECTOR_ADDRS_HI_ADD);
+	send_2_byte_value_to_sd(0x000A , PREVIOUS_READ_SECTOR_ADDRS_MID1_ADD);
+	
+	
+	sd_write_block (&sdc, 0, sd_buffer);		
+	sd_wait_notbusy (&sdc);
+	
+	/*********************************** SECTOR 1 ***************************/
+	
+	address_val = MODBUS_CHANNEL_1_SLAVEID_ADD;
+	for(i=0;i<16;i++)
+	{
+		write_byte_to_sd(1, address_val);   //slave id
+		write_byte_to_sd(1, address_val+1); //read register
+		send_2_byte_value_to_sd(0, address_val+2); //pv address
+		
+		address_val = address_val+8;		// POINT TO NEXT CHANNEL START ADDRESS
+	}
+	address_val = 0;
+	
+	address_val = NAME1_OFFSET_0_ADD;
+	for(i=0;i<13;i++)
+	{
+		write_byte_to_sd(65, address_val); 		//NAME1
+		write_byte_to_sd(66, address_val+1);	//NAME2
+		write_byte_to_sd(67, address_val+2);	//NAME3
+		write_byte_to_sd(68, address_val+3);	//NAME4
+		write_byte_to_sd(69, address_val+4);	//NAME5
+		
+		address_val = address_val+5;
+	}
+	address_val = 0;
+	
+	write_byte_to_sd(1, MODBUS_PARITY_ADD);
+	write_byte_to_sd(1, MODBUS_STOPBITS_ADD);
+	
+	send_2_byte_value_to_sd(0x0000, MODBUS_USE_CHANNEL_FLAG_HI_ADD);	
+	send_2_byte_value_to_sd(9600, MODBUS_BAUDRATE_HI_ADD);
+	
+	
+	
+	sd_write_block (&sdc, 1, sd_buffer);		
+	sd_wait_notbusy (&sdc);
+	
+	/*********************************** SECTOR 2 ***************************/
+	
+	address_val = DISPLAY_CHANNEL_1_DP1_ADD;
+	for(i=0;i<16;i++)
+	{
+		write_byte_to_sd(0, address_val);  //DP
+		write_byte_to_sd(0, address_val+1);  //UNITS
+		send_2_byte_value_to_sd(0, address_val+2);  //GAS NO
+		
+		address_val = address_val+16;    // POINT TO NEXT CHANNEL START ADDRESS
+	}
+	address_val = 0;
+	
+	
+	write_byte_to_sd(0x00, INDI_FLAGS_DISPLAY_AUTO_MODE_ADD);
+	send_2_byte_value_to_sd(1, AUTO_MODE_TIME_HI_ADD);
+	
+	sd_write_block (&sdc, 2, sd_buffer);		
+	sd_wait_notbusy (&sdc);
+	
+	/*********************************** SECTOR 3 ***************************/
+	
+	address_val = ALARM_CHANNEL_1_SETPT1_HI_ADD;
+	for(i=0;i<16;i++)
+	{
+		send_3_byte_value_to_sd(9999, address_val);  //set pt 1
+		send_3_byte_value_to_sd(9999, address_val+3);  //set pt 1
+		send_2_byte_value_to_sd(0, address_val+6);  //hys 1
+		send_2_byte_value_to_sd(0, address_val+8);	//hys 2
+		
+		
+		address_val = address_val+10;    // POINT TO NEXT CHANNEL START ADDRESS
+	}
+	address_val = 0;
+	
+	write_byte_to_sd(0x00, INDI_FLAGS_2_FAIL_SAFE_RELAY_FLAG_ADD);
+	write_byte_to_sd(0x00, INDI_FLAGS_2_USE_COMM_FAIL_FLAG_ADD);
+	send_2_byte_value_to_sd(0, USE_ALARM_FLAG_HI_ADD);
+	send_2_byte_value_to_sd(0, USE_ALARM_FLAG_MID1_ADD);
+	send_2_byte_value_to_sd(0, LOGIC_FLAG_HI_ADD);
+	send_2_byte_value_to_sd(0, LOGIC_FLAG_MID1_ADD);
+	send_2_byte_value_to_sd(0, LATCH_FLAG_HI_ADD);
+	send_2_byte_value_to_sd(0, LATCH_FLAG_MID1_ADD);
+	send_2_byte_value_to_sd(1, COMM_FAIL_RELAY_TIME_HI_ADD);
+	
+	sd_write_block (&sdc, 3, sd_buffer);		
+	sd_wait_notbusy (&sdc);
+}
+
+void get_initial_sd_values(void)
+{
+	uint8_t i=0;
+	uint32_t temp = 0;
+	
+	/*********************************** SECTOR 0 ***************************/
+	sd_read_block (&sdc, 0, sd_buffer);		
+	sd_wait_notbusy (&sdc);
+	
+////	InstrumentVersion = read_byte_from_sd(INSTRUMENT_VERSION_ADD);
+	StopLoggingFlag = read_byte_from_sd(INDI_FLAGS_3_LOGGING_STOP_ADD);
+	mode_flags_1 = read_byte_from_sd(MODE_FLAGS_1_FLAGS_ADD);
+	backlit_select = read_byte_from_sd(BACKLIT_SELECT_ADD);
+	indication_flags_2 |= read_byte_from_sd(INDI_FLAGS_2_START_STOP_COMM_ADD);
+	indication_flags_2 |= read_byte_from_sd(INDI_FLAGS_2_LOG_MODE_FLAG_ADD);
+	log_hour = read_byte_from_sd(LOG_HOUR_ADD);
+	log_min = read_byte_from_sd(LOG_MINS_ADD);
+	log_sec = read_byte_from_sd(LOG_SECS_ADD);
+	log_interval_time = read_byte_from_sd(LOG_INTERVAL_TIME_ADD);
+	log_interval_unit = read_byte_from_sd(LOG_INTERVAL_UNIT_ADD);
+	log_trigger = read_byte_from_sd(LOG_TRIGGER_ADD);
+	log_trigger_start_year = read_byte_from_sd(LOG_TRIGGER_START_YEAR_ADD);
+	log_trigger_start_month = read_byte_from_sd(LOG_TRIGGER_START_MONTH_ADD);
+	log_trigger_start_date = read_byte_from_sd(LOG_TRIGGER_START_DATE_ADD);
+	log_trigger_start_hour = read_byte_from_sd(LOG_TRIGGER_START_HOUR_ADD);
+	log_trigger_start_min = read_byte_from_sd(LOG_TRIGGER_START_MINUTE_ADD);
+	log_trigger_stop_year = read_byte_from_sd(LOG_TRIGGER_STOP_YEAR_ADD);
+	log_trigger_stop_month = read_byte_from_sd(LOG_TRIGGER_STOP_MONTH_ADD);
+	log_trigger_stop_date = read_byte_from_sd(LOG_TRIGGER_STOP_DATE_ADD);
+	log_trigger_stop_hour = read_byte_from_sd(LOG_TRIGGER_STOP_HOUR_ADD);
+	log_trigger_stop_min = read_byte_from_sd(LOG_TRIGGER_STOP_MINUTE_ADD);
+	sd_overflow_flag = read_byte_from_sd(SD_OVERFLOW_FLAG_ADD);
+////	use_slave_monitor_flag = read_byte_from_sd(USE_SLAVE_MONITOR_FLAG_ADD);
+////	Slave_monitor_ID[0] = read_byte_from_sd(MONITOR_1_SLAVE_ID_ADD);
+////	Slave_monitor_ID[1] = read_byte_from_sd(MONITOR_2_SLAVE_ID_ADD);
+	DeviceId = read_byte_from_sd(DEVICE_ID_ADD);
+	SerialYear = read_byte_from_sd(SERIAL_YEAR_ADD);
+	SerialMonth = read_byte_from_sd(SERIAL_MONTH_ADD);
+	
+	SerialNumber = get_2_byte_value_from_sd(SERIAL_NUMBER_HI_ADD);
+	log_key_press_delay = get_2_byte_value_from_sd(LOG_KEY_PRESS_DELAY_HI_ADD);
+	
+	temp = get_2_byte_value_from_sd(LOG_COUNT_HI_ADD);
+	log_count = get_2_byte_value_from_sd(LOG_COUNT_MID1_ADD);
+	log_count |= (temp << 16);
+	
+	temp = get_2_byte_value_from_sd(LOG_START_HI_ADD);
+	SdSectorAddrs = get_2_byte_value_from_sd(LOG_START_MID1_ADD);
+	SdSectorAddrs |= (temp << 16);
+	
+	temp = get_2_byte_value_from_sd(MAX_LOG_COUNT_HI_ADD);
+	MaxLogCount = get_2_byte_value_from_sd(MAX_LOG_COUNT_MID1_ADD);
+	MaxLogCount |= (temp << 16);
+	
+	temp = get_2_byte_value_from_sd(FRAME_COUNT_HI_ADD);
+	FrameCount = get_2_byte_value_from_sd(FRAME_COUNT_MID1_ADD);
+	FrameCount |= (temp << 16);
+	
+	temp = get_2_byte_value_from_sd(PREVIOUS_FRAME_COUNT_HI_ADD);
+	PreviousFrameCount = get_2_byte_value_from_sd(PREVIOUS_FRAME_COUNT_MID1_ADD);
+	PreviousFrameCount |= (temp << 16);
+	
+	temp = get_2_byte_value_from_sd(CURRENT_READ_SECTOR_ADDRS_HI_ADD);
+	CurrentReadSdSectorAddrs = get_2_byte_value_from_sd(CURRENT_READ_SECTOR_ADDRS_MID1_ADD);
+	CurrentReadSdSectorAddrs |= (temp << 16);
+	
+	temp = get_2_byte_value_from_sd(PREVIOUS_READ_SECTOR_ADDRS_HI_ADD);
+	PreviousReadSdSectorAddrs = get_2_byte_value_from_sd(PREVIOUS_READ_SECTOR_ADDRS_MID1_ADD);
+	PreviousReadSdSectorAddrs |= (temp << 16);
+	
+	warm_time1 = get_2_byte_value_from_sd(WARMUP_TIME_HI_ADD);
+	warm_time_set = warm_time1;
+	code = get_2_byte_value_from_sd(PASSWORD_HI_ADD);
+	
+		
+	/*********************************** SECTOR 1 ***************************/
+	sd_read_block (&sdc, 1, sd_buffer);		
+	sd_wait_notbusy (&sdc);
+	
+	address_val = MODBUS_CHANNEL_1_SLAVEID_ADD;
+	for(i=0;i<16;i++)
+	{
+		Modbus_Channels[i].SlaveID = read_byte_from_sd(address_val); 
+		Modbus_Channels[i].ReadRegister = read_byte_from_sd(address_val+1);
+		Modbus_Channels[i].PvAddress = get_2_byte_value_from_sd(address_val+2);
+				
+		address_val = address_val+8;
+	}
+	address_val = 0;
+	
+	address_val = NAME1_OFFSET_0_ADD;
+	for(i=0;i<13;i++)
+	{
+		Name_List.Name1[i] = read_byte_from_sd(address_val);
+		Name_List.Name2[i] = read_byte_from_sd(address_val+1);
+		Name_List.Name3[i] = read_byte_from_sd(address_val+2);
+		Name_List.Name4[i] = read_byte_from_sd(address_val+3);
+		Name_List.Name5[i] = read_byte_from_sd(address_val+4);
+		
+		address_val = address_val+5;
+	}
+	address_val = 0;
+	Name_List.Name1[13] = '\0';
+	Name_List.Name2[13] = '\0';
+	Name_List.Name3[13] = '\0';
+	Name_List.Name4[13] = '\0';
+	Name_List.Name5[13] = '\0';
+	
+	Modbus_parity = read_byte_from_sd(MODBUS_PARITY_ADD);
+	Modbus_stopbits = read_byte_from_sd(MODBUS_STOPBITS_ADD);
+	Modbus_baudrate = get_2_byte_value_from_sd(MODBUS_BAUDRATE_HI_ADD);
+	modbus_use_channel_flag = get_2_byte_value_from_sd(MODBUS_USE_CHANNEL_FLAG_HI_ADD);
+	
+	/*********************************** SECTOR 2 ***************************/
+	sd_read_block (&sdc, 2, sd_buffer);		
+	sd_wait_notbusy (&sdc);
+	
+	address_val = DISPLAY_CHANNEL_1_DP1_ADD;
+	for(i=0;i<16;i++)
+	{
+		Display_Channels[i].dp= read_byte_from_sd(address_val); 
+		Display_Channels[i].units= read_byte_from_sd(address_val+1); 
+		Display_Channels[i].gas_no= get_2_byte_value_from_sd(address_val+2); 
+		
+		address_val = address_val+16;
+	}
+	address_val = 0;
+	
+	
+	indication_flags |= read_byte_from_sd(INDI_FLAGS_DISPLAY_AUTO_MODE_ADD);
+	auto_mode_time = get_2_byte_value_from_sd(AUTO_MODE_TIME_HI_ADD);
+	auto_mode_time_counter = auto_mode_time;
+	
+	/*********************************** SECTOR 3 ***************************/
+	sd_read_block (&sdc, 3, sd_buffer);		
+	sd_wait_notbusy (&sdc);
+	
+	address_val = ALARM_CHANNEL_1_SETPT1_HI_ADD;
+	
+	for(i=0;i<16;i++)
+	{
+		Alarm_Channels[i].Alarm1_SetPt= (int32_t)(get_3_byte_value_from_sd(address_val) - 9999);   //set pt 1
+		Alarm_Channels[i].Alarm2_SetPt= (int32_t)(get_3_byte_value_from_sd(address_val+3) - 9999); //set pt 2
+		Alarm_Channels[i].Alarm1_Hys= get_2_byte_value_from_sd(address_val+6);  //hys 1
+		Alarm_Channels[i].Alarm2_Hys= get_2_byte_value_from_sd(address_val+8);   //hys 2
+		
+		address_val = address_val+10;
+	}
+	address_val = 0;
+	
+	indication_flags_2 |= read_byte_from_sd(INDI_FLAGS_2_FAIL_SAFE_RELAY_FLAG_ADD);
+	indication_flags_2 |= read_byte_from_sd(INDI_FLAGS_2_USE_COMM_FAIL_FLAG_ADD);
+	
+	comm_fail_relay_time = get_2_byte_value_from_sd(COMM_FAIL_RELAY_TIME_HI_ADD);
+	comm_fail_relay_time_counter = (comm_fail_relay_time * 60) - (comm_fail_relay_time * 12);		
+	
+	temp = get_2_byte_value_from_sd(USE_ALARM_FLAG_HI_ADD);
+	use_alarm_flag = get_2_byte_value_from_sd(USE_ALARM_FLAG_MID1_ADD);
+	use_alarm_flag |= (temp << 16);
+	
+	temp = get_2_byte_value_from_sd(LOGIC_FLAG_HI_ADD);
+	logic_flag = get_2_byte_value_from_sd(LOGIC_FLAG_MID1_ADD);
+	logic_flag |= (temp << 16);
+	
+	temp = get_2_byte_value_from_sd(LATCH_FLAG_HI_ADD);
+	latch_flag = get_2_byte_value_from_sd(LATCH_FLAG_MID1_ADD);
+	latch_flag |= (temp << 16);
+	
+	log_interval_time1 = ((log_hour * 3600) + (log_min * 60) + log_sec );
+	//indication_flags = read_byte_from_sd(INDICATION_FLAGS_ADD);
+	indication_flags &= 0x01;
+	indication_flags |= 0x20;
+	//indication_flags_2 = read_byte_from_sd(INDICATION_FLAGS_2_ADD);
+	indication_flags_2 &= 0x5A;
+	
+	mode_flags_1 &= 0x40;
+}
+	
+void update_user_sd_value(void)
+{
+	
+	sd_read_block (&sdc, 0, sd_buffer);		
+	sd_wait_notbusy (&sdc);
+	
+	write_byte_to_sd(StopLoggingFlag, INDI_FLAGS_3_LOGGING_STOP_ADD);
+	write_byte_to_sd((mode_flags_1 & 0x40), MODE_FLAGS_1_FLAGS_ADD);
+	write_byte_to_sd(backlit_select, BACKLIT_SELECT_ADD);
+	write_byte_to_sd(log_hour, LOG_HOUR_ADD);
+	write_byte_to_sd(log_min, LOG_MINS_ADD);
+	write_byte_to_sd(log_sec, LOG_SECS_ADD);
+	write_byte_to_sd((indication_flags_2 & START_STOP_COMM), INDI_FLAGS_2_START_STOP_COMM_ADD);
+	write_byte_to_sd((indication_flags_2 & LOG_MODE_FLAG), INDI_FLAGS_2_LOG_MODE_FLAG_ADD);
+	write_byte_to_sd(log_interval_time, LOG_INTERVAL_TIME_ADD);
+	write_byte_to_sd(log_interval_unit, LOG_INTERVAL_UNIT_ADD);
+	write_byte_to_sd(log_trigger, LOG_TRIGGER_ADD);
+	write_byte_to_sd(log_trigger_start_year, LOG_TRIGGER_START_YEAR_ADD);
+	write_byte_to_sd(log_trigger_start_month, LOG_TRIGGER_START_MONTH_ADD);
+	write_byte_to_sd(log_trigger_start_date, LOG_TRIGGER_START_DATE_ADD);
+	write_byte_to_sd(log_trigger_start_hour, LOG_TRIGGER_START_HOUR_ADD);
+	write_byte_to_sd(log_trigger_start_min, LOG_TRIGGER_START_MINUTE_ADD);
+	write_byte_to_sd(log_trigger_stop_year, LOG_TRIGGER_STOP_YEAR_ADD);
+	write_byte_to_sd(log_trigger_stop_month, LOG_TRIGGER_STOP_MONTH_ADD);
+	write_byte_to_sd(log_trigger_stop_date, LOG_TRIGGER_STOP_DATE_ADD);
+	write_byte_to_sd(log_trigger_stop_hour, LOG_TRIGGER_STOP_HOUR_ADD);
+	write_byte_to_sd(log_trigger_stop_min, LOG_TRIGGER_STOP_MINUTE_ADD);
+	write_byte_to_sd(DeviceId, DEVICE_ID_ADD);
+//////	write_byte_to_sd(use_slave_monitor_flag, USE_SLAVE_MONITOR_FLAG_ADD);
+//////	write_byte_to_sd(Slave_monitor_ID[0], MONITOR_1_SLAVE_ID_ADD);
+//////	write_byte_to_sd(Slave_monitor_ID[1], MONITOR_2_SLAVE_ID_ADD);
+	write_byte_to_sd(SerialYear, SERIAL_YEAR_ADD);
+	write_byte_to_sd(SerialMonth, SERIAL_MONTH_ADD);
+	
+	send_2_byte_value_to_sd(SerialNumber, SERIAL_NUMBER_HI_ADD);	
+	send_2_byte_value_to_sd(log_key_press_delay, LOG_KEY_PRESS_DELAY_HI_ADD);
+	send_2_byte_value_to_sd(warm_time_set, WARMUP_TIME_HI_ADD);
+	send_2_byte_value_to_sd(code,PASSWORD_HI_ADD);
+	
+	send_2_byte_value_to_sd(MaxLogCount >> 16, MAX_LOG_COUNT_HI_ADD);
+	send_2_byte_value_to_sd(MaxLogCount & 0xFFFF, MAX_LOG_COUNT_MID1_ADD);
+	
+	sd_write_block (&sdc, 0, sd_buffer);		
+	sd_wait_notbusy (&sdc);
+	
+
+}
+	
+void update_modbus_channels_sd_value(void)
+{
+	uint8_t i;
+	
+	sd_read_block (&sdc, 1, sd_buffer);		
+	sd_wait_notbusy (&sdc);
+	
+	write_byte_to_sd(Modbus_parity, MODBUS_PARITY_ADD);
+	write_byte_to_sd(Modbus_stopbits, MODBUS_STOPBITS_ADD);
+
+	send_2_byte_value_to_sd(Modbus_baudrate, MODBUS_BAUDRATE_HI_ADD);
+	send_2_byte_value_to_sd(modbus_use_channel_flag, MODBUS_USE_CHANNEL_FLAG_HI_ADD);
+	
+	address_val = MODBUS_CHANNEL_1_SLAVEID_ADD;
+	for(i=0;i<16;i++)
+	{
+		write_byte_to_sd(Modbus_Channels[i].SlaveID, address_val);   //slave id
+		write_byte_to_sd(Modbus_Channels[i].ReadRegister, address_val+1); //read register
+		send_2_byte_value_to_sd(Modbus_Channels[i].PvAddress, address_val+2); //pv address
+		
+		address_val = address_val+8;;
+	}
+	address_val = 0;
+	
+	address_val = NAME1_OFFSET_0_ADD;
+	for(i=0;i<13;i++)
+	{
+		write_byte_to_sd(Name_List.Name1[i], address_val);
+		write_byte_to_sd(Name_List.Name2[i], address_val+1);
+		write_byte_to_sd(Name_List.Name3[i], address_val+2);
+		write_byte_to_sd(Name_List.Name4[i], address_val+3);
+		write_byte_to_sd(Name_List.Name5[i], address_val+4);
+		
+		address_val = address_val+5;
+	}
+	address_val = 0;
+	
+	sd_write_block (&sdc, 1, sd_buffer);		
+	sd_wait_notbusy (&sdc);
+}	
+
+void update_display_channels_sd_value(void)
+{
+	uint8_t i;
+	
+	sd_read_block (&sdc, 2, sd_buffer);		
+	sd_wait_notbusy (&sdc);
+	
+	address_val = DISPLAY_CHANNEL_1_DP1_ADD;
+	for(i=0;i<16;i++)
+	{
+		write_byte_to_sd(Display_Channels[i].dp, address_val);
+		write_byte_to_sd(Display_Channels[i].units, address_val+1);
+		send_2_byte_value_to_sd(Display_Channels[i].gas_no, address_val+2);
+		
+		address_val = address_val+16;
+	}
+	address_val = 0;
+	
+	
+	
+	write_byte_to_sd((indication_flags & DISPLAY_AUTO_MODE), INDI_FLAGS_DISPLAY_AUTO_MODE_ADD);
+	send_2_byte_value_to_sd(auto_mode_time, AUTO_MODE_TIME_HI_ADD);
+	
+	sd_write_block (&sdc, 2, sd_buffer);		
+	sd_wait_notbusy (&sdc);
+}
+
+void update_alarm_channels_sd_value(void)
+{
+	uint8_t i;
+	
+	sd_read_block (&sdc, 3, sd_buffer);		
+	sd_wait_notbusy (&sdc);
+	
+	address_val = ALARM_CHANNEL_1_SETPT1_HI_ADD;
+	for(i=0;i<16;i++)
+	{
+		
+		send_3_byte_value_to_sd((uint32_t)(Alarm_Channels[i].Alarm1_SetPt + 9999), address_val);  //set pt 1
+		send_3_byte_value_to_sd((uint32_t)(Alarm_Channels[i].Alarm2_SetPt + 9999), address_val+3);  //set pt 1
+		send_2_byte_value_to_sd(Alarm_Channels[i].Alarm1_Hys, address_val+6);  //hys 1
+		send_2_byte_value_to_sd(Alarm_Channels[i].Alarm2_Hys, address_val+8);	//hys 2
+		
+		
+		address_val = address_val+10;    // POINT TO NEXT CHANNEL START ADDRESS
+	}
+	address_val = 0;
+	
+	write_byte_to_sd((indication_flags_2 & FAIL_SAFE_RELAY_FLAG), INDI_FLAGS_2_FAIL_SAFE_RELAY_FLAG_ADD);
+	write_byte_to_sd((indication_flags_2 & USE_COMM_FAIL_FLAG), INDI_FLAGS_2_USE_COMM_FAIL_FLAG_ADD);
+	
+	send_2_byte_value_to_sd(use_alarm_flag >> 16, USE_ALARM_FLAG_HI_ADD);
+	send_2_byte_value_to_sd(use_alarm_flag & 0xFFFF, USE_ALARM_FLAG_MID1_ADD);
+	
+	send_2_byte_value_to_sd(logic_flag >> 16, LOGIC_FLAG_HI_ADD);
+	send_2_byte_value_to_sd(logic_flag & 0xFFFF, LOGIC_FLAG_MID1_ADD);
+	
+	send_2_byte_value_to_sd(latch_flag >> 16, LATCH_FLAG_HI_ADD);
+	send_2_byte_value_to_sd(latch_flag & 0xFFFF, LATCH_FLAG_MID1_ADD);
+	
+	send_2_byte_value_to_sd(comm_fail_relay_time, COMM_FAIL_RELAY_TIME_HI_ADD);
+	
+	sd_write_block (&sdc, 3, sd_buffer);		
+	sd_wait_notbusy (&sdc);
+
+}
+
+void Data_Log(void)
+{
+	uint8_t i = 0;
+	uint8_t temp_data_low;
+	uint8_t temp_data_high;
+	uint16_t offset_addrs;
+	uint32_t temp_use_channel = 0x00000001;
+	
+	if(!(stop_log))
+	{
+		
+		write_byte_to_sd(Date_Log, 0);
+		write_byte_to_sd(Month_Log, 1);
+		write_byte_to_sd(Year_Log, 2);	
+		write_byte_to_sd(Hours_Log, 3);
+		write_byte_to_sd(Minutes_Log, 4);
+		write_byte_to_sd(Seconds_Log, 5);
+		
+		offset_addrs = 6;
+		for(i=0;i<16;i++)
+		{
+			if(modbus_use_channel_flag & temp_use_channel)
+			{
+				/* Process Value 1 */
+				temp_data_high = (uint8_t)((Channel_Database[i][0] & 0xFF00) >> 8);
+				write_byte_to_sd(temp_data_high, offset_addrs);
+				offset_addrs++;
+				temp_data_low = (uint8_t)(Channel_Database[i][0] & 0x00FF); 
+				write_byte_to_sd(temp_data_low, offset_addrs);
+				offset_addrs++;
+				
+//				/* Process Value 2 */
+//				temp_data_high = (uint8_t)((Channel_Database[i][1] & 0xFF00) >> 8);
+//				write_byte_to_sd(temp_data_high, offset_addrs);
+				offset_addrs++;
+//				temp_data_low = (uint8_t)(Channel_Database[i][1] & 0x00FF); 
+//				write_byte_to_sd(temp_data_low, offset_addrs);
+				offset_addrs++;
+//				
+//				/* Process Value 3 */
+//				temp_data_high = (uint8_t)((Channel_Database[i][2] & 0xFF00) >> 8);
+//				write_byte_to_sd(temp_data_high, offset_addrs);
+				offset_addrs++;
+//				temp_data_low = (uint8_t)(Channel_Database[i][2] & 0x00FF); 
+//				write_byte_to_sd(temp_data_low, offset_addrs);
+				offset_addrs++;
+				
+
+			}
+			else //if channel is not activated PV = 32763 & DP = 9
+			{
+				/* Process Value 1 */
+				temp_data_high = 0x7F;
+				write_byte_to_sd(temp_data_high, offset_addrs);
+				offset_addrs++;
+				temp_data_low = 0xFB;
+				write_byte_to_sd(temp_data_low, offset_addrs);
+				offset_addrs++;
+				
+//				/* Process Value 2 */
+//				temp_data_high = 0x7F;
+//				write_byte_to_sd(temp_data_high, offset_addrs);
+				offset_addrs++;
+//				temp_data_low = 0xFB;
+//				write_byte_to_sd(temp_data_low, offset_addrs);
+				offset_addrs++;
+//				
+//				/* Process Value 3 */
+//				temp_data_high = 0x7F;
+//				write_byte_to_sd(temp_data_high, offset_addrs);
+				offset_addrs++;
+//				temp_data_low = 0xFB;
+//				write_byte_to_sd(temp_data_low, offset_addrs);
+				offset_addrs++;
+				
+
+			}
+			
+			temp_use_channel = temp_use_channel << 1;
+		}
+		sd_write_block (&sdc, SdSectorAddrs, sd_buffer);		
+		sd_wait_notbusy (&sdc);
+		
+		SdSectorAddrs ++;
+		
+	}	
+	
+	if(log_count < MaxLogCount)   
+		log_count++;
+	else
+		log_count = MaxLogCount;	
+		
+	if(log_count >= MaxLogCount) 
+	{	
+		if(indication_flags_2 & LOG_MODE_FLAG)   //saturation
+		{
+			stop_log = 1;
+			SdSectorAddrs = 11;		
+			sd_overflow_flag = 0;
+					
+		}
+		else if(!(indication_flags_2 & LOG_MODE_FLAG))	//scrolling
+		{
+			stop_log = 0;
+			SdSectorAddrs = 11;	
+			sd_overflow_flag = 1;	
+		}
+		
+	}	
+	else
+	{
+		stop_log = 0;
+	}
+	
+	sd_read_block (&sdc, 0, sd_buffer);		
+	sd_wait_notbusy (&sdc);
+	
+	write_byte_to_sd(sd_overflow_flag, SD_OVERFLOW_FLAG_ADD);
+		
+	send_2_byte_value_to_sd(log_count >> 16, LOG_COUNT_HI_ADD);
+	send_2_byte_value_to_sd(log_count & 0xFFFF, LOG_COUNT_MID1_ADD);
+	
+	send_2_byte_value_to_sd(SdSectorAddrs >> 16, LOG_START_HI_ADD);
+	send_2_byte_value_to_sd(SdSectorAddrs & 0xFFFF, LOG_START_MID1_ADD);
+
+	sd_write_block (&sdc, 0, sd_buffer);		
+	sd_wait_notbusy (&sdc);
+	
+}
+
+
+
+void Clear_sd(void)
+{
+    log_count = 0;
+	SdSectorAddrs = 11;
+	
+	sd_overflow_flag = 0;
+	
+	sd_read_block (&sdc, 0, sd_buffer);		
+	sd_wait_notbusy (&sdc);
+	
+	write_byte_to_sd(0x00, SD_OVERFLOW_FLAG_ADD);
+	
+	send_2_byte_value_to_sd(0, LOG_COUNT_HI_ADD);
+	send_2_byte_value_to_sd(0, LOG_COUNT_MID1_ADD);
+	
+	send_2_byte_value_to_sd(0x0000, LOG_START_HI_ADD);
+	send_2_byte_value_to_sd(0x000B, LOG_START_MID1_ADD);
+	
+	sd_write_block (&sdc, 0, sd_buffer);		
+	sd_wait_notbusy (&sdc);
+	
+
+}
+
+void SendData(uint16_t address_val)
+{
+	uint16_t temp, i;
+	
+	sd_read_block (&sdc, address_val, sd_buffer);		
+	sd_wait_notbusy (&sdc);
+	
+	P1OUT |= 0x10 ; //SIO2 High
+	
+	UCA1TXBUF = ((address_val-10)/1000)+0x30;  //For testing
+  	while (( UCA1STAT & UCBUSY ));
+  	UCA1TXBUF = (((address_val-10)%1000)/100)+0x30;  //For testing
+  	while (( UCA1STAT & UCBUSY ));
+  	UCA1TXBUF = ((((address_val-10)%1000)%100)/10)+0x30;  //For testing
+  	while (( UCA1STAT & UCBUSY ));
+	UCA1TXBUF = ((((address_val-10)%1000)%100)%10)+0x30;  //For testing
+  	while (( UCA1STAT & UCBUSY ));
+  	  	
+	
+  	
+	UCA1TXBUF = '\n';//For testing
+  	while (( UCA1STAT & UCBUSY ));
+  	UCA1TXBUF = '\r';//For testing
+  	while (( UCA1STAT & UCBUSY ));
+	
+	for(i=0;i<6;i++)
+	{	
+		UCA1TXBUF = ((sd_buffer[i]/10)+0x30);
+  	  	while ( UCA1STAT & UCBUSY );
+  	  	UCA1TXBUF = ((sd_buffer[i]%10)+0x30);
+  	  	while ( UCA1STAT & UCBUSY );
+	}
+	
+	for(i=6;i<118;i=i+6)
+	{	
+		temp = ((uint16_t)sd_buffer[i+1]) | (((uint16_t)sd_buffer[i]) << 8);
+		
+		UCA1TXBUF = (temp/10000)+0x30;
+  	  	while (( UCA1STAT & UCBUSY ));
+  	  	UCA1TXBUF = ((temp%10000)/1000)+0x30;
+  	  	while (( UCA1STAT & UCBUSY ));
+  	  	UCA1TXBUF = (((temp%10000)%1000)/100)+0x30;
+  	  	while (( UCA1STAT & UCBUSY ));
+		UCA1TXBUF = ((((temp%10000)%1000)%100)/10)+0x30;
+  	  	while (( UCA1STAT & UCBUSY ));
+  	  	UCA1TXBUF = ((((temp%10000)%1000)%100)%10)+0x30;
+  	  	while (( UCA1STAT & UCBUSY ));
+  	  	
+//  	  	temp = ((uint16_t)sd_buffer[i+3]) | (((uint16_t)sd_buffer[i+2]) << 8);
+//		
+//		UCA1TXBUF = (temp/10000)+0x30;
+//  	  	while (( UCA1STAT & UCBUSY ));
+//  	  	UCA1TXBUF = ((temp%10000)/1000)+0x30;
+//  	  	while (( UCA1STAT & UCBUSY ));
+//  	  	UCA1TXBUF = (((temp%10000)%1000)/100)+0x30;
+//  	  	while (( UCA1STAT & UCBUSY ));
+//		UCA1TXBUF = ((((temp%10000)%1000)%100)/10)+0x30;
+//  	  	while (( UCA1STAT & UCBUSY ));
+//  	  	UCA1TXBUF = ((((temp%10000)%1000)%100)%10)+0x30;
+//  	  	while (( UCA1STAT & UCBUSY ));
+//  	  	
+//  	  	temp = ((uint16_t)sd_buffer[i+5]) | (((uint16_t)sd_buffer[i+4]) << 8);
+//		
+//		UCA1TXBUF = (temp/10000)+0x30;
+//  	  	while (( UCA1STAT & UCBUSY ));
+//  	  	UCA1TXBUF = ((temp%10000)/1000)+0x30;
+//  	  	while (( UCA1STAT & UCBUSY ));
+//  	  	UCA1TXBUF = (((temp%10000)%1000)/100)+0x30;
+//  	  	while (( UCA1STAT & UCBUSY ));
+//		UCA1TXBUF = ((((temp%10000)%1000)%100)/10)+0x30;
+//  	  	while (( UCA1STAT & UCBUSY ));
+//  	  	UCA1TXBUF = ((((temp%10000)%1000)%100)%10)+0x30;
+//  	  	while (( UCA1STAT & UCBUSY ));
+  	  	
+//  	  	UCA1TXBUF = (sd_buffer[i+6]+0x30);
+//  	  	while (( UCA1STAT & UCBUSY ));
+	}
+	UCA1TXBUF = '\n';
+  	while (( UCA1STAT & UCBUSY ));
+  	UCA1TXBUF = '\r';
+  	while (( UCA1STAT & UCBUSY ));
+  	
+	P1OUT &= ~0x10 ; //SIO2 Low
+	
+	
+}

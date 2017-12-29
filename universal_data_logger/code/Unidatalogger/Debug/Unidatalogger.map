@@ -1,0 +1,1099 @@
+******************************************************************************
+                  MSP430 Linker PC v3.3.0                      
+******************************************************************************
+>> Linked Wed Nov 06 08:35:49 2013
+
+OUTPUT FILE NAME:   <Unidatalogger.out>
+ENTRY POINT SYMBOL: "_c_int00"  address: 000033f0
+
+
+MEMORY CONFIGURATION
+
+         name            origin    length      used     unused   attr    fill
+----------------------  --------  ---------  --------  --------  ----  --------
+  SFR                   00000000   00000010  00000000  00000010  RWIX
+  PERIPHERALS_8BIT      00000010   000000f0  00000000  000000f0  RWIX
+  PERIPHERALS_16BIT     00000100   00000100  00000000  00000100  RWIX
+  INFOD                 00001000   00000040  00000000  00000040  RWIX
+  INFOC                 00001040   00000040  00000000  00000040  RWIX
+  INFOB                 00001080   00000040  00000000  00000040  RWIX
+  INFOA                 000010c0   00000040  00000000  00000040  RWIX
+  RAM                   00001100   00002000  000003ee  00001c12  RWIX
+  FLASH                 00003100   0000cebe  00008dda  000040e4  RWIX
+  INT00                 0000ffc0   00000002  00000000  00000002  RWIX
+  INT01                 0000ffc2   00000002  00000000  00000002  RWIX
+  INT02                 0000ffc4   00000002  00000000  00000002  RWIX
+  INT03                 0000ffc6   00000002  00000000  00000002  RWIX
+  INT04                 0000ffc8   00000002  00000000  00000002  RWIX
+  INT05                 0000ffca   00000002  00000000  00000002  RWIX
+  INT06                 0000ffcc   00000002  00000000  00000002  RWIX
+  INT07                 0000ffce   00000002  00000000  00000002  RWIX
+  INT08                 0000ffd0   00000002  00000000  00000002  RWIX
+  INT09                 0000ffd2   00000002  00000000  00000002  RWIX
+  INT10                 0000ffd4   00000002  00000000  00000002  RWIX
+  INT11                 0000ffd6   00000002  00000000  00000002  RWIX
+  INT12                 0000ffd8   00000002  00000000  00000002  RWIX
+  INT13                 0000ffda   00000002  00000000  00000002  RWIX
+  INT14                 0000ffdc   00000002  00000000  00000002  RWIX
+  INT15                 0000ffde   00000002  00000000  00000002  RWIX
+  INT16                 0000ffe0   00000002  00000000  00000002  RWIX
+  INT17                 0000ffe2   00000002  00000002  00000000  RWIX
+  INT18                 0000ffe4   00000002  00000000  00000002  RWIX
+  INT19                 0000ffe6   00000002  00000000  00000002  RWIX
+  INT20                 0000ffe8   00000002  00000000  00000002  RWIX
+  INT21                 0000ffea   00000002  00000002  00000000  RWIX
+  INT22                 0000ffec   00000002  00000002  00000000  RWIX
+  INT23                 0000ffee   00000002  00000002  00000000  RWIX
+  INT24                 0000fff0   00000002  00000000  00000002  RWIX
+  INT25                 0000fff2   00000002  00000000  00000002  RWIX
+  INT26                 0000fff4   00000002  00000000  00000002  RWIX
+  INT27                 0000fff6   00000002  00000000  00000002  RWIX
+  INT28                 0000fff8   00000002  00000000  00000002  RWIX
+  INT29                 0000fffa   00000002  00000000  00000002  RWIX
+  INT30                 0000fffc   00000002  00000000  00000002  RWIX
+  RESET                 0000fffe   00000002  00000002  00000000  RWIX
+  FLASH2                00010000   00010000  00000000  00010000  RWIX
+
+
+SECTION ALLOCATION MAP
+
+ output                                  attributes/
+section   page    origin      length       input sections
+--------  ----  ----------  ----------   ----------------
+.pinit     0    00003100    00000000     UNINITIALIZED
+
+.bss       0    00001100    0000039e     UNINITIALIZED
+                  00001100    0000021e     adc.obj (.bss)
+                  0000131e    000000b6     display(new).obj (.bss)
+                  000013d4    0000004c     LCD.obj (.bss)
+                  00001420    0000003c     Unidatalogger.obj (.bss)
+                  0000145c    0000001c     shift_data.obj (.bss)
+                  00001478    00000010     RTC.obj (.bss)
+                  00001488    00000008     rts430x.lib : _lock.obj (.bss)
+                  00001490    00000008                 : boot.obj (.bss)
+                  00001498    00000006     TI_USCI_I2C_master.obj (.bss)
+
+.stack     0    000030b0    00000050     UNINITIALIZED
+                  000030b0    00000002     rts430x.lib : boot.obj (.stack)
+                  000030b2    0000004e     --HOLE--
+
+.cinit     0    00003100    00000222     
+                  00003100    00000116     display(new).obj (.cinit)
+                  00003216    00000068     LCD.obj (.cinit)
+                  0000327e    0000003a     adc.obj (.cinit)
+                  000032b8    00000039     Unidatalogger.obj (.cinit)
+                  000032f1    00000001     --HOLE-- [fill = 0]
+                  000032f2    00000018     shift_data.obj (.cinit)
+                  0000330a    00000016     RTC.obj (.cinit)
+                  00003320    00000002     --HOLE-- [fill = 0]
+
+.text:_isr 
+*          0    00003322    00000116     
+                  00003322    00000074     adc.obj (.text:_isr:ADC12ISR)
+                  00003396    0000005a     TI_USCI_I2C_master.obj (.text:_isr:USCIAB0TX_ISR)
+                  000033f0    0000002a     rts430x.lib : boot.obj (.text:_isr:_c_int00_noexit)
+                  0000341a    00000010     TI_USCI_I2C_master.obj (.text:_isr:USCIAB0RX_ISR)
+                  0000342a    0000000e     UART.obj (.text:_isr:USCI1RX_ISR)
+
+.text      0    00003438    00008132     
+                  00003438    000023e6     adc.obj (.text:dispattern)
+                  0000581e    000021c6     display(new).obj (.text:Display)
+                  000079e4    000007d2     adc.obj (.text:crRTD)
+                  000081b6    000005d6     display(new).obj (.text:display_val_with_dp)
+                  0000878c    0000056a     adc.obj (.text:cr420)
+                  00008cf6    00000566     adc.obj (.text:crthermo)
+                  0000925c    0000055a     adc.obj (.text:adc_reading)
+                  000097b6    0000033e     adc.obj (.text:switching)
+                  00009af4    00000272     display(new).obj (.text:display)
+                  00009d66    00000270     display(new).obj (.text:display_negative_with_dp)
+                  00009fd6    00000252     display(new).obj (.text:Display_units)
+                  0000a228    000001d2     RTC.obj (.text:read_RTC)
+                  0000a3fa    00000140     adc.obj (.text:ADS1248CargaInicial)
+                  0000a53a    00000130     rts430x.lib : fs_add.obj (.text)
+                  0000a66a    000000c8     display(new).obj (.text:channel_select)
+                  0000a732    000000b6     rts430x.lib : fs_mpy.obj (.text)
+                  0000a7e8    000000b4     LCD.obj (.text:UpdateLcd)
+                  0000a89c    000000b4     display(new).obj (.text:led_display)
+                  0000a950    000000b2     adc.obj (.text:ADS1248WriteRegister)
+                  0000aa02    000000ac     adc.obj (.text:ADS1248ReadRegister)
+                  0000aaae    000000a8     adc.obj (.text:rtdcurrsel)
+                  0000ab56    000000a0     shift_data.obj (.text:channel_sel)
+                  0000abf6    00000096     LCD.obj (.text:LcdInit)
+                  0000ac8c    00000094     adc.obj (.text:ADS1248ReadData)
+                  0000ad20    0000007e     rts430x.lib : fs_tol.obj (.text)
+                  0000ad9e    00000060     Unidatalogger.obj (.text:main)
+                  0000adfe    00000058     rts430x.lib : div32u.obj (.text)
+                  0000ae56    00000056     LCD.obj (.text:LcdPutCh_8bit)
+                  0000aeac    00000056     LCD.obj (.text:LcdSendCmd_8bit)
+                  0000af02    00000054     port_setup.obj (.text:Init_Ports)
+                  0000af56    0000004a     adc.obj (.text:ADS1248Stop)
+                  0000afa0    0000004a     TI_USCI_I2C_master.obj (.text:TI_USCI_I2C_receive)
+                  0000afea    0000004a     rts430x.lib : fs_cmp.obj (.text)
+                  0000b034    0000004a                 : fs_ltof.obj (.text)
+                  0000b07e    00000046                 : autoinit.obj (.text:_auto_init)
+                  0000b0c4    00000046     display(new).obj (.text:checksw)
+                  0000b10a    00000046     rts430x.lib : fs_tou.obj (.text)
+                  0000b150    00000044     UART.obj (.text:Uart_Init)
+                  0000b194    00000042     RTC.obj (.text:DecimalToHex)
+                  0000b1d6    00000040     TI_USCI_I2C_master.obj (.text:TI_USCI_I2C_receiveinit)
+                  0000b216    00000040     TI_USCI_I2C_master.obj (.text:TI_USCI_I2C_transmitinit)
+                  0000b256    00000040     rts430x.lib : div32s.obj (.text)
+                  0000b296    0000003e                 : lsl32.obj (.text:l_lsl_const)
+                  0000b2d4    0000003e     RTC.obj (.text:write_RTC)
+                  0000b312    00000038     adc.obj (.text:ADC_Setup)
+                  0000b34a    00000038     LCD.obj (.text:delay_ms)
+                  0000b382    00000036     adc.obj (.text:ADS1248SendResetCommand)
+                  0000b3b8    00000030     display(new).obj (.text:Send_str)
+                  0000b3e8    00000030     rts430x.lib : mult32_hw.obj (.text)
+                  0000b418    0000002c     adc.obj (.text:ADS1248SPIInit)
+                  0000b444    0000002c     rts430x.lib : div16s.obj (.text)
+                  0000b470    00000024                 : fs_utof.obj (.text)
+                  0000b494    0000001e     adc.obj (.text:ADS1248AssertCS)
+                  0000b4b2    0000001e     TI_USCI_I2C_master.obj (.text:TI_USCI_I2C_transmit)
+                  0000b4d0    00000018     adc.obj (.text:ADS1248INIT)
+                  0000b4e8    00000016     rts430x.lib : div16u.obj (.text)
+                  0000b4fe    00000016                 : mult16_hw.obj (.text)
+                  0000b514    00000014                 : memset.obj (.text:memset)
+                  0000b528    00000012     Unidatalogger.obj (.text:Clock_Init)
+                  0000b53a    00000012     rts430x.lib : memcpy.obj (.text:memcpy)
+                  0000b54c    0000000a     TI_USCI_I2C_master.obj (.text:TI_USCI_I2C_notready)
+                  0000b556    0000000a     rts430x.lib : lsl16.obj (.text)
+                  0000b560    00000004                 : pre_init.obj (.text:_system_pre_init)
+                  0000b564    00000004                 : exit.obj (.text:abort)
+                  0000b568    00000002                 : _lock.obj (.text:_nop)
+
+.const     0    0000b56a    00000970     
+                  0000b56a    000006f6     display(new).obj (.const:.string)
+                  0000bc60    00000276     adc.obj (.const:.string)
+                  0000bed6    00000004     RTC.obj (.const:.string)
+
+.int17     0    0000ffe2    00000002     
+                  0000ffe2    00000002     UART.obj (.int17)
+
+.int21     0    0000ffea    00000002     
+                  0000ffea    00000002     adc.obj (.int21)
+
+.int22     0    0000ffec    00000002     
+                  0000ffec    00000002     TI_USCI_I2C_master.obj (.int22)
+
+.int23     0    0000ffee    00000002     
+                  0000ffee    00000002     TI_USCI_I2C_master.obj (.int23)
+
+.reset     0    0000fffe    00000002     
+                  0000fffe    00000002     rts430x.lib : boot.obj (.reset)
+
+
+GLOBAL SYMBOLS: SORTED ALPHABETICALLY BY Name 
+
+address    name
+--------   ----
+00001100   .bss
+ffffffff   .text
+000001a0   ADC12CTL0
+000001a2   ADC12CTL1
+000001a6   ADC12IE
+000001a4   ADC12IFG
+00003322   ADC12ISR
+000001a8   ADC12IV
+00000080   ADC12MCTL0
+00000081   ADC12MCTL1
+0000008a   ADC12MCTL10
+0000008b   ADC12MCTL11
+0000008c   ADC12MCTL12
+0000008d   ADC12MCTL13
+0000008e   ADC12MCTL14
+0000008f   ADC12MCTL15
+00000082   ADC12MCTL2
+00000083   ADC12MCTL3
+00000084   ADC12MCTL4
+00000085   ADC12MCTL5
+00000086   ADC12MCTL6
+00000087   ADC12MCTL7
+00000088   ADC12MCTL8
+00000089   ADC12MCTL9
+00000140   ADC12MEM0
+00000142   ADC12MEM1
+00000154   ADC12MEM10
+00000156   ADC12MEM11
+00000158   ADC12MEM12
+0000015a   ADC12MEM13
+0000015c   ADC12MEM14
+0000015e   ADC12MEM15
+00000144   ADC12MEM2
+00000146   ADC12MEM3
+00000148   ADC12MEM4
+0000014a   ADC12MEM5
+0000014c   ADC12MEM6
+0000014e   ADC12MEM7
+00000150   ADC12MEM8
+00000152   ADC12MEM9
+0000b312   ADC_Setup
+00001132   ADCresult
+0000b494   ADS1248AssertCS
+0000a3fa   ADS1248CargaInicial
+0000b4d0   ADS1248INIT
+0000ac8c   ADS1248ReadData
+0000aa02   ADS1248ReadRegister
+0000b418   ADS1248SPIInit
+0000b382   ADS1248SendResetCommand
+0000af56   ADS1248Stop
+0000a950   ADS1248WriteRegister
+00000057   BCSCTL1
+00000058   BCSCTL2
+00000053   BCSCTL3
+0000b564   C$$EXIT
+00000059   CACTL1
+0000005a   CACTL2
+000010fb   CALBC1_12MHZ
+000010f9   CALBC1_16MHZ
+000010ff   CALBC1_1MHZ
+000010fd   CALBC1_8MHZ
+000010fa   CALDCO_12MHZ
+000010f8   CALDCO_16MHZ
+000010fe   CALDCO_1MHZ
+000010fc   CALDCO_8MHZ
+0000005b   CAPD
+0000b528   Clock_Init
+000001c0   DAC12_0CTL
+000001c8   DAC12_0DAT
+000001c2   DAC12_1CTL
+000001ca   DAC12_1DAT
+00000056   DCOCTL
+000001d0   DMA0CTL
+000001d6   DMA0DA
+000001d6   DMA0DAL
+000001d2   DMA0SA
+000001d2   DMA0SAL
+000001da   DMA0SZ
+000001dc   DMA1CTL
+000001e2   DMA1DA
+000001e2   DMA1DAL
+000001de   DMA1SA
+000001de   DMA1SAL
+000001e6   DMA1SZ
+000001e8   DMA2CTL
+000001ee   DMA2DA
+000001ee   DMA2DAL
+000001ea   DMA2SA
+000001ea   DMA2SAL
+000001f2   DMA2SZ
+00000122   DMACTL0
+00000124   DMACTL1
+00000126   DMAIV
+00001458   Date
+00001457   Day
+0000b194   DecimalToHex
+000013b6   DeviceId
+0000581e   Display
+00009fd6   Display_units
+00000128   FCTL1
+0000012a   FCTL2
+0000012c   FCTL3
+000001be   FCTL4
+00001456   Hours
+00000000   IE1
+00000001   IE2
+00000002   IFG1
+00000003   IFG2
+0000b556   I_LSL
+0000af02   Init_Ports
+0000b2ce   L_LSL_1
+0000b2aa   L_LSL_10
+0000b2a6   L_LSL_11
+0000b2a2   L_LSL_12
+0000b29e   L_LSL_13
+0000b29a   L_LSL_14
+0000b296   L_LSL_15
+0000b2ca   L_LSL_2
+0000b2c6   L_LSL_3
+0000b2c2   L_LSL_4
+0000b2be   L_LSL_5
+0000b2ba   L_LSL_6
+0000b2b6   L_LSL_7
+0000b2b2   L_LSL_8
+0000b2ae   L_LSL_9
+0000abf6   LcdInit
+0000ae56   LcdPutCh_8bit
+0000aeac   LcdSendCmd_8bit
+00000134   MAC
+00000136   MACS
+00000130   MPY
+00000132   MPYS
+00001455   Minutes
+000013c8   Modbus_baudrate
+000013c4   Modbus_parity
+000013c5   Modbus_stopbits
+00001459   Month
+0000137f   NegativeFlag
+00000138   OP2
+0000136e   OneTimeLedOn
+00000022   P1DIR
+00000025   P1IE
+00000024   P1IES
+00000023   P1IFG
+00000020   P1IN
+00000021   P1OUT
+00000027   P1REN
+00000026   P1SEL
+0000002a   P2DIR
+0000002d   P2IE
+0000002c   P2IES
+0000002b   P2IFG
+00000028   P2IN
+00000029   P2OUT
+0000002f   P2REN
+0000002e   P2SEL
+0000001a   P3DIR
+00000018   P3IN
+00000019   P3OUT
+00000010   P3REN
+0000001b   P3SEL
+0000001e   P4DIR
+0000001c   P4IN
+0000001d   P4OUT
+00000011   P4REN
+0000001f   P4SEL
+00000032   P5DIR
+00000030   P5IN
+00000031   P5OUT
+00000012   P5REN
+00000033   P5SEL
+00000036   P6DIR
+00000034   P6IN
+00000035   P6OUT
+00000013   P6REN
+00000037   P6SEL
+0000003c   P7DIR
+00000038   P7IN
+0000003a   P7OUT
+00000014   P7REN
+0000003e   P7SEL
+0000003d   P8DIR
+00000039   P8IN
+0000003b   P8OUT
+00000015   P8REN
+0000003f   P8SEL
+0000003c   PADIR
+00000038   PAIN
+0000003a   PAOUT
+00000014   PAREN
+0000003e   PASEL
+0000013c   RESHI
+0000013a   RESLO
+0000013e   SUMEXT
+00000055   SVSCTL
+00001454   Seconds
+0000b3b8   Send_str
+0000139c   StartAddrs
+00001381   StartDownloadFlag
+000013a0   StopAddrs
+00000172   TACCR0
+00000174   TACCR1
+00000176   TACCR2
+00000162   TACCTL0
+00000164   TACCTL1
+00000166   TACCTL2
+00000160   TACTL
+0000012e   TAIV
+00000170   TAR
+00000192   TBCCR0
+00000194   TBCCR1
+00000196   TBCCR2
+00000198   TBCCR3
+0000019a   TBCCR4
+0000019c   TBCCR5
+0000019e   TBCCR6
+00000182   TBCCTL0
+00000184   TBCCTL1
+00000186   TBCCTL2
+00000188   TBCCTL3
+0000018a   TBCCTL4
+0000018c   TBCCTL5
+0000018e   TBCCTL6
+00000180   TBCTL
+0000011e   TBIV
+00000190   TBR
+0000b54c   TI_USCI_I2C_notready
+0000afa0   TI_USCI_I2C_receive
+0000b1d6   TI_USCI_I2C_receiveinit
+0000b4b2   TI_USCI_I2C_transmit
+0000b216   TI_USCI_I2C_transmitinit
+0000149a   TI_receive_field
+0000149c   TI_transmit_field
+000010db   TLV_ADC12_1_LEN
+000010da   TLV_ADC12_1_TAG
+000010c0   TLV_CHECKSUM
+000010f7   TLV_DCO_30_LEN
+000010f6   TLV_DCO_30_TAG
+00001452   Time_Format
+00001453   Time_Stamp
+00000006   UC1IE
+00000007   UC1IFG
+0000005d   UCA0ABCTL
+00000062   UCA0BR0
+00000063   UCA0BR1
+00000060   UCA0CTL0
+00000061   UCA0CTL1
+0000005f   UCA0IRRCTL
+0000005e   UCA0IRTCTL
+00000064   UCA0MCTL
+00000066   UCA0RXBUF
+00000065   UCA0STAT
+00000067   UCA0TXBUF
+000000cd   UCA1ABCTL
+000000d2   UCA1BR0
+000000d3   UCA1BR1
+000000d0   UCA1CTL0
+000000d1   UCA1CTL1
+000000cf   UCA1IRRCTL
+000000ce   UCA1IRTCTL
+000000d4   UCA1MCTL
+000000d6   UCA1RXBUF
+000000d5   UCA1STAT
+000000d7   UCA1TXBUF
+0000006a   UCB0BR0
+0000006b   UCB0BR1
+00000068   UCB0CTL0
+00000069   UCB0CTL1
+0000006c   UCB0I2CIE
+00000118   UCB0I2COA
+0000011a   UCB0I2CSA
+0000006e   UCB0RXBUF
+0000006d   UCB0STAT
+0000006f   UCB0TXBUF
+000000da   UCB1BR0
+000000db   UCB1BR1
+000000d8   UCB1CTL0
+000000d9   UCB1CTL1
+000000dc   UCB1I2CIE
+0000017c   UCB1I2COA
+0000017e   UCB1I2CSA
+000000de   UCB1RXBUF
+000000dd   UCB1STAT
+000000df   UCB1TXBUF
+0000342a   USCI1RX_ISR
+0000341a   USCIAB0RX_ISR
+00003396   USCIAB0TX_ISR
+0000b150   Uart_Init
+0000a7e8   UpdateLcd
+00000120   WDTCTL
+0000145a   Year
+00003100   __STACK_END
+00000050   __STACK_SIZE
+00000001   __TI_args_main
+00000001   __TI_auto_init
+00000001   __TI_exit
+ffffffff   __binit__
+00001100   __bss__
+ffffffff   __c_args__
+00003100   __cinit__
+0000b444   __divi
+0000b256   __divli
+0000b4e8   __divu
+0000adfe   __divul
+0000149e   __end__
+ffffffff   __etext__
+0000a540   __fs_add
+0000afea   __fs_cmp
+0000b034   __fs_ltof
+0000a732   __fs_mpy
+0000a53a   __fs_sub
+0000ad20   __fs_tol
+0000b10a   __fs_tou
+0000b470   __fs_utof
+0000b4fe   __mpyi_hw
+0000b3e8   __mpyl_hw
+ffffffff   __pinit__
+0000b444   __remi
+0000b256   __remli
+0000b4e8   __remu
+0000adfe   __remul
+ffffffff   __text__
+0000b07e   _auto_init
+000033f0   _c_int00
+000033f0   _c_int00_noexit
+00001490   _cleanup_ptr
+00001494   _dtors_ptr
+00001488   _lock
+0000b568   _nop
+0000fffe   _reset_vector
+000030b0   _stack
+0000b560   _system_pre_init
+0000148c   _unlock
+0000b564   abort
+00001423   active
+00001124   adc_msg
+0000925c   adc_reading
+000013ac   alldisable
+0000138e   ambient_flag
+0000138d   ambient_temp
+0000144c   array
+00001366   bcd
+ffffffff   binit
+000013e4   buffer
+00001498   byteCtr
+000013ae   c
+0000137a   cal_para
+000013a4   channel
+000013c6   channel_no
+0000ab56   channel_sel
+0000a66a   channel_select
+00001122   chansel
+0000b0c4   checksw
+0000146e   chipselect_stat
+00003100   cinit
+0000137c   counter
+00001130   counts
+0000878c   cr420
+000079e4   crRTD
+00008cf6   crthermo
+0000147e   data_read
+00001478   data_write
+0000b34a   delay_ms
+0000138c   dispat
+00003438   dispattern
+00009af4   display
+00001380   display_flag
+00009d66   display_negative_with_dp
+000081b6   display_val_with_dp
+00001128   dpdata
+0000149e   end
+ffffffff   etext
+00001373   exit_flags
+00001374   exit_flags_1
+00001376   exit_flags_factory
+000011fe   f20chi
+000011de   f20clow
+0000125e   f20hi
+0000123e   f20low
+0000121e   f20slope
+0000145c   first_led
+00001466   firstch_data
+00001462   forth_led
+0000146c   fourthch_data
+00001420   i
+00001377   indication_flags
+00001378   indication_flags_2
+00001379   indication_flags_3
+000013dc   its
+000013d4   its1
+000013d8   its2
+0000112c   j
+0000131e   k
+0000a89c   led_display
+0000ad9e   main
+0000b53a   memcpy
+0000137e   memory_used
+0000b514   memset
+0000137b   menu_timeout
+0000136f   message
+00001370   message_cntr
+00001371   mode_flags
+00001372   mode_flags_1
+00001375   mode_flags_1_temp
+00001396   new_password
+00001404   open
+00001394   password
+ffffffff   pinit
+0000137d   pos_cntr
+000013f4   programmar
+0000a228   read_RTC
+00001100   regreadads
+00001112   regwriteads
+00001464   relay_data
+000013c0   relay_delay
+00001398   relay_flags
+000013bc   relay_logic
+000013b8   relay_set
+00001428   ret
+00001382   rtcHexValue
+0000115e   rtdchi
+0000113e   rtdclow
+0000aaae   rtdcurrsel
+000011be   rtdhi
+0000119e   rtdlow
+0000117e   rtdslope
+00001134   scan_time
+0000145e   secnd_led
+00001468   secondch_data
+00001412   shot
+00001320   str
+00001422   sw
+000097b6   switching
+0000113a   temp
+00001136   temp1
+0000146a   thirdch_data
+00001110   thm
+0000129e   thmchi
+0000127e   thmclow
+000012fe   thmhi
+000012de   thmlow
+000012be   thmslope
+00001460   thrd_led
+0000142a   time
+00001424   tmp
+00001384   unit
+0000142c   value
+00001390   warm_time1
+00001392   warm_time_set
+0000b2d4   write_RTC
+0000112e   z
+
+
+GLOBAL SYMBOLS: SORTED BY Symbol Address 
+
+address    name
+--------   ----
+00000000   IE1
+00000001   IE2
+00000001   __TI_args_main
+00000001   __TI_auto_init
+00000001   __TI_exit
+00000002   IFG1
+00000003   IFG2
+00000006   UC1IE
+00000007   UC1IFG
+00000010   P3REN
+00000011   P4REN
+00000012   P5REN
+00000013   P6REN
+00000014   P7REN
+00000014   PAREN
+00000015   P8REN
+00000018   P3IN
+00000019   P3OUT
+0000001a   P3DIR
+0000001b   P3SEL
+0000001c   P4IN
+0000001d   P4OUT
+0000001e   P4DIR
+0000001f   P4SEL
+00000020   P1IN
+00000021   P1OUT
+00000022   P1DIR
+00000023   P1IFG
+00000024   P1IES
+00000025   P1IE
+00000026   P1SEL
+00000027   P1REN
+00000028   P2IN
+00000029   P2OUT
+0000002a   P2DIR
+0000002b   P2IFG
+0000002c   P2IES
+0000002d   P2IE
+0000002e   P2SEL
+0000002f   P2REN
+00000030   P5IN
+00000031   P5OUT
+00000032   P5DIR
+00000033   P5SEL
+00000034   P6IN
+00000035   P6OUT
+00000036   P6DIR
+00000037   P6SEL
+00000038   P7IN
+00000038   PAIN
+00000039   P8IN
+0000003a   P7OUT
+0000003a   PAOUT
+0000003b   P8OUT
+0000003c   P7DIR
+0000003c   PADIR
+0000003d   P8DIR
+0000003e   P7SEL
+0000003e   PASEL
+0000003f   P8SEL
+00000050   __STACK_SIZE
+00000053   BCSCTL3
+00000055   SVSCTL
+00000056   DCOCTL
+00000057   BCSCTL1
+00000058   BCSCTL2
+00000059   CACTL1
+0000005a   CACTL2
+0000005b   CAPD
+0000005d   UCA0ABCTL
+0000005e   UCA0IRTCTL
+0000005f   UCA0IRRCTL
+00000060   UCA0CTL0
+00000061   UCA0CTL1
+00000062   UCA0BR0
+00000063   UCA0BR1
+00000064   UCA0MCTL
+00000065   UCA0STAT
+00000066   UCA0RXBUF
+00000067   UCA0TXBUF
+00000068   UCB0CTL0
+00000069   UCB0CTL1
+0000006a   UCB0BR0
+0000006b   UCB0BR1
+0000006c   UCB0I2CIE
+0000006d   UCB0STAT
+0000006e   UCB0RXBUF
+0000006f   UCB0TXBUF
+00000080   ADC12MCTL0
+00000081   ADC12MCTL1
+00000082   ADC12MCTL2
+00000083   ADC12MCTL3
+00000084   ADC12MCTL4
+00000085   ADC12MCTL5
+00000086   ADC12MCTL6
+00000087   ADC12MCTL7
+00000088   ADC12MCTL8
+00000089   ADC12MCTL9
+0000008a   ADC12MCTL10
+0000008b   ADC12MCTL11
+0000008c   ADC12MCTL12
+0000008d   ADC12MCTL13
+0000008e   ADC12MCTL14
+0000008f   ADC12MCTL15
+000000cd   UCA1ABCTL
+000000ce   UCA1IRTCTL
+000000cf   UCA1IRRCTL
+000000d0   UCA1CTL0
+000000d1   UCA1CTL1
+000000d2   UCA1BR0
+000000d3   UCA1BR1
+000000d4   UCA1MCTL
+000000d5   UCA1STAT
+000000d6   UCA1RXBUF
+000000d7   UCA1TXBUF
+000000d8   UCB1CTL0
+000000d9   UCB1CTL1
+000000da   UCB1BR0
+000000db   UCB1BR1
+000000dc   UCB1I2CIE
+000000dd   UCB1STAT
+000000de   UCB1RXBUF
+000000df   UCB1TXBUF
+00000118   UCB0I2COA
+0000011a   UCB0I2CSA
+0000011e   TBIV
+00000120   WDTCTL
+00000122   DMACTL0
+00000124   DMACTL1
+00000126   DMAIV
+00000128   FCTL1
+0000012a   FCTL2
+0000012c   FCTL3
+0000012e   TAIV
+00000130   MPY
+00000132   MPYS
+00000134   MAC
+00000136   MACS
+00000138   OP2
+0000013a   RESLO
+0000013c   RESHI
+0000013e   SUMEXT
+00000140   ADC12MEM0
+00000142   ADC12MEM1
+00000144   ADC12MEM2
+00000146   ADC12MEM3
+00000148   ADC12MEM4
+0000014a   ADC12MEM5
+0000014c   ADC12MEM6
+0000014e   ADC12MEM7
+00000150   ADC12MEM8
+00000152   ADC12MEM9
+00000154   ADC12MEM10
+00000156   ADC12MEM11
+00000158   ADC12MEM12
+0000015a   ADC12MEM13
+0000015c   ADC12MEM14
+0000015e   ADC12MEM15
+00000160   TACTL
+00000162   TACCTL0
+00000164   TACCTL1
+00000166   TACCTL2
+00000170   TAR
+00000172   TACCR0
+00000174   TACCR1
+00000176   TACCR2
+0000017c   UCB1I2COA
+0000017e   UCB1I2CSA
+00000180   TBCTL
+00000182   TBCCTL0
+00000184   TBCCTL1
+00000186   TBCCTL2
+00000188   TBCCTL3
+0000018a   TBCCTL4
+0000018c   TBCCTL5
+0000018e   TBCCTL6
+00000190   TBR
+00000192   TBCCR0
+00000194   TBCCR1
+00000196   TBCCR2
+00000198   TBCCR3
+0000019a   TBCCR4
+0000019c   TBCCR5
+0000019e   TBCCR6
+000001a0   ADC12CTL0
+000001a2   ADC12CTL1
+000001a4   ADC12IFG
+000001a6   ADC12IE
+000001a8   ADC12IV
+000001be   FCTL4
+000001c0   DAC12_0CTL
+000001c2   DAC12_1CTL
+000001c8   DAC12_0DAT
+000001ca   DAC12_1DAT
+000001d0   DMA0CTL
+000001d2   DMA0SA
+000001d2   DMA0SAL
+000001d6   DMA0DA
+000001d6   DMA0DAL
+000001da   DMA0SZ
+000001dc   DMA1CTL
+000001de   DMA1SA
+000001de   DMA1SAL
+000001e2   DMA1DA
+000001e2   DMA1DAL
+000001e6   DMA1SZ
+000001e8   DMA2CTL
+000001ea   DMA2SA
+000001ea   DMA2SAL
+000001ee   DMA2DA
+000001ee   DMA2DAL
+000001f2   DMA2SZ
+000010c0   TLV_CHECKSUM
+000010da   TLV_ADC12_1_TAG
+000010db   TLV_ADC12_1_LEN
+000010f6   TLV_DCO_30_TAG
+000010f7   TLV_DCO_30_LEN
+000010f8   CALDCO_16MHZ
+000010f9   CALBC1_16MHZ
+000010fa   CALDCO_12MHZ
+000010fb   CALBC1_12MHZ
+000010fc   CALDCO_8MHZ
+000010fd   CALBC1_8MHZ
+000010fe   CALDCO_1MHZ
+000010ff   CALBC1_1MHZ
+00001100   .bss
+00001100   __bss__
+00001100   regreadads
+00001110   thm
+00001112   regwriteads
+00001122   chansel
+00001124   adc_msg
+00001128   dpdata
+0000112c   j
+0000112e   z
+00001130   counts
+00001132   ADCresult
+00001134   scan_time
+00001136   temp1
+0000113a   temp
+0000113e   rtdclow
+0000115e   rtdchi
+0000117e   rtdslope
+0000119e   rtdlow
+000011be   rtdhi
+000011de   f20clow
+000011fe   f20chi
+0000121e   f20slope
+0000123e   f20low
+0000125e   f20hi
+0000127e   thmclow
+0000129e   thmchi
+000012be   thmslope
+000012de   thmlow
+000012fe   thmhi
+0000131e   k
+00001320   str
+00001366   bcd
+0000136e   OneTimeLedOn
+0000136f   message
+00001370   message_cntr
+00001371   mode_flags
+00001372   mode_flags_1
+00001373   exit_flags
+00001374   exit_flags_1
+00001375   mode_flags_1_temp
+00001376   exit_flags_factory
+00001377   indication_flags
+00001378   indication_flags_2
+00001379   indication_flags_3
+0000137a   cal_para
+0000137b   menu_timeout
+0000137c   counter
+0000137d   pos_cntr
+0000137e   memory_used
+0000137f   NegativeFlag
+00001380   display_flag
+00001381   StartDownloadFlag
+00001382   rtcHexValue
+00001384   unit
+0000138c   dispat
+0000138d   ambient_temp
+0000138e   ambient_flag
+00001390   warm_time1
+00001392   warm_time_set
+00001394   password
+00001396   new_password
+00001398   relay_flags
+0000139c   StartAddrs
+000013a0   StopAddrs
+000013a4   channel
+000013ac   alldisable
+000013ae   c
+000013b6   DeviceId
+000013b8   relay_set
+000013bc   relay_logic
+000013c0   relay_delay
+000013c4   Modbus_parity
+000013c5   Modbus_stopbits
+000013c6   channel_no
+000013c8   Modbus_baudrate
+000013d4   its1
+000013d8   its2
+000013dc   its
+000013e4   buffer
+000013f4   programmar
+00001404   open
+00001412   shot
+00001420   i
+00001422   sw
+00001423   active
+00001424   tmp
+00001428   ret
+0000142a   time
+0000142c   value
+0000144c   array
+00001452   Time_Format
+00001453   Time_Stamp
+00001454   Seconds
+00001455   Minutes
+00001456   Hours
+00001457   Day
+00001458   Date
+00001459   Month
+0000145a   Year
+0000145c   first_led
+0000145e   secnd_led
+00001460   thrd_led
+00001462   forth_led
+00001464   relay_data
+00001466   firstch_data
+00001468   secondch_data
+0000146a   thirdch_data
+0000146c   fourthch_data
+0000146e   chipselect_stat
+00001478   data_write
+0000147e   data_read
+00001488   _lock
+0000148c   _unlock
+00001490   _cleanup_ptr
+00001494   _dtors_ptr
+00001498   byteCtr
+0000149a   TI_receive_field
+0000149c   TI_transmit_field
+0000149e   __end__
+0000149e   end
+000030b0   _stack
+00003100   __STACK_END
+00003100   __cinit__
+00003100   cinit
+00003322   ADC12ISR
+00003396   USCIAB0TX_ISR
+000033f0   _c_int00
+000033f0   _c_int00_noexit
+0000341a   USCIAB0RX_ISR
+0000342a   USCI1RX_ISR
+00003438   dispattern
+0000581e   Display
+000079e4   crRTD
+000081b6   display_val_with_dp
+0000878c   cr420
+00008cf6   crthermo
+0000925c   adc_reading
+000097b6   switching
+00009af4   display
+00009d66   display_negative_with_dp
+00009fd6   Display_units
+0000a228   read_RTC
+0000a3fa   ADS1248CargaInicial
+0000a53a   __fs_sub
+0000a540   __fs_add
+0000a66a   channel_select
+0000a732   __fs_mpy
+0000a7e8   UpdateLcd
+0000a89c   led_display
+0000a950   ADS1248WriteRegister
+0000aa02   ADS1248ReadRegister
+0000aaae   rtdcurrsel
+0000ab56   channel_sel
+0000abf6   LcdInit
+0000ac8c   ADS1248ReadData
+0000ad20   __fs_tol
+0000ad9e   main
+0000adfe   __divul
+0000adfe   __remul
+0000ae56   LcdPutCh_8bit
+0000aeac   LcdSendCmd_8bit
+0000af02   Init_Ports
+0000af56   ADS1248Stop
+0000afa0   TI_USCI_I2C_receive
+0000afea   __fs_cmp
+0000b034   __fs_ltof
+0000b07e   _auto_init
+0000b0c4   checksw
+0000b10a   __fs_tou
+0000b150   Uart_Init
+0000b194   DecimalToHex
+0000b1d6   TI_USCI_I2C_receiveinit
+0000b216   TI_USCI_I2C_transmitinit
+0000b256   __divli
+0000b256   __remli
+0000b296   L_LSL_15
+0000b29a   L_LSL_14
+0000b29e   L_LSL_13
+0000b2a2   L_LSL_12
+0000b2a6   L_LSL_11
+0000b2aa   L_LSL_10
+0000b2ae   L_LSL_9
+0000b2b2   L_LSL_8
+0000b2b6   L_LSL_7
+0000b2ba   L_LSL_6
+0000b2be   L_LSL_5
+0000b2c2   L_LSL_4
+0000b2c6   L_LSL_3
+0000b2ca   L_LSL_2
+0000b2ce   L_LSL_1
+0000b2d4   write_RTC
+0000b312   ADC_Setup
+0000b34a   delay_ms
+0000b382   ADS1248SendResetCommand
+0000b3b8   Send_str
+0000b3e8   __mpyl_hw
+0000b418   ADS1248SPIInit
+0000b444   __divi
+0000b444   __remi
+0000b470   __fs_utof
+0000b494   ADS1248AssertCS
+0000b4b2   TI_USCI_I2C_transmit
+0000b4d0   ADS1248INIT
+0000b4e8   __divu
+0000b4e8   __remu
+0000b4fe   __mpyi_hw
+0000b514   memset
+0000b528   Clock_Init
+0000b53a   memcpy
+0000b54c   TI_USCI_I2C_notready
+0000b556   I_LSL
+0000b560   _system_pre_init
+0000b564   C$$EXIT
+0000b564   abort
+0000b568   _nop
+0000fffe   _reset_vector
+ffffffff   .text
+ffffffff   __binit__
+ffffffff   __c_args__
+ffffffff   __etext__
+ffffffff   __pinit__
+ffffffff   __text__
+ffffffff   binit
+ffffffff   etext
+ffffffff   pinit
+
+[451 symbols]

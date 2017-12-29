@@ -1,0 +1,1 @@
+"./spi.obj" "./shift_data.obj" "./portsetup.obj" "./main_pro.obj" "./lcd.obj" "./display(new).obj" "./adc.obj" -l"libc.a" "../lnk_msp430f2618.cmd" 

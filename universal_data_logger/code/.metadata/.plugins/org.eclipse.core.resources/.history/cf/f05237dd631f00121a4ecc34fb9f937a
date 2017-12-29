@@ -1,0 +1,191 @@
+#include "msp430x26x.h"
+#include "LCD.h"
+
+
+#define OSCILLATOR_FREQUENCY 12000000
+
+void UARTInit(void);
+void mSetRS485_RTSHigh ();
+void mSetRS485_RTSLow ();
+
+unsigned char UART_RX_buf[50] ;      //Receive Buffer
+unsigned char UART_TX_Buffer[50] ;   //Transmit Buffer
+unsigned char UART_rcv_count = 0; 
+unsigned char chTemp = 0;
+unsigned char timeout = 0; 
+unsigned char run_timer = 0;
+
+      
+unsigned char Uart1Buf[15];
+unsigned char Uart1RcvCount = 0; 
+unsigned char timeout1 = 0; 
+unsigned char RunTimer1 = 0;
+unsigned char Uart1TimeoutFlag;
+
+extern uint8_t rx_led_flag;
+extern unsigned char Modbus_parity;
+extern unsigned char Modbus_stopbits;
+extern uint8_t timeout_flag;
+extern unsigned long Modbus_baudrate;
+
+
+void UARTInit(void)
+{
+	  
+	  WDTCTL = WDTPW + WDTHOLD;                 // Stop WDT
+	  P3OUT &= ~(BIT4+BIT5+BIT6+BIT7);
+	  P3SEL |= 0xF0;                             // P3.4,5 = USCI_A0 TXD/RXD
+	  P1SEL |= 0x00;                             // P1.2 = SIO pin as GPIO
+	  P1DIR |= 0x14;                             // SIO pin P1.2 as output 
+	  P1OUT |= 0x00;
+	  UCA0CTL0 = 0x00;
+	  UCA0CTL1 |= UCSSEL_1;                     // CLK = ACLK
+	  
+	  
+	  UCA1CTL0 = 0x00;
+	  UCA1CTL1 |= UCSSEL_1;                     // CLK = ACLK
+	  UCA1MCTL = UCBRS1 + UCBRS0;          		// Modulation UCBRSx = 3
+
+//	  UCA1BR0 = 226; // 9600 for 12Mhz
+//	  UCA1BR1 = 0x04;
+	  UCA1BR0 = 104; // 115200 for 12Mhz
+	  UCA1BR1 = 0x00;
+	  UCA1CTL1 &= ~UCSWRST;                // **Initialize USCI state machine**
+	  UC1IE |= UCA1RXIE;                     	// Enable USCI_A1 RX interrupt
+	  
+	  switch(Modbus_parity)
+	  {
+	  	case 1:
+	  		UCA0CTL0 &= ~(0x80); //none
+	  	break;
+	  	
+	  	case 2:
+	  		UCA0CTL0 |= (0xC0); //even
+	  	break;
+	  	
+	  	case 3:
+	  		UCA0CTL0 |= (0x80); //odd
+	  		UCA0CTL0 &= ~(0x40);
+	  	break;
+	  	
+	  	default:
+	  		UCA0CTL0 &= ~(0x80); //none
+	  	break;
+	  }
+
+	  switch(Modbus_stopbits)
+	  {
+	  	case 1:
+	  		UCA0CTL0 &= ~(0x08);
+	  	break;
+	  	
+	  	case 2:
+	  		UCA0CTL0 |= (0x08);
+	  	break;
+	  	
+	  	default:
+	  		UCA0CTL0 &= ~(0x08);
+	  	break;
+	  }
+	  UCA0MCTL = UCBRS1 + UCBRS0;          				  // Modulation UCBRSx = 3
+
+	  /* for 12 Mhz */
+	  if(Modbus_baudrate == 9600)
+	  {
+	  	UCA0BR0 = ((OSCILLATOR_FREQUENCY/Modbus_baudrate) - 4*256);   // Example, (4MHz/9600)-256 = 160
+	  	UCA0BR1 = 0x04;
+	  }
+	  else if(Modbus_baudrate == 19200)
+	  {
+	  	UCA0BR0 = ((OSCILLATOR_FREQUENCY/Modbus_baudrate) - 2*256);   // Example, 4MHz/19200 = 208
+	  	UCA0BR1 = 0x02;
+	  }
+	  else if(Modbus_baudrate == 38400)
+	  {
+	  	UCA0BR0 = ((OSCILLATOR_FREQUENCY/Modbus_baudrate) - 256);   // Example, 4MHz/19200 = 208
+	  	UCA0BR1 = 0x01;
+	  }
+	                        
+	  UCA0CTL1 &= ~UCSWRST;                // **Initialize USCI state machine**
+	  IE2 |= UCA0RXIE;                     // Enable USCI_A0 RX interrupt
+	  
+	  __bis_SR_register(GIE);       	   // Enter LPM3, interrupts enabled
+}
+
+
+#pragma vector=USCIAB0RX_VECTOR
+__interrupt void USCI0RX_ISR(void)
+{
+	/* For RTC */
+	if (UCB0STAT & UCNACKIFG)// send STOP if slave sends NACK
+	{            
+	    UCB0CTL1 |= UCTXSTP;
+	    UCB0STAT &= ~UCNACKIFG;
+	}
+	 
+	if(timeout_flag)
+		return;
+		
+	if ( UCA0STAT & UCFE )
+     {   /* FERR error condition */
+     	 chTemp = UCA0RXBUF;
+     	 UART_rcv_count = 0;
+     	 timeout = 0;
+
+     }
+     else if ( UCA0STAT & UCOE )
+     {   /* OERR error condition */
+     	 chTemp = UCA0RXBUF;
+     	 UART_rcv_count = 0;
+     	 timeout = 0;
+     }
+     else
+     {
+       	UART_RX_buf[UART_rcv_count] = UCA0RXBUF;
+    	UART_rcv_count++;
+	    timeout = 0;
+	    run_timer = 1;	
+     }
+
+}
+
+#pragma vector=USCIAB1RX_VECTOR
+__interrupt void USCI1RX_ISR(void)
+{
+		
+	
+	 if(Uart1TimeoutFlag)
+	 {
+	 	return;	 
+	 }
+	 
+	 if ( UCA1STAT & UCFE )
+     {   /* FERR error condition */
+     	 chTemp = UCA1RXBUF;
+     	 timeout1 = 0;
+     	 Uart1RcvCount = 0;
+     }
+     else if ( UCA1STAT & UCOE )
+     {   /* OERR error condition */
+     	 chTemp = UCA1RXBUF;
+     	 timeout1 = 0;
+     	 Uart1RcvCount = 0;
+     }
+     else
+     {
+     	Uart1Buf[Uart1RcvCount++] = UCA1RXBUF;
+     	timeout1 = 0;
+		RunTimer1 = 1;
+     }
+
+}
+
+void mSetRS485_RTSHigh ()
+{
+       P1OUT |= 0x04 ;     // P1.2, SIO pin High
+}
+
+void mSetRS485_RTSLow ()
+{
+       P1OUT &= ~(0x04) ;  // P1.2, SIO pin Low
+}

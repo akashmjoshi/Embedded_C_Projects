@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<section name="Workbench">
+	<section name="org.eclipse.ui.texteditor.GotoLineAction$GotoLineDialog_dialogBounds">
+		<item key="DIALOG_X_ORIGIN" value="409"/>
+		<item key="DIALOG_Y_ORIGIN" value="234"/>
+	</section>
+	<section name="org.eclipse.ui.texteditor.FindReplaceDialog_dialogBounds">
+		<item key="DIALOG_X_ORIGIN" value="840"/>
+		<item key="DIALOG_Y_ORIGIN" value="71"/>
+	</section>
+	<section name="org.eclipse.ui.texteditor.FindReplaceDialog">
+		<item key="wholeword" value="false"/>
+		<item key="incremental" value="false"/>
+		<item key="isRegEx" value="false"/>
+		<item key="selection" value="adc"/>
+		<item key="wrap" value="false"/>
+		<item key="casesensitive" value="false"/>
+		<list key="findhistory">
+			<item value="adc"/>
+			<item value="rtc"/>
+			<item value="48"/>
+			<item value="Channel 1"/>
+			<item value="chn1"/>
+			<item value="1"/>
+			<item value="IFG2"/>
+			<item value="UCB1RXIFG"/>
+		</list>
+		<list key="replacehistory">
+			<item value="32"/>
+			<item value="Channel 8"/>
+			<item value="Channel 7"/>
+			<item value="Channel 6"/>
+			<item value="Channel 5"/>
+			<item value="Channel 4"/>
+			<item value="Channel 3"/>
+			<item value="Channel 2"/>
+		</list>
+	</section>
+</section>

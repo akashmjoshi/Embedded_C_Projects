@@ -1,0 +1,1002 @@
+#include "msp430x26x.h"
+#include "lcd.h"
+#include "sd.h"
+#include "RTC.h"
+#include "spi.h"
+#include "DataTypes.h"
+#include "Timer.h"
+#include "display.h"
+#include "DecodeSlave.h"
+#include "memory.h"
+
+uint8_t Uart1TxBuf[270];
+
+uint8_t ConfigureParameterFlag = 0;
+unsigned char log_interval_time_hi_byte_receive_flag = 0;
+unsigned char log_interval_time_lo_byte_receive_flag = 0;
+unsigned int log_interval_time_hi;
+unsigned int log_interval_time_lo;
+
+unsigned int MainDataArray[MAX_DATA_ARRAY];
+unsigned int start_msg,length_msg, data_length;
+unsigned int MemoryDetail;
+unsigned char SerialYear = 01;
+unsigned char SerialMonth = 01;
+unsigned int SerialNumber = 01;
+unsigned int write_address;
+unsigned int write_data;
+unsigned int ProcessValueId;
+unsigned int BatchId;
+
+uint32_t FrameCount = 0;
+uint32_t PreviousFrameCount = 0;
+uint32_t CurrentReadSdSectorAddrs = 0;
+uint32_t PreviousReadSdSectorAddrs = 0;
+
+extern uint8_t sd_overflow_flag;
+extern uint32_t log_count;
+extern uint32_t SdSectorAddrs;
+extern uint32_t MaxLogCount;
+extern uint32_t log_interval_time1;
+
+extern uint8_t repeater_led_flag;
+extern uint8_t menu;
+extern uint8_t log_sec;
+extern uint8_t log_hour;
+extern uint8_t log_min ;
+extern uint8_t RelayActiveFlag;
+extern uint8_t DeviceId_temp;
+extern uint8_t ContinousLogStopFlag;
+extern uint8_t sec_ctr;
+extern uint8_t min_ctr;
+extern uint8_t hrs_ctr;
+extern uint8_t set_start_log_flag;
+extern uint8_t SelectDownloadOption;
+extern uint8_t StartDownloadFlag;
+extern uint8_t cal_para;
+extern uint8_t DeviceId;
+extern uint8_t indication_flags_2;
+extern uint8_t indication_flags;
+extern uint8_t mode_flags_1;
+////extern uint8_t InstrumentVersion;
+extern uint8_t UART_TX_Buffer_1[50];
+extern uint8_t Uart1Buf[15];
+extern uint8_t Uart1RcvCount; 
+extern uint8_t Uart1TimeoutFlag;
+extern uint8_t rtc_date;
+extern uint8_t rtc_hour;
+extern uint8_t rtc_min ;
+extern uint8_t rtc_month ;
+extern uint8_t rtc_sec;
+extern uint8_t rtc_year;
+extern uint8_t Seconds;
+extern uint8_t Minutes;
+extern uint8_t Hours;
+extern uint8_t Date;
+extern uint8_t Month;
+extern uint16_t Year;
+extern uint8_t log_interval_time;
+extern uint8_t log_interval_unit;
+extern uint8_t log_trigger;
+extern uint8_t log_trigger_start_year;
+extern uint8_t log_trigger_start_month;
+extern uint8_t log_trigger_start_date;
+extern uint8_t log_trigger_start_hour;
+extern uint8_t log_trigger_start_min;
+extern uint8_t log_trigger_stop_year;
+extern uint8_t log_trigger_stop_month;
+extern uint8_t log_trigger_stop_date;
+extern uint8_t log_trigger_stop_hour;
+extern uint8_t log_trigger_stop_min;
+extern uint8_t log_trigger_start_year;
+extern uint8_t log_trigger_start_month;
+extern uint8_t log_trigger_start_date;
+extern uint8_t log_trigger_start_hour;
+extern uint8_t log_trigger_start_min;
+extern uint8_t log_trigger_stop_year;
+extern uint8_t log_trigger_stop_month;
+extern uint8_t log_trigger_stop_date;
+extern uint8_t log_trigger_stop_hour;
+extern uint8_t log_trigger_stop_min;
+extern uint8_t sd_buffer[512];
+extern const uint8_t auchCRCLo_exp[];
+extern const uint8_t auchCRCHi_exp[];
+
+extern uint16_t log_key_press_delay;
+extern uint16_t modbus_use_channel_flag;
+extern uint16_t Channel_Database[16][5];
+
+extern uint32_t log_count;
+extern uint32_t StartAddrs;
+extern uint32_t StopAddrs ;
+extern uint32_t DownloadDataUpperLimit;
+
+extern sd_context_t sdc;
+extern DisplayParameters Display_Channels[16];
+/*============================================================================*/
+// Procedure to check the checksum of the message
+
+void DecodeSlave()
+{
+	unsigned int  temp_code1,temp_code2,temp_code3 ;
+    unsigned int  check ;
+   	
+	if(Uart1TimeoutFlag)
+	{
+		repeater_led_flag = 1;
+		
+	    Uart1RcvCount = 0;
+		check = modrtuChecksum ( Uart1Buf, 6 ) ;
+		
+		temp_code1 = Uart1Buf[6] ;
+   		temp_code2 = (unsigned int) (temp_code1 << 8) ;
+   		temp_code1 = Uart1Buf[7] ;
+   		temp_code3 = (unsigned int)(temp_code2|temp_code1) ;
+   		
+   		if ( check == (unsigned int) ( temp_code3 ) )
+   		{
+   			
+   			if (Uart1Buf[0] == DeviceId)
+ 			{
+				switch (Uart1Buf[1])
+		        {
+			        case MODBUS_READ_HOLDING_REGISTERS :
+			        	
+			        	start_msg = (int)Uart1Buf[2];    //message start
+			         	start_msg <<= 8;
+			         	start_msg += (int)Uart1Buf[3];
+			      
+			          	length_msg = (int)Uart1Buf[4];   //message length
+			         	length_msg <<= 8;
+			         	length_msg += (int)Uart1Buf[5];
+			         
+			           	temp_code1 = start_msg + length_msg;
+			           
+			           	if ((temp_code1 <= MAX_IP_REG) || (start_msg == STOP_LOG_ADDRS))  //total number of registers which can be read
+			           	{
+			           		
+			           		send_data();
+			           		
+			           	}
+			           	else
+			            	 modbusReturnException ( 0x02 );     
+			        break; 
+			        
+			        case MODBUS_READ_INPUTREGISTERS :
+			        	
+			        	start_msg = (int)Uart1Buf[2];    //message start
+			         	start_msg <<= 8;
+			         	start_msg += (int)Uart1Buf[3];
+			      
+			          	length_msg = (int)Uart1Buf[4];   //message length
+			         	length_msg <<= 8;
+			         	length_msg += (int)Uart1Buf[5];
+			         
+			           	temp_code1 = start_msg + length_msg;
+			           
+			           	if ((temp_code1 <= MAX_IP_REG) || (start_msg == STOP_LOG_ADDRS))  //total number of registers which can be read
+			           	{
+			           		
+			           		send_data();
+			           		
+			           	}
+			           	else
+			            	 modbusReturnException ( 0x02 );     
+			        break; 
+			         
+			        case MODBUS_WRITE_HOLDING_REGISTERS :
+			         
+			         	write_address = (int)Uart1Buf[2];    //message start
+			         	write_address <<= 8;
+			         	write_address += (int)Uart1Buf[3];
+			      
+			          	write_data = (int)Uart1Buf[4];   //message length
+			         	write_data <<= 8;
+			         	write_data += (int)Uart1Buf[5];
+			         	
+			         	if(menu == NORMAL_MODE)
+			         	{
+			         		DeviceId_temp = DeviceId;
+			         		
+			         		RelayActiveFlag = 0;
+			         		mode_flags_1 |= DEVICE_CONFIG_OPTION_FLAG;
+			         		indication_flags &= ~SHOW_MODE;  
+			         		indication_flags |= FACTORY_LED;            /* Set flag FACTORY_LED */			         		
+    						mode_flags_1 &= ~DOWNLOADING_MENU_MODE;
+    						
+			         		menu = DOWNLOADING_MENU;
+			         		cal_para = DEVICE_CONFIGURATION_PARAMETER;
+			         	}
+			         	
+			         	if ((write_address <= MAX_HL_REG || write_address == STOP_LOG_ADDRS) && (menu == DOWNLOADING_MENU) && (cal_para == DEVICE_CONFIGURATION_PARAMETER))  //total number of registers which can be write
+			         	{
+			         		ConfigureParameterFlag = 1;
+			         		
+			         		send_echo();
+			         		
+			         		MainDataArray[ write_address ] = write_data;
+			         		
+			         		
+			         		sd_read_block (&sdc, 0, sd_buffer);		
+							sd_wait_notbusy (&sdc);
+							
+			         		WriteValue(write_data,write_address);
+			         		
+			         		sd_write_block (&sdc, 0, sd_buffer);		
+							sd_wait_notbusy (&sdc);
+			         	}
+				        else
+				          	 modbusReturnException ( 0x02 );           
+				    break; 
+				    
+				    case MODBUS_DOWNLOAD_DATA_REGISTERS :
+			         
+			         	ProcessValueId = (int)Uart1Buf[2];    //Process Value ID
+			         	ProcessValueId <<= 8;
+			         	ProcessValueId += (int)Uart1Buf[3];
+			      
+			          	BatchId = (int)Uart1Buf[4];   //Batch Id 
+			         	BatchId <<= 8;
+			         	BatchId += (int)Uart1Buf[5];
+			         	
+			         	if(menu == NORMAL_MODE)
+			         	{
+			         		DeviceId_temp = DeviceId;
+			         		
+			         		RelayActiveFlag = 0;
+			         		mode_flags_1 &= ~DEVICE_CONFIG_OPTION_FLAG;
+			         		indication_flags &= ~SHOW_MODE;  
+			         		indication_flags |= FACTORY_LED;            /* Set flag FACTORY_LED */			         		
+    						mode_flags_1 &= ~DOWNLOADING_MENU_MODE;
+    						
+			         		SelectDownloadOption = 0;
+			         		menu = DOWNLOADING_MENU;
+			         		cal_para = DOWNLOADING_STARTED_PARAMETER;
+			         	}
+			         	
+			         	if((ProcessValueId == 0) && (BatchId <= 2))  //if valid ProcessValueId & BatchId then start downloading
+			         	{
+			         		StartDownloadFlag = 1;
+			         		if((menu == DOWNLOADING_MENU) && (cal_para == DOWNLOADING_COMPLETED_PARAMETER))
+			         		{
+			         			menu = DOWNLOADING_MENU;
+			         			cal_para = DOWNLOADING_STARTED_PARAMETER;
+			         		}
+			         	}
+			         	
+			         	    
+				    break; 
+			         
+			        default:
+			        	modbusReturnException ( 0x01 ); 			         	
+			        break;
+			         
+		        }
+ 			}
+   		}
+   		
+   		Uart1TimeoutFlag = 0;
+
+   		//UC1IE |= UCA1RXIE;
+	}
+}	
+
+/*----------------------------------------------------------------------------------
+* Function name       : void send_data(void)
+*     returns         : -
+*     arg1            : -
+*     arg2            : -
+* Created by          : N.Singh
+* Date created        : 11/10/10
+* Description         : This function used to form the response of the query 
+* 						received from the Modbus master in the RS485 MODBUS network 
+*-----------------------------------------------------------------------------------*/
+void send_data(void)
+{
+	  unsigned char tempc,i,j;
+	  unsigned int tempi,temp_use_channel = 0x0001;
+	  
+
+	  MainDataArray[0] = (unsigned int)Year;
+	  MainDataArray[1] = (unsigned int)Month;
+	  MainDataArray[2] = (unsigned int)Date;
+	  MainDataArray[3] = (unsigned int)Hours;
+	  MainDataArray[4] = (unsigned int)Minutes;
+	  MainDataArray[5] = (unsigned int)Seconds;
+	  
+	  MainDataArray[6] = (unsigned int)(log_interval_time1/65536);//log_interval_unit;
+	  MainDataArray[7] = (unsigned int)(log_interval_time1%65536);
+	  
+	  if(indication_flags_2 & LOG_MODE_FLAG)
+	  	MainDataArray[8] = (unsigned int)0x00; //Saturation
+	  else
+	  	MainDataArray[8] = (unsigned int)0x01;//Scrolling
+	  	
+	  MainDataArray[9] = (unsigned int)log_trigger;
+	  
+	  MainDataArray[10] = (unsigned int)log_trigger_start_year;
+	  MainDataArray[11] = (unsigned int)log_trigger_start_month;
+	  MainDataArray[12] = (unsigned int)log_trigger_start_date;
+	  MainDataArray[13] = (unsigned int)log_trigger_start_hour;
+	  MainDataArray[14] = (unsigned int)log_trigger_start_min;
+	  MainDataArray[15] = (unsigned int)log_trigger_stop_year;
+	  MainDataArray[16] = (unsigned int)log_trigger_stop_month;
+	  MainDataArray[17] = (unsigned int)log_trigger_stop_date;
+	  MainDataArray[18] = (unsigned int)log_trigger_stop_hour;
+	  MainDataArray[19] = (unsigned int)log_trigger_stop_min;
+	  
+	  MainDataArray[20] = (unsigned int)log_key_press_delay;
+	  
+	  MainDataArray[22] = (unsigned int)DeviceId;
+	  
+	  MainDataArray[23] = (unsigned int)VER_16CHANNEL_1PV;
+	  
+	  MainDataArray[24] = (unsigned int)SerialYear;
+	  MainDataArray[25] = (unsigned int)SerialMonth;
+	  MainDataArray[26] = (unsigned int)SerialNumber;
+	  
+	  MainDataArray[27] = (unsigned int)(log_count/65536);
+	  MainDataArray[28] = (unsigned int)(log_count%65536);
+	  
+	  tempc = 29;
+  	  for(i=0;i<16;i++)
+  	  {
+  	  	if(!(indication_flags_2 & START_STOP_COMM))
+  	  	{
+  	  		MainDataArray[tempc+i] = (unsigned int)9; //dp
+	  		MainDataArray[tempc+i+16] = (unsigned int)COMM_STOP_OR_MAIN_MENU; //process value
+  	  	}
+  	  	else if(modbus_use_channel_flag & temp_use_channel)
+  	  	{
+  	  		MainDataArray[tempc+i] = (unsigned int)Display_Channels[i].dp;
+	  		MainDataArray[tempc+i+16] = (unsigned int)Channel_Database[i][0];
+  	  	}
+  	  	else
+  	  	{
+  	  		MainDataArray[tempc+i] = (unsigned int)9; //dp
+	  		MainDataArray[tempc+i+16] = (unsigned int)CHANNEL_NOT_ENABLED; //process value	  		
+  	  	}
+  	  	temp_use_channel = temp_use_channel << 1;
+  	  	
+  	  }
+  	  tempc = 0;
+	  
+	  MainDataArray[STOP_LOG_ADDRS] = (unsigned int)(set_start_log_flag);
+	  
+	  Uart1TxBuf[0] = DeviceId;
+	  Uart1TxBuf[1] = Uart1Buf[1];
+	  
+	  tempc = (char)length_msg;    
+	  Uart1TxBuf[2] = tempc << 1;  
+	
+	  tempc = (char)start_msg;
+	  tempc += (char)length_msg;
+	
+	  j = 2; 
+	  for (i = (char)start_msg; i < tempc; i++) 
+	  {
+	    j++;
+	    Uart1TxBuf[j] = (MainDataArray[i]) >> 8;      //upper 8 bits
+	    j++;
+	    Uart1TxBuf[j] = (MainDataArray[i]);  //lower 8 bits
+	  }
+	 
+	  tempi = modrtuChecksum ( Uart1TxBuf, j+1 );
+	  Uart1TxBuf[j + 1] = tempi >> 8;    //msb of crc
+	  Uart1TxBuf[j + 2] = (unsigned char)tempi;   //lsb of crc
+	  
+	  
+	  data_length = j + 2;
+	  
+	  TBCCTL0 &= ~CCIE;	
+	  IE2 &= ~UCA0RXIE;
+	  
+	  if(!(mode_flags_1 & USE_REPEATER_FLAG) || (menu == DOWNLOADING_MENU))
+	   	modbusSendUART1Packet (data_length);
+
+	  TBCCTL0 |= CCIE;
+	  IE2 |= UCA0RXIE;
+	     
+}
+
+/*----------------------------------------------------------------------------------
+* Function name       : void WriteValue(unsigned int write_data,unsigned int write_address)
+*     returns         : -
+*     arg1            : -
+*     arg2            : -
+* Created by          : N.Singh
+* Date created        : 11/10/10
+* Description         : This function used to form the response of the query 
+* 						received from the Modbus master in the RS485 MODBUS network 
+*-----------------------------------------------------------------------------------*/
+void WriteValue(unsigned int write_data,unsigned int write_address)
+{
+	uint8_t rtcHexValue = 0;
+	
+	switch(write_address)
+	{
+		case 0: //RTC Year		 
+			
+			if(write_data <= 99)
+			{
+				rtc_year = (uint8_t)write_data;
+				rtcHexValue = DecimalToHex(rtc_year);
+				write_RTC(YEAR_REG_ADDRS, rtcHexValue);
+			}
+		
+		break;
+		
+		case 1:	//RTC Month
+			
+			if((write_data >= 1) && (write_data <= 12))
+			{
+				rtc_month = (uint8_t)write_data;
+				rtcHexValue = DecimalToHex(rtc_month);
+				write_RTC(MONTH_REG_ADDRS,(rtcHexValue & 0x1F));
+			}
+				         							         				 
+		break;
+		
+		case 2:		//RTC Date
+			
+			if((write_data >= 1) && (write_data <= 31))
+			{
+				rtc_date = (uint8_t)write_data;
+				rtcHexValue = DecimalToHex(rtc_date);
+				write_RTC(DATE_REG_ADDRS, (rtcHexValue & 0x3F));
+			}
+			
+   		break;
+ 		
+ 		case 3:		//RTC Hour
+ 			
+ 			if(write_data <= 23)
+			{
+				rtc_hour = (uint8_t)write_data;
+				rtcHexValue = DecimalToHex(rtc_hour);
+				write_RTC(HOUR_REG_ADDRS, (rtcHexValue & 0x3F));
+			} 		
+ 			
+ 		break;
+ 		
+ 		case 4:		//RTC Minute
+ 			if(write_data <= 59)
+			{
+				rtc_min = (uint8_t)write_data;
+				rtcHexValue = DecimalToHex(rtc_min);
+				write_RTC(MIN_REG_ADDRS, (rtcHexValue & 0x7F));
+			}
+			
+		break;
+			
+		case 5:		//RTC Seconds
+			 
+			if(write_data <= 59)
+			{
+				rtc_sec = (uint8_t)write_data;
+				rtcHexValue = DecimalToHex(rtc_sec);
+  				write_RTC(SEC_REG_ADDRS, (rtcHexValue & 0x7F));
+			} 
+			
+		break;
+		
+		case 6:		//	log_interval_time_hi
+			
+			if(write_data <= 1)
+			{
+				log_interval_time_hi = write_data;
+				
+				log_interval_time_hi_byte_receive_flag = 1;
+				
+			} 
+			
+		break;
+				
+		case 7:		//log_interval_time_lo
+			
+			if((log_interval_time_hi == 0) && (write_data <= 65535) && (write_data >= 1))
+			{
+				log_interval_time_lo = write_data;
+				
+				log_interval_time_lo_byte_receive_flag = 1;
+			}
+			else if((log_interval_time_hi == 1) && (write_data <= 20863) && (write_data >= 1))
+			{
+				log_interval_time_lo = write_data;
+				
+				log_interval_time_lo_byte_receive_flag = 1;
+			}
+			
+		break;
+		
+////		case 6:		//	log_interval_unit
+////			
+////			if(write_data <= 2)
+////			{
+////				log_interval_unit = (uint8_t)write_data;
+////				write_byte_to_sd(log_interval_unit, LOG_INTERVAL_UNIT_ADD);
+////			} 
+////			
+////		break;
+////				
+////		case 7:		//log_interval_time
+////			if(log_interval_unit == 2 && (write_data >= 1) && (write_data <= 23))
+////			{
+////				log_interval_time = (uint8_t)write_data;
+////				write_byte_to_sd(log_interval_time, LOG_INTERVAL_TIME_ADD);
+////				sec_ctr = log_interval_time - 1;
+////				min_ctr = log_interval_time;
+////				hrs_ctr = log_interval_time;
+////				
+////			}
+////			else if((write_data >= 1) && (write_data <= 59))
+////			{
+////				log_interval_time = (uint8_t)write_data;
+////				write_byte_to_sd(log_interval_time, LOG_INTERVAL_TIME_ADD);
+////				sec_ctr = log_interval_time - 1;
+////				min_ctr = log_interval_time;
+////				hrs_ctr = log_interval_time;
+////			}
+////		break;
+		
+		case 8:		//log mode
+			if(write_data == 0)
+			   indication_flags_2 |= LOG_MODE_FLAG;
+			else
+			   indication_flags_2 &= ~LOG_MODE_FLAG;
+ 			
+ 			write_byte_to_sd((indication_flags_2 & LOG_MODE_FLAG), INDI_FLAGS_2_LOG_MODE_FLAG_ADD);
+ 			
+ 		break;
+ 		
+ 		case 9: // log_trigger
+ 		 	if(write_data <= 2)
+			{
+				if(write_data != log_trigger)
+  					set_start_log_flag = 0;
+  				
+  				if(write_data == 0) //Continous Log
+  					ContinousLogStopFlag = 1;
+  					
+				log_trigger = (uint8_t)write_data;
+				write_byte_to_sd(log_trigger, LOG_TRIGGER_ADD);
+			}
+ 			
+ 		break;
+ 		
+ 		case 10: //log_trigger_start_year
+ 			if(write_data <= 99)
+			{
+				log_trigger_start_year = (uint8_t)write_data;
+				write_byte_to_sd(log_trigger_start_year, LOG_TRIGGER_START_YEAR_ADD);
+			}
+		break;
+			
+		case 11: //log_trigger_start_month
+			if((write_data >= 1) && (write_data <= 12))
+			{
+				log_trigger_start_month = (uint8_t)write_data;
+				write_byte_to_sd(log_trigger_start_month, LOG_TRIGGER_START_MONTH_ADD);
+			}
+		break;
+		
+		case 12: //log_trigger_start_date
+			if((write_data >= 1) && (write_data <= 31))
+			{
+				log_trigger_start_date = (uint8_t)write_data;
+				write_byte_to_sd(log_trigger_start_date, LOG_TRIGGER_START_DATE_ADD);
+			}
+			
+		break;
+
+		
+		case 13:  //log_trigger_start_hour
+			if(write_data <= 23)
+			{
+				log_trigger_start_hour = (uint8_t)write_data;
+				write_byte_to_sd(log_trigger_start_hour, LOG_TRIGGER_START_HOUR_ADD);
+			}
+			
+		break;
+		
+		case 14:  //	log_trigger_start_min
+			if(write_data <= 59)
+			{
+				log_trigger_start_min = (uint8_t)write_data;
+				write_byte_to_sd(log_trigger_start_min, LOG_TRIGGER_START_MINUTE_ADD);
+			}
+ 			
+   		break;
+ 		
+ 		case 15:  //log_trigger_stop_year
+ 			if(write_data <= 99)
+			{
+				log_trigger_stop_year = (uint8_t)write_data;
+				write_byte_to_sd(log_trigger_stop_year, LOG_TRIGGER_STOP_YEAR_ADD);
+			}
+		break;
+			
+		case 16:  //log_trigger_stop_month
+			if((write_data >= 1) && (write_data <= 12))
+			{
+				log_trigger_stop_month = (uint8_t)write_data;
+				write_byte_to_sd(log_trigger_stop_month, LOG_TRIGGER_STOP_MONTH_ADD);
+			}
+		break;
+		
+		case 17:   //log_trigger_stop_date
+			if((write_data >= 1) && (write_data <= 31))
+			{
+				log_trigger_stop_date = (uint8_t)write_data;
+				write_byte_to_sd(log_trigger_stop_date, LOG_TRIGGER_STOP_DATE_ADD);
+			}
+			
+		break;
+
+		
+		case 18:  //log_trigger_stop_hour
+			if(write_data <= 23)
+			{
+				log_trigger_stop_hour = (uint8_t)write_data;
+				write_byte_to_sd(log_trigger_stop_hour, LOG_TRIGGER_STOP_HOUR_ADD);
+			}
+			
+		break;
+		
+		case 19:  //log_trigger_stop_min		
+			if(write_data <= 59)
+			{
+				log_trigger_stop_min = (uint8_t)write_data;
+				write_byte_to_sd(log_trigger_stop_min, LOG_TRIGGER_STOP_MINUTE_ADD);
+			}
+ 			
+   		break;
+		
+		case 20:  //log_key_press_delay
+			if((write_data >= 1) && (write_data <= 999))
+			{
+				log_key_press_delay = write_data;
+				send_2_byte_value_to_sd(log_key_press_delay, LOG_KEY_PRESS_DELAY_HI_ADD);
+			}
+ 		break;
+ 		
+ 		case 21:  //Memory Clear
+ 			if(write_data >= 1)
+			{
+				Clear_sd();
+				MainDataArray[21] = 0;
+			}
+ 		
+ 		break;
+ 		
+ 		case STOP_LOG_ADDRS:  //Stop Log
+ 			if(write_data >= 1)
+			{
+				if(set_start_log_flag)
+				{
+					set_start_log_flag = 0;
+					if(log_trigger == 0) //Continous Log
+						ContinousLogStopFlag = 0;
+				}
+					
+			}
+			
+ 		break;
+ 				
+	}	  
+	
+	if((write_address == 7) && (log_interval_time_hi_byte_receive_flag) && (log_interval_time_lo_byte_receive_flag))
+	{
+		log_interval_time_hi_byte_receive_flag = 0;
+		log_interval_time_lo_byte_receive_flag = 0;
+		
+		log_interval_time1 = (log_interval_time_hi * 65536) + log_interval_time_lo;
+		
+		log_hour = (uint8_t)(log_interval_time1/3600);
+		log_min = (uint8_t)((log_interval_time1%3600)/60);
+		log_sec = (uint8_t)((log_interval_time1%3600)%60);
+		
+		write_byte_to_sd(log_hour, LOG_HOUR_ADD);
+		write_byte_to_sd(log_min, LOG_MINS_ADD);
+		write_byte_to_sd(log_sec, LOG_SECS_ADD);
+		
+	}
+//	else
+//	{
+//		log_interval_time_hi_byte_receive_flag = 0;
+//	}
+	  
+	     
+}
+
+void SendProcessValue(unsigned int F_ProcessValueId,unsigned int F_BatchId)
+{
+	uint8_t i=0;
+	uint8_t loop=0;
+	uint8_t PvBlockNumber = 0;
+	uint8_t PvStartAddrs = 0;
+	uint16_t tempi = 0;
+		
+	switch(F_BatchId)
+	{
+		case START_FROM_ZERO: 
+		
+			if(sd_overflow_flag)
+			{
+				CurrentReadSdSectorAddrs = SdSectorAddrs - 1;
+				//CurrentReadSdSectorAddrs = SdSectorAddrs - 1;
+   			}
+			else
+			{
+				CurrentReadSdSectorAddrs = StartAddrs - 1; //Start Sector Addrs minus 1
+   			}
+			PreviousReadSdSectorAddrs = CurrentReadSdSectorAddrs;
+			FrameCount = 0;
+			PreviousFrameCount = 0;
+			
+		break;
+		case RESEND_SAME_BATCH:
+		
+			CurrentReadSdSectorAddrs = PreviousReadSdSectorAddrs;
+			FrameCount = PreviousFrameCount;
+						
+		break;
+		case SEND_NEXT_BATCH:
+		
+			PreviousReadSdSectorAddrs = CurrentReadSdSectorAddrs;
+			PreviousFrameCount = FrameCount;		
+																
+		break;
+		
+		default:
+		// exception
+		break;
+	}
+	
+	if(SelectDownloadOption == 0) //Download All Data at once
+	{
+		StopAddrs  = log_count;
+	}
+	else if(SelectDownloadOption == 1) //Downaload Data in batch
+	{
+		StopAddrs  = (DownloadDataUpperLimit + 11) - StartAddrs;
+	}
+	
+	for(loop = 100; ((loop > 0) && (FrameCount < StopAddrs));loop--)
+	{
+		CurrentReadSdSectorAddrs++;
+		FrameCount++;
+		
+		if(CurrentReadSdSectorAddrs > (MaxLogCount + 11))
+		{
+			if((!(indication_flags_2 & LOG_MODE_FLAG)) && (sd_overflow_flag))
+			{
+				CurrentReadSdSectorAddrs = 11;										
+			}
+			else
+			{
+				break;									
+			}
+			
+		}			
+		
+		sd_read_block (&sdc, CurrentReadSdSectorAddrs, sd_buffer);		
+		sd_wait_notbusy (&sdc);
+		
+		Uart1TxBuf[0] = DeviceId;
+		Uart1TxBuf[1] = 0x09;
+		
+		Uart1TxBuf[2] = (uint8_t)(F_ProcessValueId >> 8);
+		Uart1TxBuf[3] = (uint8_t)(F_ProcessValueId );
+		
+		if(FrameCount == (StopAddrs))
+		{
+			Uart1TxBuf[4] = 0x00;
+			Uart1TxBuf[5] = 0x03;
+			StartDownloadFlag = 0;
+			cal_para = DOWNLOADING_COMPLETED_PARAMETER;
+		}
+		else
+		{
+			Uart1TxBuf[4] = (uint8_t)(F_BatchId >> 8);
+			Uart1TxBuf[5] = (uint8_t)(F_BatchId);
+		}
+		
+		Uart1TxBuf[6] = (uint8_t)sd_buffer[0];  //Log Date
+		Uart1TxBuf[7] = (uint8_t)sd_buffer[1];  //Log Month
+		Uart1TxBuf[8] = (uint8_t)sd_buffer[2];  //Log Year
+		Uart1TxBuf[9] = (uint8_t)sd_buffer[3];  //Log Hour
+		Uart1TxBuf[10] = (uint8_t)sd_buffer[4];  //Log Minute
+		Uart1TxBuf[11] = (uint8_t)sd_buffer[5];  //Log Second
+		
+		PvStartAddrs = 6;
+		PvBlockNumber = 12;
+		
+		for(i=0;i<16;i++)
+		{
+			Uart1TxBuf[PvBlockNumber] = (uint8_t)sd_buffer[PvStartAddrs + (F_ProcessValueId*2)];  
+			Uart1TxBuf[PvBlockNumber + 1] = (uint8_t)sd_buffer[PvStartAddrs + (F_ProcessValueId*2) + 1];  
+			
+			PvStartAddrs += 6;
+			PvBlockNumber += 2;
+			
+		}
+		
+		tempi = modrtuChecksum ( Uart1TxBuf, PvBlockNumber );
+		Uart1TxBuf[PvBlockNumber] = tempi >> 8;    //msb of crc
+		Uart1TxBuf[PvBlockNumber + 1] = (unsigned char)tempi;   //lsb of crc
+		
+		Uart1TxBuf[PvBlockNumber + 2] = 0x00;    //msb of Line Feed 
+		Uart1TxBuf[PvBlockNumber + 3] = 0x0A;   //lsb of Line Feed 
+		
+		Uart1TxBuf[PvBlockNumber + 4] = 0x00;    //msb of Carriage return
+		Uart1TxBuf[PvBlockNumber + 5] = 0x0D;   //lsb of Carriage return
+		
+		data_length = PvBlockNumber + 5;
+		
+		modbusSendUART1Packet (data_length);
+////		modbusSendUART1Packet_Ascii (data_length);
+	}
+	
+	sd_read_block (&sdc, 0, sd_buffer);		
+	sd_wait_notbusy (&sdc);	
+	
+	send_2_byte_value_to_sd(FrameCount >> 16, FRAME_COUNT_HI_ADD);
+	send_2_byte_value_to_sd(FrameCount & 0xFFFF, FRAME_COUNT_MID1_ADD);
+	
+	send_2_byte_value_to_sd(PreviousFrameCount >> 16, PREVIOUS_FRAME_COUNT_HI_ADD);
+	send_2_byte_value_to_sd(PreviousFrameCount & 0xFFFF, PREVIOUS_FRAME_COUNT_MID1_ADD);
+	
+	send_2_byte_value_to_sd(CurrentReadSdSectorAddrs >> 16, CURRENT_READ_SECTOR_ADDRS_HI_ADD);
+	send_2_byte_value_to_sd(CurrentReadSdSectorAddrs & 0xFFFF, CURRENT_READ_SECTOR_ADDRS_MID1_ADD);
+	
+	send_2_byte_value_to_sd(PreviousReadSdSectorAddrs >> 16, PREVIOUS_READ_SECTOR_ADDRS_HI_ADD);
+	send_2_byte_value_to_sd(PreviousReadSdSectorAddrs & 0xFFFF, PREVIOUS_READ_SECTOR_ADDRS_MID1_ADD);
+	
+	sd_write_block (&sdc, 0, sd_buffer);		
+	sd_wait_notbusy (&sdc);
+	
+}
+
+
+void modbusSendUART1Packet ( unsigned char length)
+{
+	    unsigned int i;
+	   
+	    P1OUT |= 0x10;
+	    for ( i=0; i <= length; i++ )
+	    {
+	  	  UCA1TXBUF = Uart1TxBuf[i];
+	  	  while (( UCA1STAT & UCBUSY ));
+	    }
+	    for(i=0;i<200;i++);
+	    P1OUT &= ~0x10;  
+	  
+  
+}
+
+void modbusSendUART1Packet_Ascii ( unsigned char length)
+{
+	    unsigned int i,temp;
+	   
+	    P1OUT |= 0x10;
+	    
+	    UCA1TXBUF = ((FrameCount)/1000)+0x30;  //For testing
+	  	while (( UCA1STAT & UCBUSY ));
+	  	UCA1TXBUF = (((FrameCount)%1000)/100)+0x30;  //For testing
+	  	while (( UCA1STAT & UCBUSY ));
+	  	UCA1TXBUF = ((((FrameCount)%1000)%100)/10)+0x30;  //For testing
+	  	while (( UCA1STAT & UCBUSY ));
+		UCA1TXBUF = ((((FrameCount)%1000)%100)%10)+0x30;  //For testing
+	  	while (( UCA1STAT & UCBUSY ));
+	  	  	
+		
+	  	
+		UCA1TXBUF = '\n';//For testing
+	  	while (( UCA1STAT & UCBUSY ));
+	  	UCA1TXBUF = '\r';//For testing
+	  	while (( UCA1STAT & UCBUSY ));
+  		
+  		
+  		
+  	  	
+  		for(i=0;i<2;i++)
+		{	
+			UCA1TXBUF = ((Uart1TxBuf[i]/10)+0x30);
+	  	  	while ( UCA1STAT & UCBUSY );
+	  	  	UCA1TXBUF = ((Uart1TxBuf[i]%10)+0x30);
+	  	  	while ( UCA1STAT & UCBUSY );
+		}
+		UCA1TXBUF = ((Uart1TxBuf[3]/10)+0x30);
+  	  	while ( UCA1STAT & UCBUSY );
+  	  	UCA1TXBUF = ((Uart1TxBuf[3]%10)+0x30);
+  	  	while ( UCA1STAT & UCBUSY );
+  	  	
+  	  	UCA1TXBUF = ((Uart1TxBuf[5]/10)+0x30);
+  	  	while ( UCA1STAT & UCBUSY );
+  	  	UCA1TXBUF = ((Uart1TxBuf[5]%10)+0x30);
+  	  	while ( UCA1STAT & UCBUSY );
+		
+		for(i=6;i<12;i++)
+		{	
+			UCA1TXBUF = ((Uart1TxBuf[i]/10)+0x30);
+	  	  	while ( UCA1STAT & UCBUSY );
+	  	  	UCA1TXBUF = ((Uart1TxBuf[i]%10)+0x30);
+	  	  	while ( UCA1STAT & UCBUSY );
+		}
+		
+	    for ( i=12; i <= length; i+=2 )
+	    {
+	    	temp = ((uint16_t)Uart1TxBuf[i+1]) | (((uint16_t)Uart1TxBuf[i]) << 8);
+	    	
+	  	  	UCA1TXBUF = (temp/10000)+0x30;
+	  	  	while (( UCA1STAT & UCBUSY ));
+	  	  	UCA1TXBUF = ((temp%10000)/1000)+0x30;
+	  	  	while (( UCA1STAT & UCBUSY ));
+	  	  	UCA1TXBUF = (((temp%10000)%1000)/100)+0x30;
+	  	  	while (( UCA1STAT & UCBUSY ));
+			UCA1TXBUF = ((((temp%10000)%1000)%100)/10)+0x30;
+	  	  	while (( UCA1STAT & UCBUSY ));
+	  	  	UCA1TXBUF = ((((temp%10000)%1000)%100)%10)+0x30;
+	  	  	while (( UCA1STAT & UCBUSY ));
+	    }
+	    UCA1TXBUF = '\n';
+	  	while (( UCA1STAT & UCBUSY ));
+	  	UCA1TXBUF = '\r';
+	  	while (( UCA1STAT & UCBUSY ));
+	  	
+	    for(i=0;i<200;i++);
+	    P1OUT &= ~0x10;  
+	  
+  
+}
+
+/*----------------------------------------------------------------------------------
+* Function name       : void modbusReturnException ( unsigned char exception )
+*     returns         : -
+*     arg1            : Exception value
+*     arg2            : -
+* Created by          : N.Singh
+* Date created        : 11/10/10
+* Description         : This function used to send the exception to the modbus master. 
+*-----------------------------------------------------------------------------------*/
+void modbusReturnException ( unsigned char exception )
+{
+	   unsigned int check;    
+	   
+	   Uart1TxBuf[0] = DeviceId ;
+	   Uart1TxBuf[1] |= 0x80 ;      //function code for exception
+	   Uart1TxBuf[2]  = exception ;
+	   
+	   check = modrtuChecksum ( Uart1TxBuf, 3 ) ;
+	   
+	   Uart1TxBuf[3] = check >> 8;    //msb of crc
+	   Uart1TxBuf[4] = (char)check;   //lsb of crc
+	
+	   
+	   modbusSendUART1Packet(4) ;
+}
+/*----------------------------------------------------------------------------------
+* Function name       : void send_echo(void)
+*     returns         : -
+*     arg1            : -
+*     arg2            : -
+* Created by          : N.Singh
+* Date created        : 11/10/10
+* Description         : This function used to send the response frame when write operation 
+* 						is performed. 
+*-----------------------------------------------------------------------------------*/
+void send_echo(void)
+{
+   unsigned char i;
+   unsigned int temp;
+  
+   for(i=0; i<6; i++)
+    	Uart1TxBuf[i] = Uart1Buf[i];
+  	
+  temp = modrtuChecksum ( Uart1TxBuf, 6 );
+  Uart1TxBuf[6] = temp >> 8;    		//msb of crc
+  Uart1TxBuf[7] = (unsigned char)temp;   //lsb of crc  
+        
+  modbusSendUART1Packet(7); 
+}

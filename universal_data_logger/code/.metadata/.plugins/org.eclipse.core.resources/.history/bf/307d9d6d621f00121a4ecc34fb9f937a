@@ -1,0 +1,3171 @@
+#include "msp430x26x.h"
+#include "DataTypes.h"
+#include "lcd.h"
+#include "math.h"
+#include "display.h"
+
+void Send_str(int8_t *lcd_temp, uint8_t i);
+
+int8_t str[70], bcd[7];
+uint8_t OneTimeLedOn = 0;
+uint8_t message=2; 
+uint8_t message_cntr=0;
+uint8_t mode_flags = 0;
+uint8_t mode_flags_1 = 0;
+uint8_t exit_flags = 0;
+uint8_t exit_flags_1 = 0;
+uint8_t mode_flags_1_temp = 0;
+uint8_t exit_flags_factory = 0;
+uint8_t indication_flags = 0x28;
+uint8_t indication_flags_2 = 0x00;
+uint8_t indication_flags_3 = 0x00;
+uint8_t cal_para=0;
+uint8_t menu=0;
+uint8_t menu_timeout=100;
+uint8_t counter = 1 ;
+uint8_t pos_cntr=0;
+uint8_t memory_used=0;
+uint8_t NegativeFlag = 0;
+uint8_t display_flag = 0;
+uint8_t StartDownloadFlag = 0;
+
+uint16_t warm_time1 = 1;
+uint16_t warm_time_set = 10;
+uint16_t password=0;
+uint16_t new_password=0;
+
+uint32_t relay_flags = 0;
+uint32_t StartAddrs = 0;
+uint32_t StopAddrs = 0;
+
+extern uint8_t ConfigureParameterFlag;
+extern uint8_t log_sec;
+extern uint8_t log_hour;
+extern uint8_t log_min ;
+extern uint8_t DeviceId;
+extern uint8_t SelectDownloadOption;
+extern uint8_t stop_log;
+extern uint8_t set_start_log_flag;
+extern uint8_t backlit_select;
+extern uint8_t pos_cntr1;
+extern uint8_t pos_cntr2;
+extern uint8_t pos_cntr3;
+extern uint8_t rtc_date;
+extern uint8_t rtc_hour;
+extern uint8_t rtc_min ;
+extern uint8_t rtc_month ;
+extern uint8_t rtc_sec;
+extern uint8_t rtc_year;
+extern uint8_t log_interval_time;
+extern uint8_t log_interval_unit;
+extern uint8_t log_trigger;
+extern uint8_t log_trigger_start_year;
+extern uint8_t log_trigger_start_month;
+extern uint8_t log_trigger_start_date;
+extern uint8_t log_trigger_start_hour;
+extern uint8_t log_trigger_start_min;
+extern uint8_t log_trigger_stop_year;
+extern uint8_t log_trigger_stop_month;
+extern uint8_t log_trigger_stop_date;
+extern uint8_t log_trigger_stop_hour;
+extern uint8_t log_trigger_stop_min;
+extern uint16_t log_key_press_delay;
+extern uint8_t backlit_timer;
+extern uint8_t relay_set1;
+extern uint8_t relay_set2;
+extern uint8_t relay_set3;
+extern uint8_t relay_set4;
+extern uint8_t relay_set5;
+extern uint8_t relay_set6;
+extern uint8_t relay_set7;
+extern uint8_t relay_set8;
+extern uint8_t Modbus_parity;
+extern uint8_t Modbus_stopbits;
+extern uint8_t count;
+extern uint8_t channel_no;
+extern uint8_t active_channel[17];
+extern uint8_t change_page_flag ;
+extern uint8_t UART_TX_Buffer[20];
+extern uint8_t ChannelSent;
+extern uint8_t sec_ctr,min_ctr, Seconds;
+extern uint8_t Slave_monitor_ID[5];
+extern uint8_t exit_slave_monitor_flag;
+extern uint8_t exit_slave_monitor ;
+extern uint8_t exit_monitor;
+extern uint8_t Slave_monitor_ID[5];
+extern uint8_t use_slave_monitor_flag;
+extern uint8_t use_slave_monitor;
+
+extern uint8_t SerialYear;
+extern uint8_t SerialMonth;
+extern unsigned int ProcessValueId;
+extern unsigned int BatchId;
+extern uint16_t SerialNumber;
+extern uint16_t code;
+extern uint16_t auto_mode_time ;
+extern uint16_t comm_fail_relay_time;
+extern uint16_t modbus_use_channel_flag  ;
+extern uint16_t modbus_channel_exit_flag ;
+extern uint16_t display_menu_exit_flag;
+extern uint16_t over_error_flags;
+extern uint16_t open_error_flags;
+extern uint16_t under_error_flags;
+extern uint16_t temp_use_channel_flag;
+extern uint16_t exit_modbus;
+extern uint16_t exit_display;
+extern uint16_t alarm_channel_exit_flag;
+extern uint16_t Channel_Database[16][5];
+extern uint16_t QueryCounter[16];
+
+extern uint32_t MaxLogCount;
+extern uint32_t Modbus_baudrate;
+extern uint32_t use_alarm_flag;
+extern uint32_t logic_flag;
+extern uint32_t latch_flag;
+extern uint32_t use_alarm1;
+extern uint32_t use_alarm2;
+extern uint32_t alarm1_low;
+extern uint32_t alarm2_low ;
+extern uint32_t alarm1_latch;
+extern uint32_t alarm2_latch ;
+extern uint32_t exit_alarm ;
+extern uint32_t log_count;
+extern uint32_t DownloadDataLowerLimit;
+extern uint32_t DownloadDataUpperLimit;
+
+extern AlarmParameters	 Alarm_Channels[16];
+extern ModbusParameters  Modbus_Channels[16];
+extern DisplayParameters Display_Channels[16];
+extern NameParameters Name_List;
+/*---------------------------------------------------------------------------
+* Function name       : void Display(void)
+*     returns         : -
+*     arg1            : -
+*     arg2            : -
+* Created by          : Nitin Singh
+* Date created        : 20/01/11
+* Description         : This function checks the menu and parameters and calls
+*                       functions to update strings and numbers.
+*---------------------------------------------------------------------------*/
+void Display(void)
+{
+  	uint16_t temp_use_channel = 0x0001;
+  	uint32_t temp_alarm_use_channel = 0x00000001;
+  	
+	Send_str("                ", 0);
+	Send_str("                ", 16);
+	Send_str("                ", 32);
+	Send_str("                ", 48);
+	switch(message)
+	{
+		case 2:
+		    	backlit_timer = 40;		    	  
+		  		Send_str("  Ambetronics  ", 0);       		 
+		    	Send_str("   Engineers   ", 16);
+		    	Send_str("    Pvt Ltd    ", 32);				 
+		    	Send_str(" Mumbai , India", 48);
+		break;
+		
+		case 1:
+				Send_str("     IL-8811    ", 0);
+		    	Send_str("  IntelliLogger ", 16);
+		    	Send_str(" 16 CHNL - 1 PV ", 32);
+		    	Send_str(" VERSION 010412 ", 48);       
+		break;
+		
+    			
+    	case 0:
+		    	Send_str("Please Wait Till", 0);
+		    	Send_str("  Warm-up Time  ", 16);
+				Send_str("   Completes    ", 32);
+				Send_str("        Secs    ", 48);
+		    	if(warm_time1 > 9999)
+		    		warm_time1 = 1;
+		    	display(warm_time1, 51, pos_cntr, 4); 				/* Displaying decrementing warmup time */
+				      			
+		    	break;
+    	default:
+    			switch(menu)
+    			{
+    				case NORMAL_MODE:
+    				
+						if(!(indication_flags_2 & START_STOP_COMM))
+						{
+							Send_str("Communication is", 0);
+					    	Send_str("Disabled. Please", 16);
+							Send_str("Prss SET Key for", 32);
+							Send_str("3 sec to enable.", 48);	
+						}	
+						else if(active_channel[0] == '\0')
+						{
+							Send_str("                ", 0);
+					    	Send_str("Channels Are Not", 16);
+							Send_str("    Activated   ", 32);
+							Send_str("                ", 48);	
+						}
+	   					else
+    					{
+	    					if(change_page_flag )
+	    					{
+	    						counter++;
+	    						if(active_channel[counter-1] == '\0')
+	    						{
+	    							counter = 1;
+	    						}
+	    						change_page_flag = 0;
+	    					}
+	    					
+	    					if(QueryCounter[active_channel[counter-1] - 1] >= 10)  
+							{
+								
+								Send_str("CH", 0);
+								display((uint32_t)active_channel[counter-1],2,0,2);
+								Send_str("PV:01", 5);
+					  			Send_str("ID", 11);	
+								display((uint32_t)Modbus_Channels[active_channel[counter-1] - 1].SlaveID,13,0,3);
+								
+								Send_str("    Slave Not   ", 16);
+								Send_str("   Responding   ", 32);
+								Send_str("                ", 48);
+								
+								
+								
+							}
+	    					else if(over_error_flags & (0x0001 << active_channel[counter-1] - 1))
+							{
+								Send_str("CH", 0);
+								display((uint32_t)active_channel[counter-1],2,0,2);
+								Send_str("PV:01", 5);
+					  			Send_str("ID", 11);	
+								display((uint32_t)Modbus_Channels[active_channel[counter-1] - 1].SlaveID,13,0,3);
+								
+								Send_str("Process Value Is", 32);
+								Send_str("Greatr Than Rnge", 48);
+								if(indication_flags & TOGGLE)
+								{
+									Send_str("   Over Range!  ", 16);	
+								}
+								else
+								{
+									Send_str("                ", 16);
+								}
+							}
+							else if(open_error_flags & (0x0001 << active_channel[counter-1] - 1))
+							{
+								Send_str("CH", 0);
+								display((uint32_t)active_channel[counter-1],2,0,2);
+								Send_str("PV:01", 5);
+					  			Send_str("ID", 11);	
+								display((uint32_t)Modbus_Channels[active_channel[counter-1] - 1].SlaveID,13,0,3);
+								
+								Send_str("Please Check The", 32);
+								Send_str("Sensor Connectns", 48);
+								if(indication_flags & TOGGLE)
+								{
+									Send_str("   Sensor Open  ", 16);
+								}
+								else
+								{
+									Send_str("                ", 16);
+								}
+							}
+							else if(under_error_flags & (0x0001 << active_channel[counter-1] - 1))
+							{
+								Send_str("CH", 0);
+								display((uint32_t)active_channel[counter-1],2,0,2);
+								Send_str("PV:01", 5);
+					  			Send_str("ID", 11);	
+								display((uint32_t)Modbus_Channels[active_channel[counter-1] - 1].SlaveID,13,0,3);
+								
+								Send_str("Process Value Is", 32);
+								Send_str(" Less Than Rnge ", 48);
+								if(indication_flags & TOGGLE)
+								{
+									Send_str("  Under Range!  ", 16);
+								}
+								else
+								{
+									Send_str("                ", 16);
+								}
+							}
+							else
+							{
+								Send_str("CH", 0);
+								display((uint32_t)active_channel[counter-1],2,0,2);
+								Send_str("PV:01", 5);
+					  			Send_str("ID", 11);	
+								display((uint32_t)Modbus_Channels[active_channel[counter-1] - 1].SlaveID,13,0,3);
+								
+									
+								if(Channel_Database[active_channel[counter-1] - 1][0] > 32767)
+								{
+									if(Display_Channels[active_channel[counter-1] - 1].dp == 3)
+									{
+										display_val_with_dp(18, (uint32_t)((65536 - Channel_Database[active_channel[counter-1] - 1][0])), Display_Channels[active_channel[counter-1] - 1].dp,0);
+										
+									}									
+									else
+										display_val_with_dp(19, (uint32_t)((65536 - Channel_Database[active_channel[counter-1] - 1][0])), Display_Channels[active_channel[counter-1] - 1].dp,0);
+									Send_str("-", 18);
+								}
+								else
+								{
+									if(Display_Channels[active_channel[counter-1] - 1].dp == 3)
+									{
+										display_val_with_dp(18, (uint32_t)(Channel_Database[active_channel[counter-1] - 1][0]), Display_Channels[active_channel[counter-1] - 1].dp,0);
+										
+									}
+									else
+										display_val_with_dp(19, (uint32_t)(Channel_Database[active_channel[counter-1] - 1][0]), Display_Channels[active_channel[counter-1] - 1].dp,0);
+										
+									Send_str(" ", 18);
+								}
+								
+//								if((Display_Channels[active_channel[counter-1] - 1].units > 2) || (Display_Channels[active_channel[counter-1] - 1].dp == 1)) //ppm
+//									Send_str("    ", 16);
+//								
+//								
+//								if(NegativeFlag)
+//									Send_str("-", 19);
+//								else
+//									Send_str(" ", 19);
+									
+									
+								if(Display_Channels[active_channel[counter-1] - 1].dp == 0)  
+									Display_units(Display_Channels[active_channel[counter-1] - 1].units, 25);
+								else							
+									Display_units(Display_Channels[active_channel[counter-1] - 1].units, 26); //for 1 & 2 dp give space
+								
+								if(set_start_log_flag)
+								{
+									if(!stop_log)
+									{
+										if(indication_flags & TOGGLE)
+											Send_str("L", 16);
+										else
+											Send_str(" ", 16);
+									}
+									else
+										Send_str("L", 16);
+								}
+								else
+									Send_str(" ", 16);								
+
+								Display_gas(Display_Channels[active_channel[counter-1] - 1].gas_no, 32);
+							
+								
+								if(relay_set1 || relay_set3 || relay_set5 || relay_set7)
+								{
+									if(active_channel[counter-1] <= 4)
+									{
+										if(relay_set1)
+										{
+											Send_str("RL1:ON", 48);
+
+										}
+										else
+											Send_str("RL1:OFF", 48);
+									}
+									else if(active_channel[counter-1] >= 5 && active_channel[counter-1] <= 8)// && relay_set3)
+									{
+										if(relay_set3)
+										{
+											Send_str("RL3:ON", 48);
+										}
+										else
+											Send_str("RL3:OFF", 48);
+									}
+									else if(active_channel[counter-1] >= 9 && active_channel[counter-1] <= 12)// && relay_set5)
+									{
+										if(relay_set5)
+										{
+											Send_str("RL5:ON", 48);
+
+										}
+										else
+											Send_str("RL5:OFF", 48);
+									}
+									else if(active_channel[counter-1] >= 13 && active_channel[counter-1] <= 16)// && relay_set7)
+									{
+										if(relay_set7)
+										{
+											Send_str("RL7:ON", 48);
+
+										}
+										else
+											Send_str("RL7:OFF", 48);
+									}
+								}									
+								
+								else
+								{
+										if(active_channel[counter-1] <= 4 )
+											Send_str("RL1:OFF", 48);
+										else if(active_channel[counter-1] >= 5 && active_channel[counter-1] <= 8 )
+											Send_str("RL3:OFF", 48);
+										else if(active_channel[counter-1] >= 9 && active_channel[counter-1] <= 12)
+											Send_str("RL5:OFF", 48);
+										else if(active_channel[counter-1] >= 13 && active_channel[counter-1] <= 16)
+											Send_str("RL7:OFF", 48);
+								}
+								
+								
+								if(relay_set2 || relay_set4 || relay_set6 || relay_set8)
+								{
+
+									
+									if(active_channel[counter-1] <= 4)
+									{
+										if(relay_set2)
+										{
+											Send_str("RL2:ON", 56);
+										}
+										else
+											Send_str("RL2:OFF", 56);
+									}
+									else if(active_channel[counter-1] >= 5 && active_channel[counter-1] <= 8)// && relay_set4)
+									{
+										if(relay_set4)
+										{
+											Send_str("RL4:ON", 56);
+										}
+										else
+											Send_str("RL4:OFF", 56);
+									}
+									else if(active_channel[counter-1] >= 9 && active_channel[counter-1] <= 12)// && relay_set6)
+									{
+										if(relay_set6)
+										{
+											Send_str("RL6:ON", 56);
+										}
+										else
+											Send_str("RL6:OFF", 56);
+									}
+									else if(active_channel[counter-1] >= 13 && active_channel[counter-1] <= 16)// && relay_set8)
+									{
+										if(relay_set8)
+										{
+											Send_str("RL8:ON", 56);
+										}
+										else
+											Send_str("RL8:OFF", 56);
+									}
+									
+										
+								}
+								else
+								{
+										if(active_channel[counter-1] <= 4)
+											Send_str("RL2:OFF", 56);
+										else if(active_channel[counter-1] >= 5 && active_channel[counter-1] <= 8)
+											Send_str("RL4:OFF", 56);
+										else if(active_channel[counter-1] >= 9 && active_channel[counter-1] <= 12)
+											Send_str("RL6:OFF", 56);
+										else if(active_channel[counter-1] >= 13 && active_channel[counter-1] <= 16)
+											Send_str("RL8:OFF", 56);
+								}
+
+							}
+    					}
+
+					 break;
+				   	case MAIN_MENU:
+					   		backlit_timer = 80; 
+					  		if(count < 3)
+					  		{
+					  			Send_str("  ENTERING THE  ", 16);
+					  			Send_str("   MAIN MENU    ", 32);
+					  		}
+					  		else
+					  		{
+						  		Send_str("   MAIN MENU    ", 0);
+						  		Send_str("   PARAMETER    ", 32);
+						  		if(indication_flags & TOGGLE)
+								{
+							    	Send_str(" PRESS INC KEY  ", 48);
+							    }   							   					
+								else
+									Send_str("TO ENTR THE MENU", 48);
+						  		
+						  		if(cal_para == MODBUS_PARAMETER)
+						  		{
+						  			Send_str(" MODBUS SETTING ", 16);
+						  			
+						  		}
+						  			
+						  		else if(cal_para == DISPLAY_SETTING_PARAMETER)
+						  		{
+						  			Send_str("DISPLAY SETTING ", 16);
+						  		}
+						  		else if(cal_para == ALARM_MENU_PARAMETER)
+						  		{
+						  			Send_str("  ALARM SETTING ", 16);
+						  		}
+						  		else if(cal_para == RTC_MENU_PARAMETER)
+						  		{
+						  			Send_str("    RTC SETTING ", 16);
+						  		}
+						  		else if(cal_para == LOG_SET_MENU_PARAMETER)
+						  		{
+						  			Send_str("    LOG SETTING ", 16);
+						  		}
+						  		else if(cal_para == MEMORY_MENU_PARAMETER)
+						  		{
+						  			Send_str(" MEMORY SETTING ", 16);
+						  		}
+						  		else if(cal_para == DOWNLOADING_PARAMETER)
+						  		{
+						  			Send_str("DWNLOAD SETTING ", 16);
+						  		}
+								else if(cal_para == PASSWORD_PARAMETER)
+						  		{
+						  			Send_str("PASSWRD CHANGING", 16);
+						  		}
+						  		else if(cal_para == BACKLIT_PARAMETER)
+						  		{
+						  			Send_str("BACKLIT SETTING ", 16);
+						  		}
+						  		else if(cal_para == SLAVE_MONITOR_PARAMETER)
+						  		{
+						  			Send_str("INTELLI-REPEATER", 16);
+						  		}
+						  		else if(cal_para == START_STOP_COMMUNICATION_PARAMETER)
+						  		{
+						  			Send_str("   COMM SETTING ", 16);
+						  		}
+						  		else if(cal_para == MAIN_MENU_EXIT_PARAMETER)
+						  		{
+						  			Send_str("   EXIT MENU    ", 16);
+						  			
+						  			if(exit_flags & EXIT_MENU)
+						  				Send_str("      YES       ", 32);
+									else
+										Send_str("      NO        ", 32);
+										
+									if(indication_flags & TOGGLE)
+										Send_str(" USE INC & SHIFT", 48);
+									else
+										Send_str("  KEY TO SELECT ", 48);
+						  		}
+					  		}
+					break;
+					
+					  	
+					case ENTER_PASSWORD:
+						Send_str("                ", 0);
+						Send_str("                ", 16);
+						Send_str("                ", 32);
+						Send_str("                ", 48);
+						backlit_timer = 80;
+						
+						Send_str("ENTR THE CORRECT", 0);
+						Send_str("    PASSWORD    ", 16); 
+						
+				    	display(password, 38, pos_cntr, 4);
+				    	
+				    	if(indication_flags & TOGGLE)
+							Send_str(" USE INC & SHIFT", 48);
+						else
+							Send_str("  KEY TO SELECT ", 48);
+					break;          
+					
+					case MODBUS_MENU:
+							Send_str("                ", 0);
+							Send_str("                ", 16);
+							Send_str("                ", 32);
+							Send_str("                ", 48);
+							
+							Send_str("  USE INC KEY   ", 32);
+							Send_str("TO ENTR THE MENU", 48);	
+									
+					  		backlit_timer = 80;
+					  		
+					  		if(cal_para == MODBUS_PARAMETER_1)
+					  		{
+					  			Send_str("MODBUS PARAMETER", 0);
+								Send_str("   To Continue  ", 16);
+								Send_str("Prss Set/Nxt Key", 32);
+								Send_str("                ", 48);
+					  		}
+					  		else if((cal_para >= CH1_MODBUS_PARAMETER) && (cal_para <= CH16_MODBUS_PARAMETER))
+					  		{
+					  			Send_str("MODBUS PARAMETER", 0);
+								Send_str("   CHANNEL:     ", 16);
+								display(cal_para, 27, 0, 2);
+								if(modbus_use_channel_flag & (temp_use_channel << (cal_para-1)))
+									str[18] = '*';
+					  		}
+					  		else if(cal_para == BAUD_RATE_PARAMETER)
+					  		{
+					  			Send_str("MODBUS PARAMETER", 0);
+					  			
+					  			Send_str(((indication_flags & TOGGLE)?"  SET BAUDRATE  ":"     IN BPS     "), 16);
+						    	
+						    	Send_str("                ", 32);
+								display(Modbus_baudrate, 38, pos_cntr, 5);
+								
+								Send_str(((indication_flags & TOGGLE)?" USE INC & SHIFT":"  KEY TO SELECT "), 48);
+					  		}
+					  		else if(cal_para == PARITY_PARAMETER)
+					  		{
+					  			Send_str("MODBUS PARAMETER", 0);
+								Send_str("   SET PARITY    ", 16);
+								
+								if(Modbus_parity == 1)
+									Send_str("      NONE       ", 32);
+								else if(Modbus_parity == 2)
+									Send_str("      EVEN       ", 32);
+								else if(Modbus_parity == 3)
+									Send_str("      ODD        ", 32);
+								
+								Send_str(((indication_flags & TOGGLE)?" USE INC & SHIFT":"  KEY TO SELECT "), 48);
+					  		}
+					  		else if(cal_para == STOPBITS_PARAMETER)
+					  		{
+					  			Send_str("MODBUS PARAMETER", 0);
+								Send_str("   SET STOPBITS    ", 16);
+								if(Modbus_stopbits == 1)
+									Send_str("      ONE        ", 32);
+								else if(Modbus_stopbits == 2)
+									Send_str("      TWO        ", 32);
+								
+								Send_str(((indication_flags & TOGGLE)?" USE INC & SHIFT":"  KEY TO SELECT "), 48);
+					  		}
+					  		else if(cal_para == MODBUS_EXIT_PARAMETER)
+					  		{
+					  			Send_str("MODBUS PARAMETER", 0);
+						    	Send_str("EXIT MODBUS MENU ", 16);
+						    	
+						    	Send_str(((exit_flags & EXIT_MODBUS_MENU_FLAG)?"      YES       ":"      NO        "), 32);
+						    									
+								Send_str(((indication_flags & TOGGLE)?" USE INC & SHIFT":"  KEY TO SELECT "), 48);
+					  		}
+					break;
+					                                        
+					case CHANNEL_MODBUS_MENU:
+							Send_str("                ", 0);
+							Send_str("                ", 16);
+							Send_str("                ", 32);
+							Send_str("                ", 48);
+					  		backlit_timer = 80;
+					  		
+					  		
+					  		switch(cal_para)
+					  		{
+					  			case ENABLE_CHANNEL:
+					
+									Send_str(" CHANNEL       ", 0);
+									display(channel_no, 9, 0, 2);
+									Send_str("SET", 12);
+							    	Send_str("ENABLE CHANNL   ", 16);
+							    	display(channel_no, 30, 0, 2);
+							    	if (modbus_use_channel_flag & temp_use_channel_flag)
+										Send_str("      YES       ", 32);
+									else
+										Send_str("      NO        ", 32);
+										
+									if(indication_flags & TOGGLE)
+										Send_str(" USE INC & SHIFT", 48);
+									else
+										Send_str("  KEY TO SELECT ", 48);
+								break;
+								
+								case SET_CHANNEL_PARAMETER_1:
+									
+									
+									Send_str(" CHANNEL       ", 0);
+									display(channel_no, 9, 0, 2);
+									Send_str("SET", 12);
+							    	Send_str("SLAVE ID: ", 16);
+							    	Send_str("READ REG: ", 32);
+							    	Send_str("PV ADDRS: ", 48);
+							    	
+							    	
+							    	if(pos_cntr < 4)
+							    	{
+							    		display(Modbus_Channels[channel_no-1].SlaveID, 26, pos_cntr1, 3);
+							    		display(Modbus_Channels[channel_no-1].PvAddress, 58, 0, 4);
+							    		if(Modbus_Channels[channel_no-1].ReadRegister == 0)
+								    	{
+								    		Send_str("HL REG", 42);
+										}
+								    	else
+								    	{
+								    		Send_str("IP REG", 42);
+										}
+							    	}
+							    	else if(pos_cntr == 4)
+							    	{
+							    		display(Modbus_Channels[channel_no-1].SlaveID, 26, 0, 3);
+							    		display(Modbus_Channels[channel_no-1].PvAddress, 58, 0, 4);
+									    if(Modbus_Channels[channel_no-1].ReadRegister == 0)
+								    	{
+								    		if(indication_flags & TOGGLE)
+												Send_str("HL REG", 42);
+											else
+												Send_str("      ", 42);
+								    	}
+								    	else
+								    	{
+								    		if(indication_flags & TOGGLE)
+												Send_str("IP REG", 42);
+											else
+												Send_str("      ", 42);
+								    	}
+							    	}
+							    	else 
+							    	{
+							    		display(Modbus_Channels[channel_no-1].SlaveID, 26, 0, 3);
+							    		display(Modbus_Channels[channel_no-1].PvAddress, 58, pos_cntr2, 4);
+							    		if(Modbus_Channels[channel_no-1].ReadRegister == 0)
+								    	{
+								    		Send_str("HL REG", 42);
+										}
+								    	else
+								    	{
+								    		Send_str("IP REG", 42);
+										}
+							    	}
+								break;
+								
+								case CHANNEL_EXIT:
+								
+									
+									Send_str(" CHANNEL       ", 0);
+									display(channel_no, 9, 0, 2);
+									Send_str("SET", 12);
+									
+							    		Send_str(" EXIT PARAMETER ", 16);
+							    	if (modbus_channel_exit_flag & exit_modbus)
+										Send_str("      YES       ", 32);
+									else
+										Send_str("      NO        ", 32);
+									if(indication_flags & TOGGLE)
+										Send_str(" USE INC & SHIFT", 48);
+									else
+										Send_str("  KEY TO SELECT ", 48);
+								break;
+								
+								
+					  		}
+					break;
+					
+					case DISPLAY_SETTING_MENU:
+							
+							Send_str("                ", 0);
+							Send_str("                ", 16);
+							Send_str("                ", 32);
+							Send_str("                ", 48);
+							
+							Send_str("  USE INC KEY   ", 32);
+							Send_str("TO ENTR THE MENU", 48);
+							
+							if(cal_para == DISPLAY_PARAMETER_1)
+					  		{
+					  			Send_str("DISPLAY PARAMETR", 0);
+								Send_str("   To Continue  ", 16);
+								Send_str("Prss Set/Nxt Key", 32);
+								Send_str("                ", 48);
+					  		}
+					  		else if(cal_para == PAGE_CHANGING_PARAMETER)
+					  		{
+					  			Send_str("DISPLAY PARAMETR", 0);
+								
+						    	Send_str(((indication_flags & TOGGLE)?"   SELECT PAGE  ":"  CHANGING MODE "), 16);
+						    	
+						    	Send_str(((indication_flags & DISPLAY_AUTO_MODE)?"      AUTO      ":"     MANUAL     "), 32);
+						    	
+						    	Send_str(((indication_flags & TOGGLE)?" USE INC & SHIFT":"  KEY TO SELECT "), 48);
+								
+					  		}
+					  		else if(cal_para == AUTO_PAGE_CHANGING_TIME_PARAMETER)
+					  		{
+					  			Send_str("DISPLAY PARAMETR", 0);
+					  			
+					  			Send_str(((indication_flags & TOGGLE)?"   SELECT PAGE  ":"  CHANGING TIME "), 16);
+								
+						    	Send_str("                ", 32);
+								display(auto_mode_time, 36, pos_cntr, 3);
+								
+								Send_str("SECONDS ", 40);		    	
+								
+								Send_str(((indication_flags & TOGGLE)?" USE INC & SHIFT":"  KEY TO SELECT "), 48);
+								
+					  		}
+					  		else if(cal_para == CUSTOMIZED_NAME_LIST_PARAMETER)
+					  		{
+					  			Send_str("DISPLAY PARAMETR", 0);
+					  			
+					  			Send_str(((indication_flags & TOGGLE)?"     ASSIGN     ":" CUSTOMIZED NAME"), 16);
+								
+					  		}
+					  		else if(cal_para >= CH1_DISPLAY_PARAMETER && cal_para <= CH16_DISPLAY_PARAMETER)
+					  		{
+					  			Send_str("DISPLAY PARAMETR", 0);
+								Send_str("   CHANNEL:     ", 16);
+								display((cal_para-3), 27, 0, 2);
+								
+					  		}
+					  		else if(cal_para == DISPLAY_EXIT_PARAMETER)
+					  		{
+					  			Send_str("DISPLAY PARAMETR", 0);
+							    	
+						    	Send_str("EXIT DISPLY MENU", 16);
+						    	
+						    	Send_str(((exit_flags & EXIT_DISPLAY_MENU_FLAG)?"      YES       ":"      NO        "), 32);
+						    	
+						    	Send_str(((indication_flags & TOGGLE)?" USE INC & SHIFT":"  KEY TO SELECT "), 48);
+						    	
+					  		}
+					  		
+						break;
+						
+						case CHANNEL_DISPLAY_MENU:
+							
+							Send_str("                ", 0);
+							Send_str("                ", 16);
+							Send_str("                ", 32);
+							Send_str("                ", 48);
+							
+							Send_str(" CHANNEL       ", 0);
+							display(channel_no, 9, 0, 2);
+							Send_str("SET", 12);
+							
+							if(indication_flags & TOGGLE)
+								Send_str(" USE INC & SHIFT", 48);
+							else
+								Send_str("  KEY TO SELECT ", 48);
+								
+							switch(cal_para)
+							{
+								
+								case CHANNEL_PARAMETER_1:
+							    	
+							    	Send_str("SELECT PV1 NAME ", 16);
+							    	display_flag = 1;
+							    	Display_gas(Display_Channels[channel_no - 1].gas_no,32);
+							    	display_flag = 0;
+
+								break;
+								
+								case CHANNEL_PARAMETER_2:
+									
+							    	Send_str(" SELECT PV1 DP  ", 16);
+
+							    	if(Display_Channels[channel_no - 1].dp == 0)
+							    		Send_str("0000", 38);
+							    	else if(Display_Channels[channel_no - 1].dp == 1)
+							    		Send_str("000.0", 38);
+							    	else if(Display_Channels[channel_no - 1].dp == 2)
+							    		Send_str("00.00", 38);
+							    	else if(Display_Channels[channel_no - 1].dp == 3)
+							    		Send_str("0.000", 38);
+								    	
+								break;
+								
+								case CHANNEL_PARAMETER_3:
+									
+									
+							    	Send_str("SELECT PV1 UNIT ", 16);
+							    	Display_units(Display_Channels[channel_no - 1].units,38);
+									
+								break;
+								
+								
+								case CHANNEL_PARAMETER_EXIT:
+								
+							    	Send_str("EXIT PARA SETING", 16);
+							    	if (display_menu_exit_flag & exit_display)
+										Send_str("      YES       ", 32);
+									else
+										Send_str("      NO        ", 32);
+							    	
+								break;
+								
+								
+							}	
+						break;
+						
+						case CUSTOMIZED_LIST_MENU:
+						
+							Send_str("                ", 0);
+							Send_str("                ", 16);
+							Send_str("                ", 32);
+							Send_str("                ", 48);
+							
+							Send_str("CUSTOM NAME PARA", 0);
+							
+							if(indication_flags & TOGGLE)
+								Send_str(" USE INC & SHIFT", 48);
+							else
+								Send_str("  KEY TO SELECT ", 48);
+								
+							switch(cal_para)
+							{
+			  					case NAME_1_PARAMETER:
+							    	
+							    	Send_str("CUSTOMIZD NAME 1", 16);
+							    	Display_Name(Name_List.Name1, 34);
+							    	
+								break;
+								
+								case NAME_2_PARAMETER:
+									
+							    	Send_str("CUSTOMIZD NAME 2", 16);
+							    	Display_Name(Name_List.Name2, 34);
+								    	
+								break;
+								
+								case NAME_3_PARAMETER:
+									
+									Send_str("CUSTOMIZD NAME 3", 16);
+							    	Display_Name(Name_List.Name3, 34);
+									
+								break;
+								
+								case NAME_4_PARAMETER:
+							    	
+							    	Send_str("CUSTOMIZD NAME 4", 16);
+							    	Display_Name(Name_List.Name4, 34);
+
+								break;
+								
+								case NAME_5_PARAMETER:
+									
+							    	Send_str("CUSTOMIZD NAME 5", 16);
+							    	Display_Name(Name_List.Name5, 34);
+								    	
+								break;
+								
+								case NAME_EXIT_PARAMETER:
+								
+							    	Send_str("EXIT PARA SETING", 16);
+							    	if (exit_flags_1 & EXIT_LIST_MENU_FLAG)
+										Send_str("      YES       ", 32);
+									else
+										Send_str("      NO        ", 32);
+							    	
+								break;
+							}
+								
+						break;
+						
+						
+						
+						
+						
+						case ALARM_MENU:
+							
+							Send_str("                ", 0);
+							Send_str("                ", 16);
+							Send_str("                ", 32);
+							Send_str("                ", 48);
+							
+							Send_str("  USE INC KEY   ", 32);
+							Send_str("TO ENTR THE MENU", 48);
+							
+							if(cal_para == ALARM_PARAMETER_1)
+					  		{
+					  			Send_str(" ALARM PARAMETER", 0);
+								Send_str("   To Continue  ", 16);
+								Send_str("Prss Set/Nxt Key", 32);
+								Send_str("                ", 48);
+					  		}
+					  		else if(cal_para >= CH1_ALARM_PARAMETER && cal_para <= CH16_ALARM_PARAMETER)
+					  		{
+					  			Send_str(" ALARM PARAMETER", 0);
+								Send_str("   CHANNEL:     ", 16);
+								display(cal_para, 27, 0, 2);
+								if((use_alarm_flag & (temp_alarm_use_channel << ((cal_para-1)*2))) || (use_alarm_flag & (temp_alarm_use_channel << (((cal_para-1)*2)+1))))
+									str[18] = '*';
+					  		}
+					  		else if(cal_para == USE_COMM_FAIL_RELAY)
+					  		{
+					  			Send_str(" ALARM PARAMETER", 0);
+					  			
+					  			Send_str("USE COM FAIL RLY", 16);
+								
+								Send_str(((indication_flags_2 & USE_COMM_FAIL_FLAG)?"      YES       ":"      NO        "), 32);
+						    	
+								Send_str(((indication_flags & TOGGLE)?" USE INC & SHIFT":"  KEY TO SELECT "), 48);
+								
+					  		}
+					  		else if(cal_para == COMM_FAIL_RELAY_TIME)
+					  		{
+					  			Send_str(" ALARM PARAMETER", 0);
+					  			
+					  			Send_str(((indication_flags & TOGGLE)?"SET RLY OFF TIME":"   AFTER ACK    "), 16);
+														    	
+						    	Send_str("                ", 32);
+								display(comm_fail_relay_time, 35, pos_cntr, 3);
+								
+								Send_str("MINUTES ", 39);		    	
+								
+								Send_str(((indication_flags & TOGGLE)?" USE INC & SHIFT":"  KEY TO SELECT "), 48);
+								
+					  		}
+					  		else if(cal_para == FAILSAFE_RELAY_PARAMETER)
+					  		{
+					  			Send_str(" ALARM PARAMETER", 0);
+									
+						    	Send_str(" FAILSAFE RELAY ", 16);
+						    	
+						    	Send_str(((indication_flags_2 & FAIL_SAFE_RELAY_FLAG)?"  NORMALLY ON   ":"  NORMALLY OFF  "), 32);
+						    	
+								Send_str(((indication_flags & TOGGLE)?" USE INC & SHIFT":"  KEY TO SELECT "), 48);
+								
+					  		}
+					  		else if(cal_para == ALARM_MENU_EXIT_PARAMETER)
+					  		{
+					  			Send_str(" ALARM PARAMETER", 0);
+							    
+						    	Send_str(" EXIT ALARM MENU", 16);
+						    	
+						    	Send_str(((exit_flags & EXIT_ALARM)?"      YES       ":"      NO        "), 32);	
+						    	
+						    	Send_str(((indication_flags & TOGGLE)?" USE INC & SHIFT":"  KEY TO SELECT "), 48);
+						    	
+					  		}
+
+						break;	
+						
+						case CHANNEL_ALARM_MENU:
+							
+							Send_str("                ", 0);
+							Send_str("                ", 16);
+							Send_str("                ", 32);
+							Send_str("                ", 48);
+							
+							Send_str(" CHANNEL       ", 0);
+							display(channel_no, 9, 0, 2);
+							Send_str("SET", 12);
+							
+							if(indication_flags & TOGGLE)
+								Send_str(" USE INC & SHIFT", 48);
+							else
+								Send_str("  KEY TO SELECT ", 48);
+								
+							switch(cal_para)
+							{
+								case USE_ALARM1_PARAMETER:
+									
+									Send_str("   USE ALARM 1  ", 16);
+									
+									if (use_alarm_flag & use_alarm1)
+										Send_str("      YES       ", 32);
+									else
+										Send_str("      NO        ", 32);
+							    	
+
+								break;
+								
+								case SET_ALARM1_PARAMETER:
+									
+									Send_str("SET AL1 IN", 16);
+									Display_units(Display_Channels[channel_no - 1].units, 27);
+									
+									display_negative_with_dp(37,Alarm_Channels[channel_no - 1].Alarm1_SetPt,Display_Channels[channel_no - 1].dp,pos_cntr);
+//									if(Display_Channels[channel_no - 1].units == 2 || Display_Channels[channel_no - 1].units == 3) //ppm or mgm3
+//										Send_str("      ", 32);
+										
+
+							    break;
+							    
+							    case SET_HYSTERESIS1_PARAMETER:
+									
+									Send_str("SET HY1 IN", 16);
+									Display_units(Display_Channels[channel_no - 1].units, 27);
+									
+									if(Display_Channels[channel_no - 1].dp ==  0) // No Dp'
+									{
+										display_val_with_dp(37,Alarm_Channels[channel_no - 1].Alarm1_Hys,Display_Channels[channel_no - 1].dp,pos_cntr); 
+										Send_str("      ", 32);
+									}
+									else if(Display_Channels[channel_no - 1].dp ==  1 || Display_Channels[channel_no - 1].dp ==  2) // 1 Dp & 2 DP
+									{
+										display_val_with_dp(36,Alarm_Channels[channel_no - 1].Alarm1_Hys,Display_Channels[channel_no - 1].dp,pos_cntr);
+										Send_str("     ", 32);
+									}
+									else // 3 Dp
+									{
+										display_val_with_dp(35,Alarm_Channels[channel_no - 1].Alarm1_Hys,Display_Channels[channel_no - 1].dp,pos_cntr);
+										Send_str("     ", 32);
+									}
+										
+
+							    break;
+							    
+							    case SEL_ALARM1_LOGIC_PARAMETER:
+							    	
+									Send_str(" ALARM 1 LOGIC  ", 16);	
+									Send_str("                ", 32);
+									if (logic_flag & alarm1_low)
+									{
+										Send_str("               ", 32);
+										Send_str("LOW", 38);
+									}
+									else
+									{
+										Send_str("               ", 32);
+										Send_str("HIGH", 38);
+									}
+							    	
+
+								break;
+							    
+							    case SEL_ALARM1_LATCH_PARAMETER:
+									
+									Send_str("ALARM 1 LATCHING", 16);	
+									
+									if (latch_flag & alarm1_latch)
+										Send_str("      YES      ", 32);
+									else
+										Send_str("      NO       ", 32);
+							    	
+
+								break;
+								
+
+									
+								case USE_ALARM2_PARAMETER:
+
+									Send_str("   USE ALARM 2  ", 16);
+									
+									if (use_alarm_flag & use_alarm2)
+										Send_str("      YES       ", 32);
+									else
+										Send_str("      NO        ", 32);
+							    	
+
+								break;
+								
+								case SET_ALARM2_PARAMETER:
+
+									Send_str("SET AL2 IN", 16);
+									Display_units(Display_Channels[channel_no - 1].units, 27);
+									
+									display_negative_with_dp(37,Alarm_Channels[channel_no - 1].Alarm2_SetPt,Display_Channels[channel_no - 1].dp,pos_cntr);
+//									if(Display_Channels[channel_no - 1].units == 2 || Display_Channels[channel_no - 1].units == 3) //ppm or mgm3
+//										Send_str("      ", 32);
+
+							    break;
+							    
+							    case SET_HYSTERESIS2_PARAMETER:
+
+									Send_str("SET HY2 IN", 16);
+									Display_units(Display_Channels[channel_no - 1].units, 27);
+									
+									if(Display_Channels[channel_no - 1].dp ==  0) // No Dp'
+									{
+										display_val_with_dp(37,Alarm_Channels[channel_no - 1].Alarm2_Hys,Display_Channels[channel_no - 1].dp,pos_cntr); 
+										Send_str("      ", 32);
+									}
+									else if(Display_Channels[channel_no - 1].dp ==  1 || Display_Channels[channel_no - 1].dp ==  2) // 1 Dp & 2 DP
+									{
+										display_val_with_dp(36,Alarm_Channels[channel_no - 1].Alarm2_Hys,Display_Channels[channel_no - 1].dp,pos_cntr);
+										Send_str("     ", 32);
+									}
+									else // 3 Dp
+									{
+										display_val_with_dp(35,Alarm_Channels[channel_no - 1].Alarm2_Hys,Display_Channels[channel_no - 1].dp,pos_cntr);
+										Send_str("     ", 32);
+									}
+										
+
+							    break;
+							    
+							    case SEL_ALARM2_LOGIC_PARAMETER:
+									
+									Send_str("  ALARM 2 LOGIC ", 16);	
+									Send_str("                ", 32);
+									
+									if (logic_flag & alarm2_low)
+									{
+										Send_str("               ", 32);
+										Send_str("LOW", 38);
+									}
+									else
+									{
+										Send_str("               ", 32);
+										Send_str("HIGH", 38);
+									}
+
+								break;
+							    
+							    case SEL_ALARM2_LATCH_PARAMETER:
+
+									Send_str("ALARM 2 LATCHING", 16);	
+									
+									if (latch_flag & alarm2_latch)
+										Send_str("      YES       ", 32);
+									else
+										Send_str("      NO        ", 32);							    	
+
+								break;								
+								
+							    case ALARM_EXIT_PARAMETER:
+
+									Send_str(" EXIT ALARM SET ", 16);
+									
+							    	if (alarm_channel_exit_flag & exit_alarm)
+										Send_str("      YES       ", 32);
+									else
+										Send_str("      NO        ", 32);							    	
+
+								break;
+							}
+						break;
+						
+						case RTC_MENU:	
+							
+							backlit_timer = 80;
+					  		
+					  		Send_str(" RTC PARAMETER ", 0);
+					  		
+					  		if(indication_flags & TOGGLE)
+								Send_str(" USE INC & SHIFT", 48);
+							else
+								Send_str("  KEY TO SELECT ", 48);	
+												  		
+					  		switch(cal_para)
+					  		{
+					  			case RTC_PARAMETER_1:
+								
+									Send_str("   To Continue  ", 16);
+									Send_str("Prss Set/Nxt Key", 32);
+									Send_str("                ", 48);
+								break;	
+								
+								case SET_RTC_PARAMETER_1:
+									
+									Send_str(" DATE/MNTH/YEAR", 16);
+									Send_str("     /    /20  ", 32);
+									if(pos_cntr <= 2 )
+							    	{
+										display(rtc_date, 34, pos_cntr1, 2);
+							    		display(rtc_month,39, 0, 2);
+							    		display(rtc_year, 45, 0, 2);
+							    	}
+							    	else if(pos_cntr >= 3 && pos_cntr <= 4)
+							    	{
+										display(rtc_date, 34, 0, 2);
+							    		display(rtc_month, 39, pos_cntr2, 2);
+							    		display(rtc_year, 45, 0, 2);
+							    	}
+							    	else 
+							    	{
+
+							    		display(rtc_date, 34, 0, 2);
+							    		display(rtc_month, 39, 0, 2);
+							    		display(rtc_year, 45, pos_cntr3, 2);
+							    	}
+								break;
+								
+								case SET_RTC_PARAMETER_2:
+									
+									Send_str(" HOUR:MINS:SECS", 16);
+									Send_str("     :    :    ", 32);
+									if(pos_cntr <= 2 )
+							    	{
+										display(rtc_hour, 34, pos_cntr1, 2);
+							    		display(rtc_min, 39, 0, 2);
+							    		display(rtc_sec, 44, 0, 2);
+							    	}
+							    	else if(pos_cntr >= 3 && pos_cntr <= 4)
+							    	{
+							    		display(rtc_hour, 34, 0, 2);
+							    		display(rtc_min, 39, pos_cntr2, 2);
+							    		display(rtc_sec, 44, 0, 2);
+							    	}
+							    	else 
+							    	{
+										display(rtc_hour, 34, 0, 2);
+							    		display(rtc_min, 39, 0, 2);
+							    		display(rtc_sec, 44, pos_cntr3, 2);
+							    	}
+								break;
+								
+								case CONFIRM_RTC_PARAMETER:
+								
+									Send_str("  UPDATE RTC?  ", 16);
+									
+							  		if(indication_flags_2 & SET_NEW_RTC_FLAG)	
+							  			Send_str("      YES       ", 32);
+									else
+										Send_str("      NO        ", 32);
+									
+									
+								
+								break;
+								
+								case EXIT_RTC_MENU_PARAMETER:
+										
+										Send_str(" EXIT RTC MENU ", 16);
+										
+							  			if(exit_flags_1 & EXIT_RTC_MENU)
+							  				Send_str("      YES       ", 32);
+										else
+											Send_str("      NO        ", 32);
+								  		
+								  		
+							  	break; 	
+					  		}
+						
+						break;
+						
+						case LOG_SET_MENU:	
+						
+							backlit_timer = 80;
+							Send_str("  LOG PARAMETR ", 0);
+					  		
+					  		if(indication_flags & TOGGLE)
+								Send_str(" USE INC & SHIFT", 48);
+							else
+								Send_str("  KEY TO SELECT ", 48);
+							
+							switch(cal_para)
+							{
+							 	case LOG_SET_MENU_PARAMETER_1:
+								
+									Send_str("   To Continue  ", 16);
+									Send_str("Prss Set/Nxt Key", 32);
+									Send_str("                ", 48);
+								break;
+								
+								case LOG_INTERVAL_PARAMETER:
+									
+									if(indication_flags & TOGGLE)
+										Send_str("SET LOG INTERVAL", 16);
+									else
+										Send_str(" HOUR:MINS:SECS", 16);									
+									
+									Send_str("     :    :    ", 32);
+									if(pos_cntr <= 2 )
+							    	{
+							    		display(log_hour, 34, pos_cntr1, 2);
+							    		display(log_min, 39, 0, 2);
+							    		display(log_sec, 44, 0, 2);
+							    		
+							    	}
+							    	else if(pos_cntr >= 3 && pos_cntr <= 4)
+							    	{
+							    		display(log_hour, 34, 0, 2);
+							    		display(log_min, 39, pos_cntr2, 2);
+							    		display(log_sec, 44, 0, 2);
+							    	}
+							    	else 
+							    	{
+										display(log_hour, 34, 0, 2);
+							    		display(log_min, 39, 0, 2);
+							    		display(log_sec, 44, pos_cntr3, 2);
+							    	}
+//////									if(pos_cntr == 0)
+//////					    			{
+//////					    				display(log_interval_time, 37, 0, 2);
+//////					    				if(log_interval_unit == 0)
+//////							    			Send_str("SEC      ", 40);
+//////							    		else if(log_interval_unit == 1)
+//////							    			Send_str("MIN      ", 40);
+//////							    		else if(log_interval_unit == 2)
+//////							    			Send_str("HOUR     ", 40);
+//////					    			}
+//////									else if (pos_cntr > 0 && pos_cntr < 2)
+//////							    	{
+//////							    		display(log_interval_time, 37, 0, 2);	
+//////							    		if(log_interval_unit == 0)
+//////							    		{
+//////							    			if(indication_flags & TOGGLE)
+//////							    			 	Send_str("SEC      ", 40);
+//////							    			else 
+//////							    			{
+//////							    				Send_str("         ", 40);
+//////							    			}
+//////							    		}
+//////							    		else if(log_interval_unit == 1)
+//////							    		{
+//////							    			if(indication_flags & TOGGLE)
+//////							    			 	Send_str("MIN      ", 40);
+//////							    			else 
+//////							    			{
+//////							    				Send_str("        ", 40);
+//////							    			}
+//////							    		}
+//////							    		else if(log_interval_unit == 2)
+//////							    		{
+//////							    			if(indication_flags & TOGGLE)
+//////							    			 	Send_str("HOUR    ", 40);
+//////							    			else 
+//////							    			{
+//////							    				Send_str("        ", 40);
+//////							    			}
+//////							    		}
+//////							    		
+//////							    	}
+//////							    	else if(pos_cntr >= 2)
+//////							    	{
+//////							    		display(log_interval_time, 37, pos_cntr1, 2);	
+//////							    		if(log_interval_unit == 0)
+//////							    			Send_str("SEC      ", 40);
+//////							    		else if(log_interval_unit == 1)
+//////							    			Send_str("MIN      ", 40);
+//////							    		else if(log_interval_unit == 2)
+//////							    			Send_str("HOUR     ", 40);
+//////							    	}
+					    			 	
+					    		break;
+					    		
+					    		case LOG_MODE_PARAMETER:
+					    			
+					    			Send_str("  SET LOG MODE  ", 16);
+									if(indication_flags_2 & LOG_MODE_FLAG)
+										Send_str("   SATURATION   ", 32);
+									else
+										Send_str("   SCROLLING    ", 32);
+					    		
+					    		break;
+					    		
+					    		case LOG_TRIGGER_PARAMETER:
+									
+									Send_str(" SET LOG TRIGGER", 16);
+									if(log_trigger == 0)
+						    			Send_str("  CONTINOUS LOG ", 32);
+						    		else if(log_trigger == 1)
+						    			Send_str(" TIME TRIGR LOG ", 32);
+						    		else if(log_trigger == 2)
+						    			Send_str("  KEY PRESS LOG ", 32);
+						    			
+								break;	
+								
+								case SET_LOG_TRIGGER_START_YEAR_PARAMETER:
+									
+									if(indication_flags & TOGGLE)
+										Send_str("SET START YR IN", 16);
+									else
+							    		Send_str(" DATE/MNTH/YEAR", 16);
+									Send_str("     /    /20  ", 32);
+									if(pos_cntr <= 2 )
+							    	{
+										display(log_trigger_start_date, 34, pos_cntr1, 2);
+							    		display(log_trigger_start_month,39, 0, 2);
+							    		display(log_trigger_start_year, 45, 0, 2);
+							    	}
+							    	else if(pos_cntr >= 3 && pos_cntr <= 4)
+							    	{
+										display(log_trigger_start_date, 34, 0, 2);
+							    		display(log_trigger_start_month, 39, pos_cntr2, 2);
+							    		display(log_trigger_start_year, 45, 0, 2);
+							    	}
+							    	else 
+							    	{
+
+							    		display(log_trigger_start_date, 34, 0, 2);
+							    		display(log_trigger_start_month, 39, 0, 2);
+							    		display(log_trigger_start_year, 45, pos_cntr3, 2);
+							    	}
+								break;
+								
+								case SET_LOG_TRIGGER_START_HOUR_PARAMETER:
+									
+									if(indication_flags & TOGGLE)
+										Send_str("SET STRT TIM IN", 16);
+									else
+										Send_str("   HOUR:MINS   ", 16);
+									Send_str("       :       ", 32);
+									if(pos_cntr <= 2 )
+							    	{
+										display(log_trigger_start_hour, 36, pos_cntr1, 2);
+							    		display(log_trigger_start_min, 41, 0, 2);
+							    		
+							    	}
+							    	else// if(pos_cntr >= 3 && pos_cntr <= 4)
+							    	{
+							    		display(log_trigger_start_hour, 36, 0, 2);
+							    		display(log_trigger_start_min, 41, pos_cntr2, 2);
+							    		
+							    	}
+							    	
+							    	
+								break;
+								
+								case SET_LOG_TRIGGER_STOP_YEAR_PARAMETER:
+									
+									if(indication_flags & TOGGLE)
+										Send_str(" SET STOP YR IN", 16);
+									else
+										Send_str(" DATE/MNTH/YEAR", 16);
+									Send_str("     /    /20  ", 32);
+									if(pos_cntr <= 2 )
+							    	{
+										display(log_trigger_stop_date, 34, pos_cntr1, 2);
+							    		display(log_trigger_stop_month,39, 0, 2);
+							    		display(log_trigger_stop_year, 45, 0, 2);
+							    	}
+							    	else if(pos_cntr >= 3 && pos_cntr <= 4)
+							    	{
+										display(log_trigger_stop_date, 34, 0, 2);
+							    		display(log_trigger_stop_month, 39, pos_cntr2, 2);
+							    		display(log_trigger_stop_year, 45, 0, 2);
+							    	}
+							    	else 
+							    	{
+
+							    		display(log_trigger_stop_date, 34, 0, 2);
+							    		display(log_trigger_stop_month, 39, 0, 2);
+							    		display(log_trigger_stop_year, 45, pos_cntr3, 2);
+							    	}
+								break;
+								
+								case SET_LOG_TRIGGER_STOP_HOUR_PARAMETER:
+									
+									if(indication_flags & TOGGLE)
+										Send_str("SET STP TIME IN", 16);
+									else
+							    		Send_str("   HOUR:MINS   ", 16);
+									Send_str("       :       ", 32);
+									if(pos_cntr <= 2 )
+							    	{
+										display(log_trigger_stop_hour, 36, pos_cntr1, 2);
+							    		display(log_trigger_stop_min, 41, 0, 2);
+							    		
+							    	}
+							    	else// if(pos_cntr >= 3 && pos_cntr <= 4)
+							    	{
+							    		display(log_trigger_stop_hour, 36, 0, 2);
+							    		display(log_trigger_stop_min, 41, pos_cntr2, 2);
+							    		
+							    	}
+							    	
+							    	
+								break;
+								
+								case KEY_PRESS_START_DELAY_PARAMETER:
+									
+									Send_str("KEY PRESS DELAY", 16);
+					    			
+					    			display(log_key_press_delay, 35,pos_cntr, 3);
+					    			Send_str("MINUTES", 39);
+							    	
+								break;
+								
+								case STOP_LOGGING_PARAMETER:
+									
+									Send_str(" STOP LOGGING? ", 16);
+					    			
+					    			if (indication_flags_3 & STOP_LOGGING_FLAG)
+										Send_str("      YES       ", 32);
+									else
+										Send_str("      NO        ", 32);
+							    	
+								break;
+								
+								case EXIT_LOG_SET_MENU_PARAMETER:
+								
+									Send_str(" EXIT LOG MENU  ", 16);
+						  			if (exit_flags_1 & EXIT_LOG_SET_FLAG)
+						  				Send_str("      YES       ", 32);
+									else
+										Send_str("      NO        ", 32);
+									
+								break;
+							 }
+						
+						break;
+						
+						case MEMORY_MENU:
+						
+							Send_str("MEMORY PARAMETER", 0);
+							
+							if (cal_para == MEMORY_MENU_PARAMETER_1)
+							{
+								Send_str("   To Continue  ", 16);
+								Send_str("Prss Set/Nxt Key", 32);
+								Send_str("                ", 48);
+							}							
+							else if (cal_para == MEMORY_USED_PARAMETER)
+							{
+								Send_str("   MEMORY USED  ", 16);
+								display((log_count), 32,0, 6);
+								
+								memory_used = ((float32_t)log_count / (float32_t)MaxLogCount)*100;
+								if(memory_used == 0)
+									Send_str("- <1% Full", 38);
+								else
+								{
+									Send_str("-   % Full", 38);
+									display(memory_used, 39,0, 3);
+								}
+								Send_str("PRSS SET/NXT KEY", 48);
+								
+								
+							}
+							else if (cal_para == MEMORY_CLEAR_PARAMETER)
+							{
+								Send_str("  CLEAR MEMORY? ", 16);
+								
+								if (mode_flags_1 & MEMORY_CLEAR_FLAG)
+					  				Send_str("      YES       ", 32);
+								else
+									Send_str("      NO        ", 32);
+									
+								if(indication_flags & TOGGLE)
+									Send_str(" USE INC & SHIFT", 48);
+								else
+									Send_str("  KEY TO SELECT ", 48);
+								
+							}
+							else if (cal_para == MEMORY_CLEAR_CONFIRM_PARAMETER)
+							{
+								Send_str("  ARE YOU SURE? ", 16);
+								if (indication_flags_2 & CONFIRM_MEM_CLEAR_FLAG)
+					  				Send_str("      YES       ", 32);
+								else
+									Send_str("      NO        ", 32);
+									
+								if(indication_flags & TOGGLE)
+									Send_str(" USE INC & SHIFT", 48);
+								else
+									Send_str("  KEY TO SELECT ", 48);
+								
+							}
+							else if(cal_para == EXIT_MEMORY_MENU_PARAMETER)
+							{
+								Send_str("EXIT MEMORY MENU", 16);
+								if (exit_flags_1 & EXIT_MEMORY_MENU)
+									Send_str("      YES       ", 32);
+								else
+									Send_str("      NO        ", 32);
+									
+								if(indication_flags & TOGGLE)
+									Send_str(" USE INC & SHIFT", 48);
+								else
+									Send_str("  KEY TO SELECT ", 48);
+									
+							}	
+					    	
+							
+						
+						break;
+						
+						case DOWNLOADING_MENU:
+					  		backlit_timer = 80;
+					  			Send_str("DOWNLOAD PARAMTR", 0);
+					  		
+					  		if(indication_flags & TOGGLE)
+								Send_str(" USE INC & SHIFT", 48);
+							else
+								Send_str("  KEY TO SELECT ", 48);
+								
+					  		switch(cal_para)
+					  		{
+					  			case DOWNLOADING_PARAMETER_1:
+								
+									Send_str("   To Continue  ", 16);
+									Send_str("Prss Set/Nxt Key", 32);
+									Send_str("                ", 48);
+								break;	
+								
+								case DEVICE_ID_PARAMETER:
+										
+									Send_str("SELECT DEVICE ID", 16);
+									display(DeviceId, 38,pos_cntr,3);
+							  	break;	
+							  	
+							  	case SELECT_OPTION_PARAMETER:
+									
+									Send_str(" SELECT OPTION  ", 16);
+										
+									if(mode_flags_1 & DEVICE_CONFIG_OPTION_FLAG)
+						  				Send_str("DEVICE CNFIGURTN",32);
+									else
+										Send_str(" DATA DOWNLOAD  ",32);
+
+							  	break;
+							  	
+							  	case DEVICE_CONFIGURATION_PARAMETER:
+									
+									if(ConfigureParameterFlag)
+									{
+										ConfigureParameterFlag = 0;
+										menu_timeout =240; //Timeout to be done in 4 mins for subsequent cmd, after first cmd is issued
+									}
+									Send_str("                ", 0);
+									Send_str("PLEASE CONFIGURE", 16);										
+									Send_str("     DEVICE     ", 32);
+									Send_str("                ", 48);
+
+							  	break;		
+					  			case SELECT_DOWNLOADING_PARAMETER:
+					  			
+						   		    if(indication_flags & TOGGLE)
+										Send_str("     SELECT     ", 16);
+									else
+										Send_str(" DOWNLOAD OPTION", 16);
+																	      		  
+						      		if(SelectDownloadOption == 0) 
+						      			Send_str("ALL DATA AT ONCE", 32);
+						      		else if(SelectDownloadOption == 1) 
+						      			Send_str("  DATA IN BATCH ", 32);
+
+								break;
+								  		
+								case BATCH_LOWER_LIMIT_PARAMETER:
+										
+									Send_str(" SET LOWER LIMIT", 16);
+									display(DownloadDataLowerLimit, 37,pos_cntr,6);
+											
+
+							  	break;
+
+								case BATCH_UPPER_LIMIT_PARAMETER:
+										
+									Send_str(" SET UPPER LIMIT", 16);
+									display(DownloadDataUpperLimit, 37,pos_cntr,6);
+											
+
+							  	break;		
+
+								case START_DOWNLOADING_PARAMETER:
+										
+									Send_str("START DOWNLOADNG", 16);
+									if(indication_flags & START_DOWNLOADING_FLAG)
+						  				Send_str("      YES       ", 32);
+									else
+										Send_str("      NO        ", 32);
+
+							  	break;						
+							  	
+							  	case DOWNLOADING_STARTED_PARAMETER:
+										
+										if((DownloadDataUpperLimit < DownloadDataLowerLimit) && (SelectDownloadOption == 1))
+										{
+											Send_str("                ", 0);
+											Send_str("UPPER LIMIT LESS", 16);
+											Send_str("THAN LOWER LIMIT", 32);
+											Send_str("                ", 48);
+											
+										}
+										else
+										{
+											if(StartDownloadFlag)
+											{
+												menu_timeout = 240; //for timeout not to be done
+										
+												Send_str("                ", 0);
+												Send_str("   DOWNLOADING  ", 16);
+												Send_str("     STARTED    ", 32);
+												Send_str("                ", 48);
+												
+												UpdateLcd();
+												
+												if(SelectDownloadOption == 0) //All Data
+												{
+													StartAddrs = 11;
+													
+												}
+												else if(SelectDownloadOption == 1) //in batch
+												{
+													StartAddrs = DownloadDataLowerLimit + 10;
+													
+												}
+												
+												TBCCTL0 &= ~CCIE;
+												
+												led_display(0xFF00,0x0000,0x0000,0x0000, 0); //All Led OFF	
+												led_display(0x0100,0x0000,0x0000,0x0000, 1); //Download Led ON
+												
+//												SendProcessValue(ProcessValueId,BatchId);
+												StartDownloadFlag = 0;
+												
+												led_display(0x4000,0x0000,0x0000,0x0000, 1); //hty led on
+												led_display(0x0100,0x0000,0x0000,0x0000, 0); //Download Led OFF
+
+
+	   											TBCCTL0 |= CCIE;
+												
+	
+											}
+											else
+											{
+												Send_str("                ", 0);
+												Send_str("   WAITING FOR  ", 16);
+												Send_str("DOWNLOAD COMMAND", 32);
+												Send_str("                ", 48);
+												
+											}
+										}
+
+
+							  	break;						
+							  	
+							  	case DOWNLOADING_COMPLETED_PARAMETER:
+							  		
+							  			Send_str("DOWNLOAD COMPLTD", 16);
+										Send_str("          DATA  ", 32);
+										Send_str("    RETRIEVED   ", 48);
+										
+										if(SelectDownloadOption == 0) //All Data
+										{
+											display(log_count, 34,0,6);
+										}
+										else if(SelectDownloadOption == 1) //in batch
+										{
+											display((DownloadDataUpperLimit - DownloadDataLowerLimit+1), 34,0,6);
+										}
+										
+							  	
+							  	break;
+							  	
+							  	case NO_DATA_PARAMETER:
+
+										Send_str("NO DATA AVAILABL", 16);
+										Send_str("  FOR DOWNLOAD  ", 32);
+										Send_str("PRSS SET/NXT KEY", 48);
+
+							  	break; 			
+							  	
+								case DOWNLOADING_EXIT_PARAMETER:
+
+										Send_str("EXIT DOWNLD MENU", 16);
+							  			if(exit_flags_1 & EXIT_DOWNLOADING_MENU)
+							  				Send_str("      YES       ", 32);
+										else
+											Send_str("      NO        ", 32);
+
+							  	break; 			
+					  		}
+					 	break;
+					  
+						case PASSWORD_MENU:
+					  		backlit_timer = 80;
+					  		Send_str("PASSWRD PARAMETR", 0);
+					  		
+					  		if(indication_flags & TOGGLE)
+								Send_str(" USE INC & SHIFT", 48);
+							else
+								Send_str("  KEY TO SELECT ", 48);
+								
+					  		switch(cal_para)
+					  		{
+					  			case PASSWORD_PARAMETER_1:
+								
+									Send_str("   To Continue  ", 16);
+									Send_str("Prss Set/Nxt Key", 32);
+									Send_str("                ", 48);
+								break;	
+								
+					  			case SET_PASSWORD_PARAMETER:
+					  			
+							   		    Send_str("SET NEW PASSWORD", 16);							      		  
+							      		display(new_password, 38, pos_cntr, 4); 
+
+								break;
+								  		
+								case CONFIRM_PASSWORD_PARAMETER:
+								
+							   			Send_str(" Are You Sure?  ", 16);
+							      		
+							      		if(indication_flags_2 & SET_NEW_PASSWORD)
+							      			Send_str("      YES       ", 32);
+										else
+											Send_str("      NO        ", 32);
+							  				
+
+							  	break;
+								
+								case PASSWORD_EXIT_PARAMETER:
+										
+
+										Send_str("EXIT PASWRD MENU", 16);
+							  			if(exit_flags & EXIT_PASSWORD)
+							  				Send_str("      YES       ", 32);
+										else
+											Send_str("      NO        ", 32);
+								  			
+
+							  	break; 			
+					  		}
+					  break;
+					  
+					  case BACKLIT_MENU:
+					  		backlit_timer = 80;
+					  		
+					  		Send_str("BACKLIT PARAMETR", 0);
+					  		
+					  		if(indication_flags & TOGGLE)
+								Send_str(" USE INC & SHIFT", 48);
+							else
+								Send_str("  KEY TO SELECT ", 48);
+								
+					  		switch(cal_para)
+					  		{
+					  			
+					  			case BACKLIT_PARAMETER_1:
+								
+									Send_str("   To Continue  ", 16);
+									Send_str("Prss Set/Nxt Key", 32);
+									Send_str("                ", 48);
+								break;	
+								
+					  			case BACKLIT_ON_OFF_PARAMETER:
+										
+
+								  		Send_str("   LCD BACKLIT  ", 16);
+								  		if(backlit_select == 0)
+								  			Send_str("      AUTO      ", 32);
+								  		else if(backlit_select == 1)
+								  			Send_str("  CONTINOUS ON  ", 32);
+										else
+											Send_str("      OFF       ", 32);
+
+											
+								 break;
+								
+								case BACKLIT_EXIT_PARAMETER:
+
+										
+										Send_str("   MENU EXIT    ", 16);
+										
+							  			if(exit_flags & EXIT_BACKLIT)
+							  				Send_str("      YES       ", 32);
+										else
+											Send_str("      NO        ", 32);
+											
+
+							    break; 			
+					  		}
+					  break;
+					  
+					  case SLAVE_MONITOR_MENU:
+							Send_str("                ", 0);
+							Send_str("                ", 16);
+							Send_str("                ", 32);
+							Send_str("                ", 48);
+							
+							Send_str("INTELLI-REPEATER", 0);
+							
+							Send_str("  USE INC KEY   ", 32);
+							Send_str("TO ENTR THE MENU", 48);
+							
+					  		backlit_timer = 80;
+					  		switch(cal_para)
+					  		{
+					  			case SLAVE_MONITOR_MENU_PARA:
+								
+
+									Send_str("   To Continue  ", 16);
+									Send_str("Prss Set/Nxt Key", 32);
+									Send_str("                ", 48);
+								break;	
+								
+								case SLAVE_MONITOR_1_PARAMETER:
+								
+									Send_str("  USE REPEATER  ", 16);
+									if(mode_flags_1 & USE_REPEATER_FLAG)
+						  				Send_str("      YES       ", 32);
+									else
+										Send_str("      NO        ", 32);
+										
+								break;	
+////								case SLAVE_MONITOR_2_PARAMETER:
+////								
+////									Send_str("   REPEATER:2   ", 16);
+////									
+////								break;	
+								case EXIT_SLAVE_MONITOR_PARAMETER:
+								
+							    	Send_str("   EXIT MENU    ", 16);
+							    	if (mode_flags_1 & EXIT_SLAVE_MONITOR_FLAG)
+										Send_str("      YES       ", 32);
+									else
+										Send_str("      NO        ", 32);
+									if(indication_flags & TOGGLE)
+										Send_str(" USE INC & SHIFT", 48);
+									else
+										Send_str("  KEY TO SELECT ", 48);
+								break;
+								
+					  		}
+					break;	
+					
+////					case CHANNEL_SLAVE_MONITOR_MENU:
+////							Send_str("                ", 0);
+////							Send_str("                ", 16);
+////							Send_str("                ", 32);
+////							Send_str("                ", 48);
+////							
+////							Send_str(" CHANNEL       ", 0);
+////							display(channel_no, 9, 0, 2);
+////							Send_str("SET", 12);
+////							
+////							if(indication_flags & TOGGLE)
+////								Send_str(" USE INC & SHIFT", 48);
+////							else
+////								Send_str("  KEY TO SELECT ", 48);
+////								
+////					  		backlit_timer = 80;
+////					  		switch(cal_para)
+////					  		{
+////					  			case USE_SLAVE_MONITOR_PARAMETER:
+////										
+////										Send_str("  USE REPEATER  ", 16);
+////										
+////										if (use_slave_monitor_flag & use_slave_monitor)
+////											Send_str("      YES       ", 32);
+////										else
+////											Send_str("      NO        ", 32);
+////								    	
+////
+////								break;
+////								
+////								case SET_SLAVE_ID_PARAMETER:
+////								
+////									Send_str(" SET REPEATER ID", 16);	
+////									display(Slave_monitor_ID[channel_no-1], 38, pos_cntr, 3);
+////
+////										
+////								break;	
+////								
+////								case EXIT_CHANNEL_SLAVE_MONITOR_PARAMETER:
+////								
+////							    	Send_str("EXIT REPEATR SET", 16);
+////							    	
+////							    	if (exit_slave_monitor_flag & exit_slave_monitor)
+////										Send_str("      YES       ", 32);
+////									else
+////										Send_str("      NO        ", 32);
+////					
+////									Send_str("  KEY TO SELECT ", 48);
+////								break;
+////								
+////					  		}
+////						break;	
+					
+					  case START_STOP_COMMUNICATION:
+						
+							Send_str("COMMUNICATN MENU", 0);
+							
+							if(indication_flags & TOGGLE)
+								Send_str(" USE INC & SHIFT", 48);
+							else
+								Send_str("  KEY TO SELECT ", 48);
+								
+							if (cal_para == COMM_PARAMETER_1)
+							{
+								Send_str("   To Continue  ", 16);
+								Send_str("Prss Set/Nxt Key", 32);
+								Send_str("                ", 48);
+							}		
+							else if (cal_para == START_STOP_PARAMETER)
+							{
+								Send_str("Entr Your Choice", 16);
+								if(indication_flags_2 & START_STOP_COMM)
+									Send_str("Strt Communicatn", 32);
+								else
+									Send_str("Stop Communicatn", 32);
+							}
+							else if(cal_para == EXIT_START_STOP_MENU)
+							{
+								Send_str(" EXIT COMM MENU ", 16);
+								if (exit_flags & EXIT_START_STOP_COMM)
+									Send_str("      YES       ", 32);
+								else
+									Send_str("      NO        ", 32);
+									
+							}	
+					    	
+							
+						
+						break;
+					  case REMOTE_TEST_MENU:
+					  
+					  		Send_str("REMOTE TEST MENU", 0);
+					  		
+							if(indication_flags & BLINK)
+							{
+								Send_str("  SYSTEM CHECK  ", 16);
+							}
+							else
+							{
+								Send_str("                ", 16);
+							}
+							P1OUT |= 0x08; //LCD Backlit On
+								
+							P2OUT &= ~0x10;  //Failsafe Relay ON
+								
+							Send_str("   ALL LEDs ON  ", 32);
+							Send_str("  ALL RELAYS ON ", 48);
+							if(OneTimeLedOn == 0)
+							{
+								OneTimeLedOn = 1;
+								led_display(0xFFFF,0xFFFF,0xFFFF,0xFFFF, 1); 
+							}  
+							 
+							
+					 break;
+					  
+					  case FACTORY_MENU:
+							Send_str("                ", 0);
+							Send_str("                ", 16);
+							Send_str("                ", 32);
+							Send_str("                ", 48);
+					  		backlit_timer = 80;
+					  		switch(cal_para)
+					  		{
+					  			case FACTORY_PARAMETER_1:
+					  			
+									Send_str("FACTORY PARAMETR", 0);
+									Send_str("   To Continue  ", 16);
+									Send_str("Prss Set/Nxt Key", 32);
+									Send_str("                ", 48);
+								break;
+								
+					  			case SET_WARMUP_PARAMETER:
+					
+									Send_str("FACTORY SET MENU", 0);
+							    	Send_str("SET WARMUP TIME ", 16);
+							    	Send_str("         Secs   ", 32);
+							    	display(warm_time_set, 36, pos_cntr, 4);
+									if(indication_flags & TOGGLE)
+										Send_str(" USE INC & SHIFT", 48);
+									else
+										Send_str("  KEY TO SELECT ", 48);
+								break;
+								
+								case MAX_LOG_COUNT_PARAMETER:
+					
+									Send_str("FACTORY SET MENU", 0);
+							    	Send_str("  MEMORY COUNT  ", 16);
+							    	
+							    	if(MaxLogCount == 100000)
+							    		Send_str("     01 LAKH    ", 32);
+							    	else if(MaxLogCount == 500000)
+							    		Send_str("     05 LAKH    ", 32);
+							    	else if(MaxLogCount == 900000)
+							    		Send_str("     09 LAKH    ", 32);
+							    		
+							    	if(indication_flags & TOGGLE)
+										Send_str(" USE INC & SHIFT", 48);
+									else
+										Send_str("  KEY TO SELECT ", 48);
+								break;
+								
+								case SERIAL_YEAR_PARAMETER:
+								    Send_str("FACTORY SET MENU", 0);
+							    	Send_str("PRODUCTION YEAR ", 16);
+							    	
+							    	Send_str("     20         ", 32);
+							    	display(SerialYear, 39, pos_cntr, 2);
+							    		
+							    	if(indication_flags & TOGGLE)
+										Send_str(" USE INC & SHIFT", 48);
+									else
+										Send_str("  KEY TO SELECT ", 48);
+								      	
+								break;
+								case SERIAL_MONTH_PARAMETER:
+								    Send_str("FACTORY SET MENU", 0);
+							    	Send_str("PRODUCTION MONTH", 16);
+							    	
+							    	display(SerialMonth, 38, pos_cntr, 2);
+							    	
+							    	if(indication_flags & TOGGLE)
+										Send_str(" USE INC & SHIFT", 48);
+									else
+										Send_str("  KEY TO SELECT ", 48);
+								break;
+								case SERIAL_NUMBER_PARAMETER:
+								    Send_str("FACTORY SET MENU", 0);
+							    	Send_str("PRODUCTION NUMBR", 16);
+							    	
+							    	display(SerialNumber, 37, pos_cntr, 4);
+							    		
+							    	if(indication_flags & TOGGLE)
+										Send_str(" USE INC & SHIFT", 48);
+									else
+										Send_str("  KEY TO SELECT ", 48);
+								break;
+								case FACTORY_EXIT_PARAMETER:
+								
+										Send_str("FACTORY SET MENU", 0);
+										
+										Send_str("   MENU EXIT    ", 16);
+										
+							  			if(exit_flags & EXIT_FACTORY)
+							  				Send_str("      YES       ", 32);
+										else
+											Send_str("      NO        ", 32);
+											
+										if(indication_flags & TOGGLE)
+											Send_str(" USE INC & SHIFT", 48);
+										else
+											Send_str("  KEY TO SELECT ", 48);
+							    break; 		
+					  		}
+						break;
+						
+						
+    			}
+	}
+}
+
+
+void Display_units(uint16_t unit_no,uint8_t pos)
+{
+/* Displays gas specified by units starting from pos */
+	switch (unit_no)
+  	{
+    	case 0:
+      			Send_str("%LEL",pos);
+      			break;  
+    
+    	case 1:
+      			Send_str("%V/V", pos);
+      			break;      
+    
+    	case 2:
+    			Send_str("mg/m3", pos);
+       			break;
+        
+       	case 3:
+       			Send_str(" PPM", pos);
+      			break;
+      			
+       	case 4:
+       			Send_str(" PPB", pos);
+      			break;				
+       
+       	case 5:
+      			Send_str("  C  ",pos);
+	      		str[pos+1] = 0xdf;
+       			break;		
+       
+        case 6:
+      			Send_str("  F   ",pos);
+	      		str[pos+1] = 0xdf;
+       			break;
+		
+		case 7:
+      			Send_str(" %RH ",pos);
+	      		break;	
+       			
+       	case 8:
+      			Send_str("mmWC ",pos);
+	      		break;
+	    
+	    case 9:
+      			Send_str("mmHg ",pos);
+	      		break;
+	      		
+	    case 10:
+      			Send_str("Pa  ",pos);
+	      		break;
+	    
+	    case 11:
+      			Send_str("kPa ",pos);
+	      		break;
+	    
+	    case 12:
+      			Send_str("hPa ",pos);
+	      		break;
+	    
+	    case 13:
+      			Send_str("atm ",pos);
+	      		break;
+	    
+	    case 14:
+      			Send_str("bar ",pos);
+	      		break;
+	    
+	    case 15:
+      			Send_str("Torr ",pos);
+	      		break;
+	    
+	    case 16:
+      			Send_str("dyne ",pos);
+	      		break;
+	      		
+	    case 17:
+      			Send_str("lbf  ",pos);
+	      		break;
+	    
+	    case 18:
+      			Send_str("kPa ",pos);
+	      		break;
+	    
+	    case 19:
+      			Send_str("N   ",pos);
+	      		break;
+	    
+	    case 20:
+      			Send_str("kN ",pos);
+	      		break;
+	    
+	    case 21:
+      			Send_str("MN ",pos);
+	      		break;
+	    
+	    case 22:
+      			Send_str("cal ",pos);
+	      		break;
+	    
+	    case 23:
+      			Send_str("kcal ",pos);
+	      		break;
+	    
+	    case 24:
+      			Send_str("Joule",pos);
+	      		break;
+	    
+	    case 25:
+      			Send_str("kJoul",pos);
+	      		break;
+	      		
+	    case 26:
+      			Send_str("MJoul",pos);
+	      		break;
+	    
+	    case 27:
+      			Send_str("N-mtr",pos);
+	      		break;
+	    
+	    case 28:
+      			Send_str("Ergs",pos);
+	      		break;
+	    
+	    case 29:
+      			Send_str("kWh ",pos);
+	      		break;
+	    
+	      					
+  	}           
+}
+
+void Display_gas(uint16_t gas_no,uint8_t pos)
+{
+/* Displays gas specified by gas_no starting from pos */	
+	switch (gas_no)
+  	{
+    	case 0:
+    			Send_str("    ACETONE     ",pos);
+    			break;  
+    	case 1:
+      			Send_str("    ACETYLEN    ",pos);
+      			break;      
+    	case 2:
+      			Send_str("    N-BUTANE    ",pos);
+      			break;
+    	case 3:
+      			Send_str("     ETHANE     ",pos);
+      			break;  
+    	case 4:
+		      	Send_str("    ETHANOL     ",pos);
+		      	break;      
+    	case 5:
+      			Send_str("    ETHYLENE    ",pos);
+      			break;   
+	    case 6:
+	      		Send_str("    N-HEXANE    ",pos);
+	      		break; 
+	    case 7:
+	      		Send_str("      LPG       ",pos);
+	      		break;  		
+	    case 8:
+	      		Send_str("      LNG       ",pos);
+	      		break;    
+	    case 9:
+	      		Send_str("    METHANOL    ",pos);
+	      		break;      	    
+	    case 10:
+	      		Send_str("    METHANE     ",pos);
+	      		break;    
+	    case 11:
+	      		Send_str("     PETROL     ",pos);
+	      		break;        	         
+	    case 12:
+	      		Send_str("    PROPANE    ",pos);
+	      		break;        	    
+	    case 13:
+	      		Send_str("    TOULENE    ",pos);
+	      		break;  	    
+	    case 14:
+	      		Send_str("    XYLENE     ",pos);
+	      		break;
+	    case 15:
+	      		Send_str("    i-BUTANE    ",pos);                         //ISO-BUTANE
+	      		break;
+	    case 16:
+	      		Send_str("    BUTENE-1    ",pos);                         //1-BUTENE
+	      		break;
+	    case 17:
+	      		Send_str("    n-BUTNOL    ",pos);                        //N-BUTANOL 
+	      		break;
+	    case 18:
+	      		Send_str("    i-BUTNOL    ",pos);                        //ISO-BUTANOL 
+	      		break;
+	    case 19:
+	      		Send_str("    t-BUTNOL    ",pos);                        //TERT-BUTANOL 
+	      		break;
+	  	case 20:
+	      		Send_str(" ETHYLENE OXIDE ",pos);                    //ETHYLENE OXIDE
+	      		break;
+	  	case 21:
+	      		Send_str("   n-HEPTANE    ",pos);                    //N-HEPTANE
+	      		break;
+	  	case 22:
+	      		Send_str("    KEROSENE    ",pos);                    //KEROSENE
+	      		break;
+	 	case 23:
+	      		Send_str("   n-PENTANE    ",pos);                    //N-PENTANE
+	      		break;
+	 	case 24:
+	      		Send_str("   i-PENTANE    ",pos);                    //ISO-PENTANE
+	      		break;
+	 	case 25:
+	      		Send_str("   n-PROPANOL   ",pos);                        //N-PROPANOL 
+	      		break;
+	 	case 26:
+	      		Send_str("   i-PROPANOL   ",pos);                        //I-PROPANOL 
+	      		break;
+	 	case 27:
+	      		Send_str("    PROPYLENE   ",pos);                        //PROPYLENE 
+	      		break;
+	 	case 28:
+	      		Send_str("TETRA HYDRO FURN",pos);                        //TETRA HYDRO FURAN 
+	      		break;
+	 	case 29:
+	      		Send_str("    W-SPIRIT    ",pos);                        //WHITE SPIRIT 
+	      		break;    	    
+	    case 30:
+	      		Send_str(" CARBON DIOXIDE ",pos);
+	      		break;
+	    
+	    case 31:
+	      		Send_str("HYDROGEN CYANIDE",pos);                        //HYDROGEN CYANIDE 
+	      		break;
+	 	case 32:
+	      		Send_str("HYDROGEN SULPHID",pos);                        //HYDROGEN SULPHID
+	      		break;
+	 	case 33:
+	      		Send_str("     AMMONIA    ",pos);                        //ISO-PROPYL ETHER 
+	      		break;
+	 	case 34:
+	      		Send_str(" CARBON MONOXIDE",pos);                        //PROPYNE 
+	      		break;
+	 	case 35:
+	      		Send_str("    CHLORINE    ",pos);                        //TETRA HYDRO FURAN 
+	      		break;
+	 	case 36:
+	      		Send_str("HYDROGEN CHLORID",pos);                        //TRI-METHYL BENZENE 
+	      		break;
+	 	case 37:
+	      		Send_str("  NITRIC OXIDE  ",pos);                        //WHITE SPIRIT 
+	      		break;    	    
+	    case 38:
+	      		Send_str("      NOx       ",pos);
+	      		break;
+	    
+	    case 39:
+	      		Send_str("NITROGEN DIOXIDE",pos);
+	      		break;
+	    
+	    case 40:
+	      		Send_str("     OXYGEN     ",pos);                        //HYDROGEN CYANIDE 
+	      		break;
+	 	case 41:
+	      		Send_str("     OZONE      ",pos);                        //HYDROGEN SULPHID
+	      		break;
+	 	case 42:
+	      		Send_str("    PHOSGENE    ",pos);                        //ISO-PROPYL ETHER 
+	      		break;
+	 	case 43:
+	      		Send_str("    PHOSPHENE   ",pos);                        //PROPYNE 
+	      		break;
+	 	case 44:
+	      		Send_str("SULPHUR DIOXIDE ",pos);                        //TETRA HYDRO FURAN 
+	      		break;
+	 	case 45:
+	      		Send_str("      SOx       ",pos);                        //TRI-METHYL BENZENE 
+	      		break;
+	 	
+	    case 46:
+    			Send_str("  ISO-BUTYLENE  ",pos);
+    			break;  
+	    case 47:
+	      		Send_str("    BENZENE    ",pos);		//BENZENE
+	      		
+	      		break;
+	  	case 48:
+	      		Send_str("    ETHYLENE    ",pos);		//C2H4
+	      		break;
+	 	case 49:
+	      		Send_str("    GASOLINE   ",pos);		//GASOLINE VAPOURS
+	      		
+	      		break;
+	 	case 50:
+	      		Send_str("    HEPTANE    ",pos);		//C7H16
+	      		break;
+	  	case 51:
+	      		Send_str("      IPA       ",pos);		//C3H8O
+	      		break;
+	  	case 52:
+	      		Send_str("    PARAFFIN    ",pos);		// PARAFFIN WAX, FUME, NORMAL
+	      		
+	      		break;
+	 	case 53:
+	      		Send_str("    PROPANOL    ",pos);		//C3H8O   PROPAN-1-OL
+	      		break;    	    
+	      		
+	    case 54:
+	      		Send_str("  TEMPERATURE   ",pos);
+	      		//str[pos+14] = 0xdf;
+	      		break;
+	      		
+	    case 55:
+	      		Send_str("    HUMIDITY    ",pos);
+	      		//str[pos+14] = 0xdf;
+	      		break;
+	    
+	    case 56:
+	      		Send_str("    DEW POINT   ",pos);
+	      		//str[pos+12] = 0x25;
+	      		break;
+	    
+	    case 57:
+	      		Send_str("   VAPOUR CONC  ",pos);
+	      		//str[pos+12] = 0x25;
+	      		break;
+	    
+	    case 58:
+	      		Send_str(" VAPOUR PRESSURE",pos);
+	      		//str[pos+12] = 0x25;
+	      		break;
+	    
+	    case 59:
+	      		Send_str("    PRESSURE    ",pos);
+	      		//str[pos+12] = 0x25;
+	      		break;
+	    
+	    case 60:
+	      		Send_str("     ENERGY     ",pos);
+	      		//str[pos+12] = 0x25;
+	      		break;
+	      		
+	    case 61:
+	    		if(display_flag)
+	    		{
+	      			Send_str("C1:",pos);
+	      			Send_str(Name_List.Name1,pos+3);
+	    		}
+	    		else
+	    			Send_str(Name_List.Name1,pos+2);
+	      		
+	      		break;
+	    
+	    case 62:
+	    		if(display_flag)
+	    		{
+	      			Send_str("C2:",pos);
+	      			Send_str(Name_List.Name2,pos+3);
+	    		}
+	    		else
+	    			Send_str(Name_List.Name2,pos+2);
+	      		
+	      		break;
+	    
+	    case 63:
+	    		if(display_flag)
+	    		{
+	      			Send_str("C3:",pos);
+	      			Send_str(Name_List.Name3,pos+3);
+	    		}
+	    		else
+	    			Send_str(Name_List.Name3,pos+2);
+	      		
+	      		break;
+	      		
+	     case 64:
+	    		if(display_flag)
+	    		{
+	      			Send_str("C4:",pos);
+	      			Send_str(Name_List.Name4,pos+3);
+	    		}
+	    		else
+	    			Send_str(Name_List.Name4,pos+2);
+	      		
+	      		break;
+	      		
+	     case 65:
+	    		if(display_flag)
+	    		{
+	      			Send_str("C5:",pos);
+	      			Send_str(Name_List.Name5,pos+3);
+	    		}
+	    		else
+	    			Send_str(Name_List.Name5,pos+2);
+	      		
+	      		break;
+	    
+	    
+  	}
+}
+/*---------------------------------------------------------------------------
+* Function name       : void Send_str(char *lcd_temp, unsigned char i)
+*     returns         : -
+*     arg1            : unsigned char *lcd_temp, string which has to be displayed
+*     arg2            : unsigned char i, starting position to display
+* Created by          : Nitin Singh
+* Date created        : 20/01/11
+* Description         : This function updates the string character by character
+*---------------------------------------------------------------------------*/
+void Send_str(int8_t *lcd_temp, uint8_t i)
+{
+	while(*lcd_temp != 0)
+		str[i++] = *lcd_temp++;                           /* storing the string to be diplayed on buffer string */
+}
+
+/*---------------------------------------------------------------------------
+* Function name       : void Display_Name(char *lcd_temp, unsigned char i)
+*     returns         : -
+*     arg1            : unsigned char *lcd_temp, string which has to be displayed
+*     arg2            : unsigned char i, starting position to display
+* Created by          : Nitin Singh
+* Date created        : 20/01/11
+* Description         : This function updates the string character by character
+*---------------------------------------------------------------------------*/
+void Display_Name(int8_t *lcd_temp, uint8_t i)
+{
+	uint8_t temp = i;
+	
+	while(*lcd_temp != 0)
+	{
+		if((i-temp+1) == pos_cntr)
+		{
+			if(( indication_flags & TOGGLE))
+			{
+	        	 str[i++] = '_';
+	        	 *lcd_temp++;
+			}
+	        else
+	        	str[i++] = *lcd_temp++;                           /* storing the string to be diplayed on buffer string */
+		}
+		else
+			str[i++] = *lcd_temp++;                           /* storing the string to be diplayed on buffer string */
+	}
+}
+
+/*---------------------------------------------------------------------------
+* Function name       : void display(uint32_t value, uint8_t pos, uint8_t flash,uint8_t number_of_digits)
+*     returns         : -
+*     arg1            : uint32_t value, number which has to be displayed
+*     arg2            : uint8_t pos, starting position to display
+*     arg3            : uint8_t flash, for flasging the digit (1 = flashing ON & 0 = flashing OFF)
+*     arg4            : uint8_t number_of_digits, number of digits to be displayed
+* Created by          : Nitin Singh
+* Date created        : 20/01/11
+*---------------------------------------------------------------------------*/
+void display(uint32_t value, uint8_t pos, uint8_t flash,uint8_t number_of_digits)
+{
+      uint8_t digit;
+   		if(number_of_digits == 6)
+   		{
+	         digit=((value/100000));           			//calculating thousands place digit
+	         if((flash == 6) && ( indication_flags & TOGGLE))
+	         	str[pos++] = '_';
+	         else
+	         	str[pos++]=digit+0x30;
+	         number_of_digits--;
+   		}
+   		if(number_of_digits == 5)
+   		{
+	         digit=((value%100000)/10000);           			//calculating thousands place digit
+	         if((flash == 5) && ( indication_flags & TOGGLE))
+	         	str[pos++] = '_';
+	         else
+	         	str[pos++]=digit+0x30;
+	         number_of_digits--;
+   		}
+         if(number_of_digits == 4)
+         { 
+	         digit=((value%100000)%10000)/1000;         			//calculating hundred place digit
+	         if((flash == 4) && ( indication_flags & TOGGLE))
+	         	str[pos++] = '_';
+	         else
+	         	str[pos++]=digit+0x30;
+	         number_of_digits--;
+         }
+         if(number_of_digits == 3)
+         { 
+	         digit=(((value%100000)%10000)%1000)/100;    			//calculating tens place digit
+	         if((flash == 3) && ( indication_flags & TOGGLE))
+	         	str[pos++] = '_';
+	         else
+	         	str[pos++]=digit+0x30;
+	         number_of_digits--;
+         }
+         if(number_of_digits == 2)
+         { 
+	         digit=((((value%100000)%10000)%1000)%100)/10;    			//calculating ones place digit
+	         if((flash == 2) && ( indication_flags & TOGGLE))
+	         	str[pos++] = '_';
+	         else
+	         	str[pos++]=digit+0x30;
+	         number_of_digits--;
+         }
+         if(number_of_digits == 1)
+         { 
+	         digit=((((value%100000)%10000)%1000)%100)%10;    			//calculating ones place digit
+	         if((flash == 1) && ( indication_flags & TOGGLE))
+	         	str[pos++] = '_';
+	         else
+	         	str[pos++]=digit+0x30;
+	         number_of_digits--;
+         }
+}
+
+/*---------------------------------------------------------------------------
+* Function name       : void display_name(uint8_t *string, uint8_t pos, uint8_t flash,uint8_t number_of_char)
+*     returns         : -
+*     arg1            : uint8_t *string, sting which has to be displayed
+*     arg2            : uint8_t pos, starting position to display
+*     arg3            : uint8_t flash, for flashing the character (1 = flashing ON & 0 = flashing OFF)
+*     arg4            : uint8_t number_of_char, number of character to be displayed
+* Created by          : Nitin Singh
+* Date created        : 20/01/11
+*---------------------------------------------------------------------------*/
+
+//void display_name(uint8_t *string, uint8_t pos, uint8_t flash,uint8_t number_of_char)
+//{
+//      	
+//      	if(number_of_char == 16)
+//   		{
+//	         if((flash == 16) && ( indication_flags & BLINK))
+//	         	str[pos++] = '_';
+//	         else
+//	         	str[pos++] = *(string+15);
+//	         number_of_char--;
+//   		}
+//      	if(number_of_char == 15)
+//   		{
+//	         if((flash == 15) && ( indication_flags & BLINK))
+//	         	str[pos++] = '_';
+//	         else
+//	         	str[pos++] = *(string+14);
+//	         number_of_char--;
+//   		}
+//   		if(number_of_char == 14)
+//   		{
+//	         
+//	         if((flash == 14) && ( indication_flags & BLINK))
+//	         	str[pos++] = '_';
+//	         else
+//	         	str[pos++]=*(string+13);
+//	         number_of_char--;
+//   		}
+//         if(number_of_char == 13)
+//         { 
+//	         
+//	         if((flash == 13) && ( indication_flags & BLINK))
+//	         	str[pos++] = '_';
+//	         else
+//	         	str[pos++]=*(string+12);
+//	         number_of_char--;
+//         }
+//      	if(number_of_char == 12)
+//   		{
+//	         if((flash == 12) && ( indication_flags & BLINK))
+//	         	str[pos++] = '_';
+//	         else
+//	         	str[pos++] = *(string+11);
+//	         number_of_char--;
+//   		}
+//   		if(number_of_char == 11)
+//   		{
+//	         
+//	         if((flash == 11) && ( indication_flags & BLINK))
+//	         	str[pos++] = '_';
+//	         else
+//	         	str[pos++]=*(string+10);
+//	         number_of_char--;
+//   		}
+//         if(number_of_char == 10)
+//         { 
+//	         
+//	         if((flash == 10) && ( indication_flags & BLINK))
+//	         	str[pos++] = '_';
+//	         else
+//	         	str[pos++]=*(string+9);
+//	         number_of_char--;
+//         }
+//         if(number_of_char == 9)
+//         { 
+//	         
+//	         if((flash == 9) && ( indication_flags & BLINK))
+//	         	str[pos++] = '_';
+//	         else
+//	         	str[pos++]=*(string+8);
+//	         number_of_char--;
+//         }
+//         if(number_of_char == 8)
+//         { 
+//	         
+//	         if((flash == 8) && ( indication_flags & BLINK))
+//	         	str[pos++] = '_';
+//	         else
+//	         	str[pos++]=*(string+7);
+//	         number_of_char--;
+//         }
+//         if(number_of_char == 7)
+//         { 
+//	         
+//	         if((flash == 7) && ( indication_flags & BLINK))
+//	         	str[pos++] = '_';
+//	         else
+//	         	str[pos++]=*(string+6);
+//	         number_of_char--;
+//         }
+//   		if(number_of_char == 6)
+//   		{
+//	         if((flash == 6) && ( indication_flags & BLINK))
+//	         	str[pos++] = '_';
+//	         else
+//	         	str[pos++] = *(string+5);
+//	         number_of_char--;
+//   		}
+//   		if(number_of_char == 5)
+//   		{
+//	         
+//	         if((flash == 5) && ( indication_flags & BLINK))
+//	         	str[pos++] = '_';
+//	         else
+//	         	str[pos++]=*(string+4);
+//	         number_of_char--;
+//   		}
+//         if(number_of_char == 4)
+//         { 
+//	         
+//	         if((flash == 4) && ( indication_flags & BLINK))
+//	         	str[pos++] = '_';
+//	         else
+//	         	str[pos++]=*(string+3);
+//	         number_of_char--;
+//         }
+//         if(number_of_char == 3)
+//         { 
+//	         
+//	         if((flash == 3) && ( indication_flags & BLINK))
+//	         	str[pos++] = '_';
+//	         else
+//	         	str[pos++]=*(string+2);
+//	         number_of_char--;
+//         }
+//         if(number_of_char == 2)
+//         { 
+//	         
+//	         if((flash == 2) && ( indication_flags & BLINK))
+//	         	str[pos++] = '_';
+//	         else
+//	         	str[pos++]=*(string+1);
+//	         number_of_char--;
+//         }
+//         if(number_of_char == 1)
+//         { 
+//	         
+//	         if((flash == 1) && ( indication_flags & BLINK))
+//	         	str[pos++] = '_';
+//	         else
+//	         	str[pos++]=*(string+0);
+//	         number_of_char--;
+//         }
+//}
+
+/*-----------------------------------------------------------------------------------------------------------
+* Function name       : void display_val_with_dp(uint8_t pos, uint32_t value, uint8_t dp, uint8_t flash)
+*     returns         : -
+*     
+*     arg1            : uint8_t pos, starting position to display
+* 	  arg2            : uint32_t value, number which has to be displayed
+*     arg3            : uint8_t dp, decimal point value
+* 	  arg4            : uint8_t flash, for flasging the digit (1 = flashing ON & 0 = flashing OFF)
+*     
+* Created by          : Nitin Singh
+* Date created        : 20/01/11
+*-----------------------------------------------------------------------------------------------------------*/
+void display_val_with_dp(uint8_t pos, uint32_t value, uint8_t dp, uint8_t flash)
+{
+	uint8_t digit6,digit5,digit4,digit3,digit2,digit1;
+	
+	
+//	digit5 = value/10000;
+//	digit4 = (value%10000)/1000;
+//	digit3 = ((value%10000)%1000)/100;
+//	digit2 = (((value%10000)%1000)%100)/10;
+//	digit1 = (((value%10000)%1000)%100)%10;
+	
+	digit6 = value/100000;
+	digit5 = (value%100000)/10000;
+	digit4 = ((value%100000)%10000)/1000;
+	digit3 = (((value%100000)%10000)%1000)/100;
+	digit2 = ((((value%100000)%10000)%1000)%100)/10;
+	digit1 = ((((value%100000)%10000)%1000)%100)%10;
+	
+	if(dp == 3)
+	{
+		if((flash == 6) && ( indication_flags & BLINK))
+	         str[pos++] = '_';
+	    else
+	         str[pos++] = digit6+0x30;
+	         
+		if((flash == 5) && ( indication_flags & BLINK))
+	         str[pos++] = '_';
+	    else
+	         str[pos++] = digit5+0x30;
+	         
+		if((flash == 4) && ( indication_flags & BLINK))
+	         str[pos++] = '_';
+	    else
+	         str[pos++] = digit4+0x30;
+	    
+	    str[pos++] = '.';
+	    
+		if((flash == 3) && ( indication_flags & BLINK))
+	         str[pos++] = '_';
+	    else
+	         str[pos++] = digit3+0x30;
+	         
+		if((flash == 2) && ( indication_flags & BLINK))
+	         str[pos++] = '_';
+	    else
+	         str[pos++] = digit2+0x30;
+		
+		if((flash == 1) && ( indication_flags & BLINK))
+	         str[pos++] = '_';
+	    else
+	         str[pos++] = digit1+0x30;
+	}
+	else if(dp == 2)
+	{
+		if((flash == 5) && ( indication_flags & BLINK))
+	         str[pos++] = '_';
+	    else
+	         str[pos++] = digit5+0x30;
+	         
+		if((flash == 4) && ( indication_flags & BLINK))
+	         str[pos++] = '_';
+	    else
+	         str[pos++] = digit4+0x30;
+	         
+		if((flash == 3) && ( indication_flags & BLINK))
+	         str[pos++] = '_';
+	    else
+	         str[pos++] = digit3+0x30;
+	         
+		str[pos++] = '.';
+	         
+		if((flash == 2) && ( indication_flags & BLINK))
+	         str[pos++] = '_';
+	    else
+	         str[pos++] = digit2+0x30;
+		
+		if((flash == 1) && ( indication_flags & BLINK))
+	         str[pos++] = '_';
+	    else
+	         str[pos++] = digit1+0x30;
+	}
+	else if(dp == 1)
+	{
+		if((flash == 5) && ( indication_flags & BLINK))
+	         str[pos++] = '_';
+	    else
+	         str[pos++] = digit5+0x30;
+		if((flash == 4) && ( indication_flags & BLINK))
+	         str[pos++] = '_';
+	    else
+	         str[pos++] = digit4+0x30;
+		if((flash == 3) && ( indication_flags & BLINK))
+	         str[pos++] = '_';
+	    else
+	         str[pos++] = digit3+0x30;
+		if((flash == 2) && ( indication_flags & BLINK))
+	         str[pos++] = '_';
+	    else
+	         str[pos++] = digit2+0x30;
+		str[pos++] = '.';
+		if((flash == 1) && ( indication_flags & BLINK))
+	         str[pos++] = '_';
+	    else
+	         str[pos++] = digit1+0x30;
+	}
+	else if(dp == 0)
+	{
+		if((flash == 5) && ( indication_flags & BLINK))
+	         str[pos++] = '_';
+	    else
+	         str[pos++] = digit5+0x30;
+		if((flash == 4) && ( indication_flags & BLINK))
+	         str[pos++] = '_';
+	    else
+	         str[pos++] = digit4+0x30;
+		if((flash == 3) && ( indication_flags & BLINK))
+	         str[pos++] = '_';
+	    else
+	         str[pos++] = digit3+0x30;
+		if((flash == 2) && ( indication_flags & BLINK))
+	         str[pos++] = '_';
+	    else
+	         str[pos++] = digit2+0x30;
+		if((flash == 1) && ( indication_flags & BLINK))
+	         str[pos++] = '_';
+	    else
+	         str[pos++] = digit1+0x30;
+	}
+}
+/*---------------------------------------------------------------------------
+* Function name       : void display_negative_with_dp(uint8_t pos, float32_t num1, uint8_t dp_v, uint8_t flash)
+*     returns         : -
+*     arg1            : uint8_t *string, sting which has to be displayed
+*     arg2            : uint8_t pos, starting position to display
+*     arg3            : uint8_t flash, for flashing the character (1 = flashing ON & 0 = flashing OFF)
+*     arg4            : uint8_t number_of_char, number of character to be displayed
+* Created by          : Nitin Singh
+* Date created        : 20/01/11
+*---------------------------------------------------------------------------*/
+
+void display_negative_with_dp(uint8_t pos, float32_t num1, uint8_t dp_v, uint8_t flash)
+{
+	uint8_t digit = 0;
+	uint16_t num = 0;
+	if(dp_v == 0)
+	{
+		pos++;
+	}
+	pos--;
+	if(num1<(-0.51))
+	{
+		num = (uint16_t)(((-1)*num1)+0.5);
+		if((flash == 5) && ( indication_flags & TOGGLE))
+		        str[pos++] = '_';
+		else
+		   	str[pos++] = '-';
+	}
+	else
+	{
+		num = (uint16_t)(num1+0.5);
+		if((flash == 5) && ( indication_flags & TOGGLE))
+		        str[pos++] = '_';
+		else
+	   		str[pos++] = '+';
+	}
+	digit=((num/1000));
+	if((flash == 4) && ( indication_flags & TOGGLE))
+        	str[pos++] = '_';
+    	else
+   		str[pos++]=digit+0x30; 
+   	if(dp_v == 3)
+   		str[pos++] = '.';
+   	digit=(num%1000)/100;
+   	if((flash == 3) && ( indication_flags & TOGGLE))
+        str[pos++] = '_';
+    else
+   		str[pos++]=digit+0x30; 
+   	if(dp_v == 2)
+   		str[pos++] = '.';
+   	digit=((num%1000)%100)/10;
+   	if((flash == 2) && ( indication_flags & TOGGLE))
+        str[pos++] = '_';
+    else
+   		str[pos++]=digit+0x30; 
+   	if(dp_v == 1)
+   		str[pos++] = '.';
+   	digit=((num%1000)%100)%10;
+   	if((flash == 1) && ( indication_flags & TOGGLE))
+        str[pos++] = '_';
+    else
+   		str[pos++]=digit+0x30; 
+}
+void led_display(unsigned int first16LEDs,unsigned int second16LEDs,unsigned int third16LEDs,unsigned int fourth16LEDs, unsigned char set)
+{
+   static unsigned int led_merge1 = 0x0000;
+   static unsigned int led_merge2 = 0x0000;
+   static unsigned int led_merge3 = 0x0000;
+   static unsigned int led_merge4 = 0x0000;
+   
+   unsigned char i = 0;
+   
+   if(set == 1)
+   	set = 0;
+   else if(set == 0)
+   	set = 1;
+
+   if(set == 1)
+   {
+      led_merge1 |= fourth16LEDs;
+      led_merge2 |= third16LEDs;
+      led_merge3 |= second16LEDs;
+      led_merge4 |= first16LEDs;
+   }
+   else
+   {
+      led_merge1 = ~fourth16LEDs;
+      led_merge2 = ~third16LEDs;
+      led_merge3 = ~second16LEDs;
+      led_merge4 = ~first16LEDs;
+   }
+   
+   //for(i=0;i<8;i++)
+   {
+     LED_PORT |= (0x01 << LED_SERIAL_PIN_NO);
+     LED_PORT &= ~(0x01 << LED_SCLK_PIN_NO);
+	 LED_PORT |= (0x01 << LED_SCLK_PIN_NO);
+   }
+   
+   for(i=0;i<8;i++)
+   {
+	   if(led_merge1 & (0x0001 << i))
+	      LED_PORT |= (0x01 << LED_SERIAL_PIN_NO);
+	   else
+	      LED_PORT &= ~(0x01 << LED_SERIAL_PIN_NO);
+	   
+	   LED_PORT &= ~(0x01 << LED_SCLK_PIN_NO);
+	   LED_PORT |= (0x01 << LED_SCLK_PIN_NO);
+   }
+   
+   for(i=0;i<8;i++)
+   {
+	   if(led_merge2 & (0x0001 << i))
+	      LED_PORT |= (0x01 << LED_SERIAL_PIN_NO);
+	   else
+	      LED_PORT &= ~(0x01 << LED_SERIAL_PIN_NO);
+	   
+	   LED_PORT &= ~(0x01 << LED_SCLK_PIN_NO);
+	   LED_PORT |= (0x01 << LED_SCLK_PIN_NO);
+   }
+
+      
+   for(i=0;i<8;i++)
+   {
+	   if(led_merge3 & (0x0001 << i))
+	      LED_PORT |= (0x01 << LED_SERIAL_PIN_NO);
+	   else
+	      LED_PORT &= ~(0x01 << LED_SERIAL_PIN_NO);
+	   
+	   LED_PORT &= ~(0x01 << LED_SCLK_PIN_NO);
+	   LED_PORT |= (0x01 << LED_SCLK_PIN_NO);
+   }
+   
+   for(i=0;i<8;i++)
+   {
+	   if(led_merge4 & (0x0001 << i))
+	      LED_PORT |= (0x01 << LED_SERIAL_PIN_NO);
+	   else
+	      LED_PORT &= ~(0x01 << LED_SERIAL_PIN_NO);
+	   
+	   LED_PORT &= ~(0x01 << LED_SCLK_PIN_NO);
+	   LED_PORT |= (0x01 << LED_SCLK_PIN_NO);
+   }
+		   
+   LED_PORT &= ~(0x01 << LED_RCLK_PIN_NO);
+   LED_PORT |= (0x01 << LED_RCLK_PIN_NO);
+
+    
+}
+

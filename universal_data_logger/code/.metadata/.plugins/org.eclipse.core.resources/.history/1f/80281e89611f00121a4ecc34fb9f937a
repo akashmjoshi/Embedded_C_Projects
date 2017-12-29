@@ -1,0 +1,40 @@
+#ifndef DECODESLAVE_H_
+#define DECODESLAVE_H_
+
+#define MODBUS_READ_HOLDING_REGISTERS     0x03
+#define MODBUS_READ_INPUTREGISTERS        0x04
+#define MODBUS_WRITE_HOLDING_REGISTERS    0x06 
+#define MODBUS_DOWNLOAD_DATA_REGISTERS	  0x09
+#define MODBUS_ERROR_CODE				  0x83
+#define MODBUS_ILLEGAL_FUNCTION_CODE	  0x01
+#define MODBUS_ILLEGAL_DATA_ADDRESS		  0x02
+
+#define MAX_DATA_ARRAY  150
+#define MAX_IP_REG		61
+#define MAX_HL_REG		21
+#define STOP_LOG_ADDRS	125
+
+/*****************Batch Id Defination*************/
+#define START_FROM_ZERO     0
+#define RESEND_SAME_BATCH   1
+#define SEND_NEXT_BATCH     2 
+
+/***************** InstrumentVersion *****************/
+#define VER_16CHANNEL_1PV       		0x01
+#define VER_16CHANNEL_2PV       		0x02
+#define VER_16CHANNEL_3PV		 		0x03
+#define VER_32CHANNEL_1PV        		0x04
+#define VER_32CHANNEL_2PV  				0x05
+#define VER_32CHANNEL_3PV        		0x06
+
+void DecodeSlave(void);
+void send_data(void);
+void WriteValue(unsigned int write_data,unsigned int write_address);
+void SendProcessValue(unsigned int ProcessValueId,unsigned int BatchId);
+unsigned int modrtuChecksum ( unsigned char *chkbuf, unsigned char len );
+void modbusSendUART1Packet ( unsigned char length);
+void modbusSendUART1Packet_Ascii ( unsigned char length);
+void modbusReturnException ( unsigned char exception );
+void send_echo(void);
+
+#endif /*DECODESLAVE_H_*/

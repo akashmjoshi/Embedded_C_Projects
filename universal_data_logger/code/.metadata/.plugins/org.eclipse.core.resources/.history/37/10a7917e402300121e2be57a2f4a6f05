@@ -1,0 +1,1 @@
+"./spi.obj" "./shift_data.obj" "./sd.obj" "./portsetup.obj" "./memory.obj" "./man.obj" "./main_pro.obj" "./lcd.obj" "./display(new).obj" "./disp_udl.obj" "./adc.obj" "./UARTinit.obj" "./Trigger_Alarm.obj" "./Timer.obj" "./SendRequest.obj" "./RTC.obj" "./KeyScanning(new).obj" "./I2C_master.obj" "./GetSlaveData.obj" "./DecodeSlave.obj" -l"libc.a" "../lnk_msp430f2618.cmd" 

@@ -1,0 +1,171 @@
+!SESSION 2012-10-09 14:36:45.047 -----------------------------------------------
+eclipse.buildId=4.1.3.00038
+java.version=1.5.0_14
+java.vendor=Sun Microsystems Inc.
+BootLoader constants: OS=win32, ARCH=x86, WS=win32, NL=en_US
+Command-line arguments:  -os win32 -ws win32 -arch x86
+
+!ENTRY com.ti.ccstudio.debug.core 4 0 2012-10-09 17:54:13.902
+!MESSAGE Error: MSP430: Error initializing emulator: MSP-FET430UIF is already in use.
+
+
+!ENTRY com.ti.ccstudio.debug.core 4 0 2012-10-09 17:54:28.983
+!MESSAGE Error: MSP430: Error initializing emulator: A firmware update is required for the USB debug interface.  Click the "Update" button to update the firmware and launch your debug session.
+
+
+!ENTRY com.ti.ccstudio.debug.core 4 0 2012-10-09 17:55:31.258
+!MESSAGE Error: MSP430: Error connecting to the target: Could not find device (or device not supported)
+
+
+!ENTRY com.ti.ccstudio.debug.core 4 0 2012-10-09 17:55:43.286
+!MESSAGE Error: MSP430: Error connecting to the target: Could not find device (or device not supported)
+
+!SESSION 2012-10-11 19:11:55.023 -----------------------------------------------
+eclipse.buildId=4.1.3.00038
+java.version=1.5.0_14
+java.vendor=Sun Microsystems Inc.
+BootLoader constants: OS=win32, ARCH=x86, WS=win32, NL=en_US
+Command-line arguments:  -os win32 -ws win32 -arch x86
+
+!ENTRY org.eclipse.core.resources 2 10035 2012-10-11 19:12:08.408
+!MESSAGE A workspace crash was detected. The previous session did not exit normally.
+!SESSION 2012-10-17 11:49:22.886 -----------------------------------------------
+eclipse.buildId=4.1.3.00038
+java.version=1.5.0_14
+java.vendor=Sun Microsystems Inc.
+BootLoader constants: OS=win32, ARCH=x86, WS=win32, NL=en_US
+Command-line arguments:  -os win32 -ws win32 -arch x86
+
+!ENTRY org.eclipse.core.resources 2 10035 2012-10-17 11:49:36.614
+!MESSAGE A workspace crash was detected. The previous session did not exit normally.
+!SESSION 2012-10-19 10:22:54.843 -----------------------------------------------
+eclipse.buildId=4.1.3.00038
+java.version=1.5.0_14
+java.vendor=Sun Microsystems Inc.
+BootLoader constants: OS=win32, ARCH=x86, WS=win32, NL=en_US
+Command-line arguments:  -os win32 -ws win32 -arch x86
+
+!ENTRY com.ti.ccstudio.debug.core 4 104 2012-10-19 15:02:54.161
+!MESSAGE Program file does not exist
+!STACK 0
+java.io.FileNotFoundException: C:\Users\AEPL\Documents\ankit workspace\udl_pro\Debug\udl_pro.out not found
+	at org.eclipse.cdt.launch.AbstractCLaunchDelegate.verifyProgramPath(AbstractCLaunchDelegate.java:370)
+	at com.ti.ccstudio.debug.core.launch.BaseCCELaunchDelegate.doLaunch(BaseCCELaunchDelegate.java:295)
+	at com.ti.ccstudio.debug.core.launch.BaseCCELaunchDelegate.launch(BaseCCELaunchDelegate.java:267)
+	at org.eclipse.debug.internal.core.LaunchConfiguration.launch(LaunchConfiguration.java:657)
+	at org.eclipse.debug.internal.core.LaunchConfiguration.launch(LaunchConfiguration.java:583)
+	at org.eclipse.debug.internal.ui.DebugUIPlugin.buildAndLaunch(DebugUIPlugin.java:779)
+	at org.eclipse.debug.internal.ui.DebugUIPlugin$4.run(DebugUIPlugin.java:835)
+	at org.eclipse.jface.operation.ModalContext$ModalContextThread.run(ModalContext.java:113)
+!SUBENTRY 1 com.ti.ccstudio.debug.core 4 104 2012-10-19 15:02:54.161
+!MESSAGE C:\Users\AEPL\Documents\ankit workspace\udl_pro\Debug\udl_pro.out not found
+!STACK 0
+java.io.FileNotFoundException: C:\Users\AEPL\Documents\ankit workspace\udl_pro\Debug\udl_pro.out not found
+	at org.eclipse.cdt.launch.AbstractCLaunchDelegate.verifyProgramPath(AbstractCLaunchDelegate.java:370)
+	at com.ti.ccstudio.debug.core.launch.BaseCCELaunchDelegate.doLaunch(BaseCCELaunchDelegate.java:295)
+	at com.ti.ccstudio.debug.core.launch.BaseCCELaunchDelegate.launch(BaseCCELaunchDelegate.java:267)
+	at org.eclipse.debug.internal.core.LaunchConfiguration.launch(LaunchConfiguration.java:657)
+	at org.eclipse.debug.internal.core.LaunchConfiguration.launch(LaunchConfiguration.java:583)
+	at org.eclipse.debug.internal.ui.DebugUIPlugin.buildAndLaunch(DebugUIPlugin.java:779)
+	at org.eclipse.debug.internal.ui.DebugUIPlugin$4.run(DebugUIPlugin.java:835)
+	at org.eclipse.jface.operation.ModalContext$ModalContextThread.run(ModalContext.java:113)
+!SESSION 2012-10-25 09:52:51.594 -----------------------------------------------
+eclipse.buildId=4.1.3.00038
+java.version=1.5.0_14
+java.vendor=Sun Microsystems Inc.
+BootLoader constants: OS=win32, ARCH=x86, WS=win32, NL=en_US
+Command-line arguments:  -os win32 -ws win32 -arch x86
+
+!ENTRY com.ti.ccstudio.debug.core 4 0 2012-10-25 11:22:22.702
+!MESSAGE Error: MSP430: Error initializing emulator: MSP-FET430UIF is already in use.
+
+
+!ENTRY com.ti.ccstudio.debug.core 4 0 2012-10-25 11:22:46.702
+!MESSAGE Error: MSP430: Error initializing emulator: A firmware update is required for the USB debug interface.  Click the "Update" button to update the firmware and launch your debug session.
+
+!SESSION 2012-10-28 18:09:35.148 -----------------------------------------------
+eclipse.buildId=4.1.3.00038
+java.version=1.5.0_14
+java.vendor=Sun Microsystems Inc.
+BootLoader constants: OS=win32, ARCH=x86, WS=win32, NL=en_US
+Command-line arguments:  -os win32 -ws win32 -arch x86
+
+!ENTRY org.eclipse.ui 4 4 2012-10-28 18:46:11.484
+!MESSAGE Unhandled event loop exception
+
+!ENTRY org.eclipse.ui 4 0 2012-10-28 18:46:11.547
+!MESSAGE Widget is disposed
+!STACK 0
+org.eclipse.swt.SWTException: Widget is disposed
+	at org.eclipse.swt.SWT.error(SWT.java:3374)
+	at org.eclipse.swt.SWT.error(SWT.java:3297)
+	at org.eclipse.swt.SWT.error(SWT.java:3268)
+	at org.eclipse.swt.widgets.Widget.error(Widget.java:435)
+	at org.eclipse.swt.widgets.Widget.checkWidget(Widget.java:330)
+	at org.eclipse.swt.widgets.Tree.getSelection(Tree.java:2909)
+	at org.eclipse.jface.viewers.TreeViewer.getSelection(TreeViewer.java:471)
+	at org.eclipse.jface.viewers.TreeViewer.setSelection(TreeViewer.java:696)
+	at org.eclipse.jface.viewers.AbstractTreeViewer.setSelectionToWidget(AbstractTreeViewer.java:2233)
+	at org.eclipse.jface.viewers.AbstractTreeViewer.setSelectionToWidget(AbstractTreeViewer.java:2577)
+	at org.eclipse.jface.viewers.StructuredViewer.preservingSelection(StructuredViewer.java:1330)
+	at org.eclipse.jface.viewers.StructuredViewer.refresh(StructuredViewer.java:1386)
+	at org.eclipse.jface.viewers.StructuredViewer.refresh(StructuredViewer.java:1345)
+	at org.eclipse.cdt.internal.ui.search.PDOMSearchTreeContentProvider$1.run(PDOMSearchTreeContentProvider.java:135)
+	at org.eclipse.swt.widgets.RunnableLock.run(RunnableLock.java:35)
+	at org.eclipse.swt.widgets.Synchronizer.runAsyncMessages(Synchronizer.java:123)
+	at org.eclipse.swt.widgets.Display.runAsyncMessages(Display.java:3325)
+	at org.eclipse.swt.widgets.Display.readAndDispatch(Display.java:2971)
+	at org.eclipse.ui.internal.Workbench.runEventLoop(Workbench.java:1914)
+	at org.eclipse.ui.internal.Workbench.runUI(Workbench.java:1878)
+	at org.eclipse.ui.internal.Workbench.createAndRunWorkbench(Workbench.java:419)
+	at org.eclipse.ui.PlatformUI.createAndRunWorkbench(PlatformUI.java:149)
+	at org.eclipse.ui.internal.ide.IDEApplication.run(IDEApplication.java:97)
+	at org.eclipse.core.internal.runtime.PlatformActivator$1.run(PlatformActivator.java:78)
+	at org.eclipse.core.runtime.internal.adaptor.EclipseAppLauncher.runApplication(EclipseAppLauncher.java:92)
+	at org.eclipse.core.runtime.internal.adaptor.EclipseAppLauncher.start(EclipseAppLauncher.java:68)
+	at org.eclipse.core.runtime.adaptor.EclipseStarter.run(EclipseStarter.java:400)
+	at org.eclipse.core.runtime.adaptor.EclipseStarter.run(EclipseStarter.java:177)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(Unknown Source)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(Unknown Source)
+	at java.lang.reflect.Method.invoke(Unknown Source)
+	at org.eclipse.core.launcher.Main.invokeFramework(Main.java:336)
+	at org.eclipse.core.launcher.Main.basicRun(Main.java:280)
+	at org.eclipse.core.launcher.Main.run(Main.java:996)
+	at org.eclipse.core.launcher.Main.main(Main.java:971)
+
+!ENTRY org.eclipse.ui 4 4 2012-10-28 18:48:27.423
+!MESSAGE Unhandled event loop exception
+
+!ENTRY org.eclipse.ui 4 0 2012-10-28 18:48:27.423
+!MESSAGE java.lang.NullPointerException
+!STACK 0
+java.lang.NullPointerException
+	at org.eclipse.cdt.internal.ui.search.actions.FindRefsInWorkingSetAction.getScope(FindRefsInWorkingSetAction.java:72)
+	at org.eclipse.cdt.internal.ui.search.actions.FindAction.run(FindAction.java:52)
+	at org.eclipse.jface.action.Action.runWithEvent(Action.java:499)
+	at org.eclipse.jface.action.ActionContributionItem.handleWidgetSelection(ActionContributionItem.java:539)
+	at org.eclipse.jface.action.ActionContributionItem.access$2(ActionContributionItem.java:488)
+	at org.eclipse.jface.action.ActionContributionItem$5.handleEvent(ActionContributionItem.java:400)
+	at org.eclipse.swt.widgets.EventTable.sendEvent(EventTable.java:66)
+	at org.eclipse.swt.widgets.Widget.sendEvent(Widget.java:928)
+	at org.eclipse.swt.widgets.Display.runDeferredEvents(Display.java:3348)
+	at org.eclipse.swt.widgets.Display.readAndDispatch(Display.java:2968)
+	at org.eclipse.ui.internal.Workbench.runEventLoop(Workbench.java:1914)
+	at org.eclipse.ui.internal.Workbench.runUI(Workbench.java:1878)
+	at org.eclipse.ui.internal.Workbench.createAndRunWorkbench(Workbench.java:419)
+	at org.eclipse.ui.PlatformUI.createAndRunWorkbench(PlatformUI.java:149)
+	at org.eclipse.ui.internal.ide.IDEApplication.run(IDEApplication.java:97)
+	at org.eclipse.core.internal.runtime.PlatformActivator$1.run(PlatformActivator.java:78)
+	at org.eclipse.core.runtime.internal.adaptor.EclipseAppLauncher.runApplication(EclipseAppLauncher.java:92)
+	at org.eclipse.core.runtime.internal.adaptor.EclipseAppLauncher.start(EclipseAppLauncher.java:68)
+	at org.eclipse.core.runtime.adaptor.EclipseStarter.run(EclipseStarter.java:400)
+	at org.eclipse.core.runtime.adaptor.EclipseStarter.run(EclipseStarter.java:177)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(Unknown Source)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(Unknown Source)
+	at java.lang.reflect.Method.invoke(Unknown Source)
+	at org.eclipse.core.launcher.Main.invokeFramework(Main.java:336)
+	at org.eclipse.core.launcher.Main.basicRun(Main.java:280)
+	at org.eclipse.core.launcher.Main.run(Main.java:996)
+	at org.eclipse.core.launcher.Main.main(Main.java:971)

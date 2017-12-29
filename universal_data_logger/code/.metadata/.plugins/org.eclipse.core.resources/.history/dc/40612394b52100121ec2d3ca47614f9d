@@ -1,0 +1,12 @@
+#ifndef MAN_H_
+#define MAN_H_
+
+
+
+void rtc_pswd(void);
+void r_date(void);
+void r_time(void);
+void rtc_save(void);
+void enabl_chng(void);
+
+#endif /*MAN_H_*/

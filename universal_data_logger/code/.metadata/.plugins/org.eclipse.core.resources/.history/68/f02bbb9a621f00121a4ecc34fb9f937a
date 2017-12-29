@@ -1,0 +1,3801 @@
+/*--------------------------------------------------------------------------
+* COMPANY:              AMBETRONICS ENGINEERS PVT LTD.
+* 
+* PROJECT:              Modbus Master                                            
+*                                                                           
+* MODULE TITLE:         Key Scan     
+*                                                                           
+* MODULE FILENAME:      KeyScanning.c                                    
+*
+* MODULE TESTING REF:   
+*
+* TOOLS DESCRIPTION:
+*                       Texas Instruments Code Composer Essentials Version 4.1
+*                       Texas Instruments MSP430 USB-Debug-Interface MSP-FET430UIF
+* 						Elptronic Inc. FET-Pro430 (FET MSP430 Flash Programmer 		
+*                       
+*                                                                            
+* MODULE DESCRIPTION:                                                       
+* Scans the keys whether it is pressed or released and calls the function to 
+* respective operations based on keys pressed                            
+*                                                                           
+* Author: Nitin Singh                                                                        
+*-------------------------------------------------------------------------*/
+#include "msp430x26x.h"
+#include "lcd.h"
+#include "display.h"
+#include "memory.h"
+#include "DataTypes.h"
+
+void mode_select(void);
+
+extern uint8_t stop_log;
+extern uint8_t Seconds;
+extern uint8_t Minutes;
+extern uint8_t Hours;
+extern uint8_t Date;
+extern uint8_t Month;
+extern uint16_t Year;
+extern uint8_t CommFail[16];
+extern uint8_t message;
+extern uint8_t message_cntr;
+extern uint8_t remote_ack_count ;
+extern uint8_t remote_test_count;
+extern uint8_t indication_flags;
+extern uint8_t indication_flags_2;
+extern uint8_t indication_flags_3;
+extern uint8_t mode_flags;
+extern uint8_t mode_flags_1;
+extern uint8_t exit_flags;
+extern uint8_t exit_flags_1;
+extern uint8_t exit_flags_factory;
+extern uint8_t cal_para;
+extern uint8_t menu;
+extern uint8_t menu_timeout;
+extern uint8_t pos_cntr;
+extern uint8_t backlit_timer;
+extern uint8_t count;
+extern uint8_t active_channel[17];
+extern uint8_t counter;
+extern uint8_t relay_set1;
+extern uint8_t relay_set2;
+extern uint8_t relay_set3;
+extern uint8_t relay_set4;
+extern uint8_t relay_set5;
+extern uint8_t relay_set6;
+extern uint8_t relay_set7;
+extern uint8_t relay_set8;
+extern uint8_t CommFail_1;
+extern uint8_t CommFail_2;
+extern uint8_t CommFail_3;
+extern uint8_t CommFail_4;
+extern uint8_t comm_fail_relay_flag_1;
+extern uint8_t comm_fail_relay_flag_2;
+extern uint8_t comm_fail_relay_flag_3;
+extern uint8_t comm_fail_relay_flag_4;
+extern uint8_t sec_ctr;
+extern uint8_t StartDownloadFlag;
+
+
+extern char str[20], bcd[7];
+
+extern uint8_t SerialYear;
+extern uint8_t SerialMonth;
+extern uint16_t SerialNumber;
+extern uint16_t new_password;
+extern uint16_t warm_time1;
+extern uint16_t warmup;
+extern uint16_t password;
+extern uint16_t warm_time_set;
+extern uint16_t Channel_Database[16][5];
+
+extern uint32_t ack_flag;
+extern uint32_t relay_flags;
+extern uint32_t log_count;
+
+uint8_t StopLoggingFlag = 0;
+uint8_t ContinousLogStopFlag = 1;
+uint8_t log_sec = 0;
+uint8_t log_hour = 0;
+uint8_t log_min = 0;
+uint8_t log_sec_temp = 0;
+uint8_t log_hour_temp = 0;
+uint8_t log_min_temp = 0;
+uint8_t RelayActiveFlag = 1;
+uint8_t counter_temp = 1;
+uint8_t keyPressFlag = 0;
+uint8_t DeviceId = 01;
+uint8_t DeviceId_temp = 01;
+uint8_t rtc_date = 0;
+uint8_t rtc_hour = 0;
+uint8_t rtc_min = 0;
+uint8_t rtc_month = 0;
+uint8_t rtc_sec = 0;
+uint8_t rtc_year = 0;
+uint8_t SelectDownloadOption = 0;
+uint8_t pos_cntr1 = 0;
+uint8_t pos_cntr2 = 0;
+uint8_t pos_cntr3 = 0;
+uint8_t  Modbus_parity = 1;
+uint8_t  Modbus_stopbits = 1;
+uint8_t Modbus_parity_temp = 1;
+uint8_t Modbus_stopbits_temp = 1;
+uint8_t channel_no = 0;
+uint8_t backlit_select = 0;
+uint8_t backlit_select_temp = 0;
+uint8_t indication_flags_2_temp = 0;
+uint8_t indication_flags_3_temp = 0;
+uint8_t indication_flags_temp = 0;
+uint8_t log_interval_time_temp;
+uint8_t log_interval_time;
+uint8_t log_interval_unit_temp;
+uint8_t log_interval_unit;
+uint8_t log_trigger_temp;
+uint8_t log_trigger;
+uint8_t log_trigger_start_year_temp;
+uint8_t log_trigger_start_year;
+uint8_t log_trigger_start_month_temp;
+uint8_t log_trigger_start_month;
+uint8_t log_trigger_start_date_temp;
+uint8_t log_trigger_start_date;
+uint8_t log_trigger_start_hour_temp;
+uint8_t log_trigger_start_hour;
+uint8_t log_trigger_start_min_temp;
+uint8_t log_trigger_start_min;
+uint8_t log_trigger_stop_year_temp;
+uint8_t log_trigger_stop_year;
+uint8_t log_trigger_stop_month_temp;
+uint8_t log_trigger_stop_month;
+uint8_t log_trigger_stop_date_temp;
+uint8_t log_trigger_stop_date;
+uint8_t log_trigger_stop_hour_temp;
+uint8_t log_trigger_stop_hour;
+uint8_t log_trigger_stop_min_temp;
+uint8_t log_trigger_stop_min;
+uint16_t log_key_press_delay_temp;
+uint16_t log_key_press_delay;
+uint8_t set_delay_flag = 0;
+uint8_t set_start_log_flag = 0;
+uint8_t exit_slave_monitor_flag = 0;
+uint8_t exit_slave_monitor = 0;
+uint8_t exit_monitor = 0;
+uint8_t Slave_monitor_ID[5];
+uint8_t Slave_monitor_ID_temp[5];
+uint8_t use_slave_monitor_flag = 0;
+uint8_t use_slave_monitor_flag_temp = 0;
+uint8_t use_slave_monitor = 0;
+uint8_t SerialYear_temp;
+uint8_t SerialMonth_temp;
+uint16_t SerialNumber_temp;
+uint16_t temp_use_channel_flag = 0;
+uint16_t exit_modbus = 0;
+uint16_t exit_display = 0;
+uint16_t warm_time1_temp = 10;
+uint16_t code = 0;
+uint16_t auto_mode_time = 1;
+uint16_t auto_mode_time_counter = 0;
+uint16_t comm_fail_relay_time = 1;
+uint16_t comm_fail_relay_time_temp = 1;
+uint16_t comm_fail_relay_time_counter = 0;
+uint16_t modbus_use_channel_flag =  0x0000;
+uint16_t modbus_channel_exit_flag = 0x0000;
+uint16_t display_menu_exit_flag = 0x0000;
+uint16_t alarm_channel_exit_flag = 0x0000;
+uint16_t auto_mode_time_temp = 1;
+uint16_t code_temp = 0;
+uint16_t modbus_use_channel_flag_temp =  0x0000;
+
+uint32_t log_interval_time1;
+uint32_t log_interval_time1_temp;
+uint32_t use_alarm1 = 0;
+uint32_t use_alarm2 = 0;
+uint32_t alarm1_low = 0;
+uint32_t alarm2_low = 0;
+uint32_t alarm1_latch = 0;
+uint32_t alarm2_latch = 0;
+uint32_t exit_alarm = 0;
+uint32_t MaxLogCount = 100000;
+uint32_t MaxLogCount_temp = 100000;
+uint32_t Modbus_baudrate_temp = 9600;
+uint32_t Modbus_baudrate = 9600;
+uint32_t ack_flags = 0x00000000;
+uint32_t use_alarm_flag = 0x00000000;
+uint32_t logic_flag = 0x00000000;
+uint32_t latch_flag = 0x00000000;
+uint32_t use_alarm_flag_temp = 0x00000000;
+uint32_t logic_flag_temp = 0x00000000;
+uint32_t latch_flag_temp = 0x00000000;
+uint32_t DownloadDataLowerLimit = 1;
+uint32_t DownloadDataUpperLimit = 1;
+
+AlarmParameters	 Alarm_Channels[16];
+ModbusParameters Modbus_Channels[16];
+DisplayParameters Display_Channels[16];
+NameParameters Name_List;
+
+AlarmParameters	 Temp_Alarm_Channels[16];
+ModbusParameters Temp_Modbus_Channels[16];
+DisplayParameters Temp_Display_Channels[16];
+NameParameters Temp_Name_List;
+
+/*---------------------------------------------------------------------------
+* Function name       : void key_scanning(void)
+*     returns         : -
+*     arg1            : -
+*     arg2            : -
+* Created by          : Nitin Singh
+* Date created        : 20/01/11
+* Description         : Scans the keys whenever function is called and calls 
+*                       the respective functions based on keys pressed.
+*---------------------------------------------------------------------------*/
+void key_scanning(void)
+{
+	unsigned char key_value;
+	static unsigned char key_after_delay = 0;
+	uint16_t i;
+	uint16_t  temp_use_channel = 0x0001;
+	uint32_t  temp_relay1 = 0x00000001;
+	uint32_t  temp_relay2 = 0x00000002;
+	uint32_t  temp_ack1   = 0x00000001;
+	uint32_t  temp_ack2   = 0x00000002;
+	
+	P2SEL=0x00;
+	P2DIR&=0xF8;                   			   //Setting p2.0 to p2.3 as input pins
+	
+	if(warmup == 0)
+	{
+
+		if((!(P1IN & 0x01))&& (remote_ack_count >= 3))
+		{
+			remote_ack_count = 0;
+			for(i=0;i<16;i++)
+	    	{
+	    		
+	  			if(i <= 3)
+					comm_fail_relay_flag_1 = 0;
+				else if(i >= 4 && i <= 7)
+					comm_fail_relay_flag_2 = 0;
+				else if(i >= 8 && i <= 11)
+					comm_fail_relay_flag_3 = 0;
+				else if(i >= 12 && i <= 15)
+					comm_fail_relay_flag_4 = 0;
+		    	
+	    		if(modbus_use_channel_flag & temp_use_channel)
+				{
+			    	if((relay_flags & temp_relay1))// && (relay_flags & TIME_RELAY1))                          
+			      		ack_flags |= temp_ack1;                         /* Acknowledge relay1 if it is ON */     
+			      	else
+			    		relay_flags &= ~temp_relay1;						 /* Else turn off relay1 */
+			    		
+			    	if((relay_flags & temp_relay2))// && (relay_flags & TIME_RELAY2))
+			      		ack_flags |= temp_ack2;                         /* Acknowledge relay2 if it is ON */ 
+			      	else
+			    		relay_flags &= ~temp_relay2;                      /* Else turn off relay2 */
+				}
+				temp_use_channel = temp_use_channel << 1;	
+		    	temp_relay1 = temp_relay1 << 2;
+				temp_relay2 = temp_relay2 << 2;
+				temp_ack1 = temp_ack1 << 2;
+				temp_ack2 = temp_ack2 << 2;
+	    	} 
+			
+		}
+		if((!(P1IN & 0x01))&& (remote_test_count >= 10))
+		{
+			remote_test_count = 0;
+			if(menu == NORMAL_MODE)
+			{
+				menu = REMOTE_TEST_MENU;
+			}		
+			
+		}
+		
+		key_value=P2IN & 0x07;                				/* Reading port2 register value into a local variable */
+		if(exit_flags_factory & KEY_SENSED)
+		{
+			if(key_after_delay == 0x06)
+			{
+					TBCCTL0 &= ~CCIE;
+					led_display(0x1000,0x0000,0x0000,0x0000, 1);
+					TBCCTL0 |= CCIE;
+					 
+						
+					exit_flags_factory &= ~KEY_SENSED;
+					if((menu == 0) && (exit_flags_factory & KEY_SENSED_3_SECS))
+					{
+						mode_select();
+						exit_flags_factory &= ~KEY_SENSED_3_SECS;
+					}
+					else
+						next_key();
+					key_after_delay = 0;
+			}
+			else if(key_after_delay == 0x05)
+			{
+				if(menu != NORMAL_MODE)
+				{
+					TBCCTL0 &= ~CCIE;
+					led_display(0x1000,0x0000,0x0000,0x0000, 1);
+					TBCCTL0 |= CCIE;
+				}	 	
+					
+					exit_flags_factory &= ~KEY_SENSED;
+					if((menu == NORMAL_MODE) && (exit_flags_factory & KEY_SENSED_3_SECS))
+					{
+						
+						exit_flags_factory &= ~KEY_SENSED_3_SECS;
+					}
+					else
+						shift_key();
+					key_after_delay = 0;
+			}
+			else if(key_after_delay == 0x03)
+			{
+					TBCCTL0 &= ~CCIE;
+					led_display(0x1000,0x0000,0x0000,0x0000, 1);
+					TBCCTL0 |= CCIE;
+					  	
+					
+					exit_flags_factory &= ~KEY_SENSED;
+					if((menu == 0) && (exit_flags_factory & KEY_SENSED_3_SECS))
+					{
+
+						if((log_trigger == 2) && !(set_start_log_flag) && !(set_delay_flag) && (indication_flags_2 & START_STOP_COMM)) //if in key press trigger option start logging 
+						{
+							set_delay_flag = 1;
+							sec_ctr = 0;
+
+							Send_str("                ", 0);
+							Send_str(" Logging Starts ", 16);
+							Send_str("  in     Mins   ", 32);
+							display(log_key_press_delay, 37,pos_cntr, 3);
+							Send_str("                ", 48);
+							
+						}
+						else
+						{
+							
+							Send_str(" HOUR:MINS:SECS ", 0);
+							Send_str("     :    :     ", 16);
+							display(Hours, 18, 0, 2);
+							display(Minutes, 23, 0, 2);
+							display(Seconds, 28, 0, 2);
+							
+							Send_str(" DATE/MNTH/YEAR ", 32);
+							Send_str("     /    /20   ", 48);
+							display(Date, 50, 0, 2);
+				    		display(Month,55, 0, 2);
+				    		display(Year, 61, 0, 2);
+							
+						}
+						UpdateLcd(); 
+						for(i=0;i<60000;i++);	
+						for(i=0;i<60000;i++);	
+						
+		        		exit_flags_factory &= ~KEY_SENSED_3_SECS;
+					}
+					else
+						inc_key();
+					key_after_delay = 0;
+			}
+		}	
+		else if(key_value == 0x06)                				 
+		{
+			indication_flags |= KEY_DEBOUNCE;
+			key_after_delay = 0x06;
+		}
+		else if(key_value == 0x05)                				 
+		{
+			indication_flags |= KEY_DEBOUNCE;
+			key_after_delay = 0x05;
+		}
+		else if(key_value == 0x03)                				 
+		{
+			indication_flags |= KEY_DEBOUNCE;
+			key_after_delay = 0x03;
+		}
+		else 
+		{
+			exit_flags_factory &= ~KEY_SENSED_3_SECS;
+			exit_flags_factory &= ~KEY_SENSED;
+			
+			if(!(menu == REMOTE_TEST_MENU))
+			{
+				TBCCTL0 &= ~CCIE;
+				led_display(0x1000,0x0000,0x0000,0x0000, 0);
+				TBCCTL0 |= CCIE;
+			}  
+		}
+	}
+}
+		
+void mode_select(void)
+{
+	if ((cal_para == DEFAULT_PARAMETER) && (menu == NORMAL_MODE))                     /* Check whether controller is in default menu */     
+  	{
+  		password = 0;                                       /* Set the password to zero */
+      	//indication_flags |= FACTORY_MODE;                 /* Set the flag FACTORY_MODE */
+      	menu = MAIN_MENU;                                           /* Change the menu to password menu */
+      	cal_para = MODBUS_PARAMETER;                                       /* Set it in first parameter */
+      	count = 0;
+  	}
+  	backlit_timer = 40;                                     /* Set the baklit to ON for 5 secs */
+  	menu_timeout =60;
+}
+
+/*---------------------------------------------------------------------------
+* Function name       : void next_key(void)
+*     returns         : -
+*     arg1            : -
+*     arg2            : -
+* Created by          : Nitin Singh
+* Date created        : 20/01/11
+* Description         : This function is used to set parameters or to switch 
+*                       one menu/parameter to other 
+*---------------------------------------------------------------------------*/
+void next_key(void)
+{
+	uint8_t i;
+	uint8_t rtcHexValue = 0;
+	uint16_t temp_use_channel_1 = 0x0001;
+	
+	
+	backlit_timer =40;
+	pos_cntr = 0;
+	
+	
+	if((menu == MAIN_MENU) && !(count<3))
+	{
+  		cal_para++;
+  		counter_temp = counter; //this is used for checking the channel which is disabled in normal mode
+  		if(cal_para > MAIN_MENU_EXIT_PARAMETER)
+  		{
+  			if(exit_flags & EXIT_MENU)
+  			{
+  				menu = NORMAL_MODE;
+  				cal_para = DEFAULT_PARAMETER;
+  				password = 0;
+  				
+  				counter = 1;
+  				
+  				led_display(0x00FF,0xFF00,0x0000,0x0000, 0);
+  				
+  				RelayActiveFlag = 1;
+  				
+////  				for(i=0; i<16 ; i++)
+////  				  CommFail[i] = 0;
+  				 
+////  				comm_fail_relay_flag_1 = 1;
+////  				comm_fail_relay_flag_2 = 1;
+////  				comm_fail_relay_flag_3 = 1;
+////  				comm_fail_relay_flag_4 = 1;
+////  				
+////  				CommFail_1 = 0;
+////  				CommFail_2 = 0;
+////  				CommFail_3 = 0;
+////  				CommFail_4 = 0;
+  				  
+ 				indication_flags |= SHOW_MODE;
+  				exit_flags &= ~EXIT_MENU;
+  			}
+  			else
+  				cal_para = 0;
+  		}	
+	}
+	else if(menu == ENTER_PASSWORD)
+	{
+		cal_para = 0;
+		if ((password == code) || (password == FACTORY_PASSWORD)|| (password == 16))          /* check for password authentication */
+    	{
+    		indication_flags &= ~SHOW_MODE;                 /* If authenticated clear flag SHOW_MODE */
+    	 	
+    	 	comm_fail_relay_flag_1 = 1;
+			comm_fail_relay_flag_2 = 1;
+			comm_fail_relay_flag_3 = 1;
+			comm_fail_relay_flag_4 = 1;
+	  		
+	  		RelayActiveFlag = 0;
+	  		
+////    	 	for(i=0; i<16 ; i++)
+////  				  CommFail[i] = 0;
+  				  
+    	 	if(mode_flags & MODBUS_SETTING_MODE)
+    		{   
+    			
+    			if(password == FACTORY_PASSWORD)
+    			{
+    				menu = FACTORY_MENU;
+    				warm_time1_temp = warm_time1;
+    				MaxLogCount_temp = MaxLogCount;
+    				SerialYear_temp = SerialYear;
+    				SerialMonth_temp = SerialMonth;
+    				SerialNumber_temp = SerialNumber;
+    			}                          
+    			else
+    			{
+    				temp_use_channel_1 = 0x0001;
+    				modbus_use_channel_flag_temp = modbus_use_channel_flag;
+	
+					for(i=0;i<16;i++)
+					{
+						if(modbus_use_channel_flag & temp_use_channel_1)
+						{
+							Temp_Modbus_Channels[i].SlaveID = Modbus_Channels[i].SlaveID;
+							Temp_Modbus_Channels[i].ReadRegister = Modbus_Channels[i].ReadRegister;
+							Temp_Modbus_Channels[i].PvAddress = Modbus_Channels[i].PvAddress;
+						}
+					
+						temp_use_channel_1 = temp_use_channel_1 << 1;
+					}
+					temp_use_channel_1 = 0x0001;
+					
+					Modbus_parity_temp = Modbus_parity;
+					Modbus_stopbits_temp = Modbus_stopbits;
+					Modbus_baudrate_temp = Modbus_baudrate;
+					
+					
+    				menu = MODBUS_MENU;                          /* Change menu to user settings menu */
+    			}
+    			mode_flags &= ~MODBUS_SETTING_MODE;
+    			indication_flags |= FACTORY_LED;            /* Set flag FACTORY_LED */
+    		}
+    		else if(mode_flags & DISPLAY_SETTING_MODE)   
+    		{   
+    			temp_use_channel_1 = 0x0001;
+				indication_flags_temp = (indication_flags & DISPLAY_AUTO_MODE);
+				auto_mode_time_temp =auto_mode_time;
+				
+				for(i=0;i<16;i++)
+				{
+					if(modbus_use_channel_flag & temp_use_channel_1)
+					{
+						Temp_Display_Channels[i].dp = Display_Channels[i].dp;
+						Temp_Display_Channels[i].units = Display_Channels[i].units;
+						Temp_Display_Channels[i].gas_no = Display_Channels[i].gas_no;
+					}
+				
+					temp_use_channel_1 = temp_use_channel_1 << 1;
+				}
+				temp_use_channel_1 = 0x0001;    	
+				
+				for(i=0;i<13;i++)
+				{
+					Temp_Name_List.Name1[i] = Name_List.Name1[i];
+					Temp_Name_List.Name2[i] = Name_List.Name2[i];
+					Temp_Name_List.Name3[i] = Name_List.Name3[i];
+					Temp_Name_List.Name4[i] = Name_List.Name4[i];
+					Temp_Name_List.Name5[i] = Name_List.Name5[i];
+				}
+					
+    			menu = DISPLAY_SETTING_MENU;                           /* Change menu to user settings menu */
+    			mode_flags &= ~DISPLAY_SETTING_MODE;
+    			indication_flags |= FACTORY_LED;            /* Set flag FACTORY_LED */
+    		}
+    		else if(mode_flags & ALARM_MODE)   
+    		{   
+    			temp_use_channel_1 = 0x0001;
+    			for(i=0;i<16;i++)
+				{
+					if(modbus_use_channel_flag & temp_use_channel_1)
+					{
+						Temp_Alarm_Channels[i].Alarm1_Hys = Alarm_Channels[i].Alarm1_Hys;
+						Temp_Alarm_Channels[i].Alarm2_Hys = Alarm_Channels[i].Alarm2_Hys;
+						Temp_Alarm_Channels[i].Alarm1_SetPt = Alarm_Channels[i].Alarm1_SetPt;
+						Temp_Alarm_Channels[i].Alarm2_SetPt = Alarm_Channels[i].Alarm2_SetPt;
+					}
+				
+					temp_use_channel_1 = temp_use_channel_1 << 1;
+				}
+				temp_use_channel_1 = 0x0001;
+				
+				comm_fail_relay_time_temp = comm_fail_relay_time;
+				indication_flags_2_temp = indication_flags_2;
+				use_alarm_flag_temp =use_alarm_flag;
+				logic_flag_temp =logic_flag;
+				latch_flag_temp =latch_flag; 
+				
+    			menu = ALARM_MENU;                           /* Change menu to user settings menu */
+    			mode_flags &= ~ALARM_MODE;
+    			indication_flags |= FACTORY_LED;            /* Set flag FACTORY_LED */
+    		}
+    		else if(mode_flags_1 & RTC_MODE)   
+    		{   
+    			menu = RTC_MENU;                                   /* Change menu to user settings menu */
+    			
+    			rtc_year = Year;
+    			rtc_month = Month;
+    			rtc_date = Date;
+				rtc_hour = Hours;
+				rtc_min = Minutes;				
+				rtc_sec = Seconds;
+				
+    			mode_flags_1 &= ~RTC_MODE;
+    			indication_flags |= FACTORY_LED;            /* Set flag FACTORY_LED */
+    		}
+    		else if(mode_flags_1 & LOG_SET_MODE)   
+    		{   
+    			menu = LOG_SET_MENU;                                   /* Change menu to user settings menu */
+    			
+    			ContinousLogStopFlag = 1;
+    			
+    			indication_flags_2_temp = indication_flags_2;
+    			indication_flags_3_temp = indication_flags_3;
+    			log_interval_time1_temp = log_interval_time1;
+
+    			
+    			log_sec_temp = log_sec;
+				log_hour_temp = log_hour;
+				log_min_temp = log_min;
+    			log_trigger_temp = log_trigger;
+    			log_trigger_start_year_temp = log_trigger_start_year;
+    			log_trigger_start_month_temp = log_trigger_start_month;
+    			log_trigger_start_date_temp = log_trigger_start_date;
+    			log_trigger_start_hour_temp = log_trigger_start_hour;
+    			log_trigger_start_min_temp = log_trigger_start_min;
+    			
+    			log_trigger_stop_year_temp = log_trigger_stop_year;
+    			log_trigger_stop_month_temp = log_trigger_stop_month;
+    			log_trigger_stop_date_temp = log_trigger_stop_date;
+    			log_trigger_stop_hour_temp = log_trigger_stop_hour;
+    			log_trigger_stop_min_temp = log_trigger_stop_min;
+    			
+    			log_key_press_delay_temp = log_key_press_delay;
+    			
+    			mode_flags_1 &= ~LOG_SET_MODE;
+    			indication_flags |= FACTORY_LED;            /* Set flag FACTORY_LED */
+    		}
+    		else if(mode_flags_1 & MEMORY_MENU_MODE)   
+    		{   
+    			menu = MEMORY_MENU;                                   /* Change menu to user settings menu */
+    			
+    			mode_flags_1 &= ~MEMORY_MENU_MODE;
+    			indication_flags |= FACTORY_LED;            /* Set flag FACTORY_LED */
+    		}
+    		else if(mode_flags_1 & DOWNLOADING_MENU_MODE)   
+    		{   
+    			menu = DOWNLOADING_MENU;                                   /* Change menu to user settings menu */
+    			
+    			DeviceId_temp = DeviceId;
+    			mode_flags_1 &= ~DOWNLOADING_MENU_MODE;
+    			indication_flags |= FACTORY_LED;            /* Set flag FACTORY_LED */
+    		}
+    		else if(mode_flags & PASSWORD_MODE)   
+    		{   
+    			code_temp = code;
+    			indication_flags_2_temp = indication_flags_2;
+    			
+    			menu = PASSWORD_MENU;                                   /* Change menu to user settings menu */
+    			
+    			mode_flags &= ~PASSWORD_MODE;
+    			indication_flags |= FACTORY_LED;            /* Set flag FACTORY_LED */
+    		}
+    		else if(mode_flags & START_STOP_COMM_MODE)   
+    		{   
+    			indication_flags_2_temp = indication_flags_2;
+    			
+    			menu = START_STOP_COMMUNICATION;                                   /* Change menu to user settings menu */
+    			
+    			mode_flags &= ~START_STOP_COMM_MODE;
+    			indication_flags |= FACTORY_LED;            /* Set flag FACTORY_LED */
+    		}
+    		else if(mode_flags & BACKLIT_MODE)   
+    		{   
+    			backlit_select_temp = backlit_select;
+    			
+    			menu = BACKLIT_MENU;                                   /* Change menu to user settings menu */
+    			mode_flags &= ~BACKLIT_MODE;
+    			indication_flags |= FACTORY_LED;            /* Set flag FACTORY_LED */
+    		}
+    		else if(mode_flags & SLAVE_MONITOR_MODE)   
+    		{   
+    			    			
+    			menu = SLAVE_MONITOR_MENU;                                   /* Change menu to user settings menu */
+    			mode_flags &= ~SLAVE_MONITOR_MODE;
+    			indication_flags |= FACTORY_LED;            /* Set flag FACTORY_LED */
+    		}
+    		
+    		pos_cntr = 0;                               /* Set position of cursor to zero */
+			password = 0;
+
+    	}
+    	else
+    	{
+      			cal_para = 0;                                   /* set it in first parameter */
+      			if(mode_flags & MODBUS_SETTING_MODE)
+	    		{   
+	    			menu = MODBUS_MENU;                                   /* Change menu to user settings menu */
+	    			mode_flags &= ~MODBUS_SETTING_MODE;
+	    		}
+	    		else if(mode_flags & DISPLAY_SETTING_MODE)   
+	    		{   
+	    			menu = DISPLAY_SETTING_MENU;                                   /* Change menu to user settings menu */
+	    			mode_flags &= ~DISPLAY_SETTING_MODE;
+	    		}
+	    		else if(mode_flags & ALARM_MODE)   
+	    		{   
+	    			menu = ALARM_MENU;                                   /* Change menu to user settings menu */
+	    			mode_flags &= ~ALARM_MODE;
+	    		}
+	    		else if(mode_flags_1 & RTC_MODE)   
+	    		{   
+	    			menu = RTC_MENU;                                   /* Change menu to user settings menu */
+	    			mode_flags_1 &= ~RTC_MODE;
+	    		}
+	    		else if(mode_flags_1 & LOG_SET_MODE)   
+	    		{   
+	    			menu = LOG_SET_MENU;                                   /* Change menu to user settings menu */
+	    			mode_flags_1 &= ~LOG_SET_MODE;
+	    			
+	    		}
+	    		else if(mode_flags_1 & MEMORY_MENU_MODE)   
+	    		{   
+	    			menu = MEMORY_MENU;                                   /* Change menu to user settings menu */
+	    			mode_flags_1 &= ~MEMORY_MENU_MODE;
+	    			
+	    		}
+	    		else if(mode_flags_1 & DOWNLOADING_MENU_MODE)   
+	    		{   
+	    			menu = DOWNLOADING_MENU;                                   /* Change menu to user settings menu */
+	    			mode_flags_1 &= ~DOWNLOADING_MENU_MODE;
+	    		}
+	    		else if(mode_flags & PASSWORD_MODE)   
+	    		{   
+	    			menu = MAIN_MENU;                                   /* Change menu to user settings menu */
+	    			cal_para = PASSWORD_PARAMETER;
+	    			mode_flags &= ~PASSWORD_MODE;
+	    		}
+	    		else if(mode_flags & BACKLIT_MODE)   
+	    		{   
+	    			menu = BACKLIT_MENU;                                   /* Change menu to user settings menu */
+	    			mode_flags &= ~BACKLIT_MODE;
+	    		}
+	    		else if(mode_flags & SLAVE_MONITOR_MODE)   
+	    		{   
+	    			menu = SLAVE_MONITOR_MENU;                                   /* Change menu to user settings menu */
+	    			mode_flags &= ~SLAVE_MONITOR_MODE;
+	    		}
+	    		else if(mode_flags & START_STOP_COMM_MODE)   
+	    		{   
+	    			menu = START_STOP_COMMUNICATION;                                   /* Change menu to user settings menu */
+	    			mode_flags &= ~START_STOP_COMM_MODE;
+	    			
+	    		}
+	    		
+	    		password = 0;                                   /* Set password to zero */
+	      		pos_cntr = 0;                                   /* Set position of cursor to zero */
+	      	
+
+    	}
+     }
+     
+    else if(menu == MODBUS_MENU)
+   {
+   		backlit_timer = 40;
+    	cal_para++;                                         /* Increase the parameter counter */
+    	
+
+   		if(cal_para > MODBUS_EXIT_PARAMETER)
+  		{
+  			if(exit_flags & EXIT_MODBUS_MENU_FLAG)
+	  			{
+	  				menu = MAIN_MENU;
+	  				cal_para = MODBUS_PARAMETER;
+	  				password = 0;
+	  				pos_cntr = 0;
+	  				mode_flags &= ~MODBUS_SETTING_MODE;
+	  				exit_flags &= ~EXIT_MODBUS_MENU_FLAG;
+	  				modbus_channel_exit_flag = 0;
+	  				indication_flags |= SHOW_MODE;
+	  				indication_flags &= ~FACTORY_LED;            /* Clear flag FACTORY_LED */
+
+					update_modbus_channels_sd_value();
+	  				UARTInit();
+////	  				for(i=0; i<16 ; i++)
+////  				  		CommFail[i] = 0;
+	  			}
+	  			else
+	  			{
+	  				cal_para = MODBUS_PARAMETER_1;
+	  				password = 0;
+	  				pos_cntr = 0;
+	  			}
+  		}
+   }
+   else if(menu == CHANNEL_MODBUS_MENU)
+   	{
+   		backlit_timer = 40;
+    	cal_para++;                                         /* Increase the parameter counter */
+    	
+    	if(cal_para == SET_CHANNEL_PARAMETER_1)
+        {
+        	if (!(modbus_use_channel_flag & temp_use_channel_flag))               
+        			cal_para = CHANNEL_EXIT;
+        }
+    	
+    	if(cal_para > CHANNEL_EXIT)
+  		{
+  			if(modbus_channel_exit_flag & exit_modbus)
+  			{
+  				menu = MODBUS_MENU;
+  				cal_para = MODBUS_PARAMETER_1;
+  				password = 0;
+  				pos_cntr = 0;
+  				modbus_channel_exit_flag &= ~exit_modbus;
+  				
+  			}
+  			else
+  			{
+  				cal_para = ENABLE_CHANNEL;
+  				password = 0;
+  				pos_cntr = 0;
+  			}
+  		}
+    	
+	} 
+	else if(menu == DISPLAY_SETTING_MENU)
+   {
+   		backlit_timer = 40;
+    	cal_para++;                                         /* Increase the parameter counter */
+    	
+		if(cal_para == AUTO_PAGE_CHANGING_TIME_PARAMETER)
+    	{
+    		if (!(indication_flags & DISPLAY_AUTO_MODE))    //if manual mode is selected           
+        			cal_para = CUSTOMIZED_NAME_LIST_PARAMETER;
+    	}
+    	if(cal_para == CH1_DISPLAY_PARAMETER)
+    	{
+    		if (!(modbus_use_channel_flag & USE_CHANNEL_1_FLAG))               
+        			cal_para = CH2_DISPLAY_PARAMETER;
+    	}
+    		
+        if(cal_para == CH2_DISPLAY_PARAMETER)
+    	{
+    		if (!(modbus_use_channel_flag & USE_CHANNEL_2_FLAG))               
+        			cal_para = CH3_DISPLAY_PARAMETER;
+    	}
+    	if(cal_para == CH3_DISPLAY_PARAMETER)
+    	{
+    		if (!(modbus_use_channel_flag & USE_CHANNEL_3_FLAG))               
+        			cal_para = CH4_DISPLAY_PARAMETER;
+    	}
+    		
+        if(cal_para == CH4_DISPLAY_PARAMETER)
+    	{
+    		if (!(modbus_use_channel_flag & USE_CHANNEL_4_FLAG))               
+        			cal_para = CH5_DISPLAY_PARAMETER;
+    	}
+    	if(cal_para == CH5_DISPLAY_PARAMETER)
+    	{
+    		if (!(modbus_use_channel_flag & USE_CHANNEL_5_FLAG))               
+        			cal_para = CH6_DISPLAY_PARAMETER;
+    	}
+    		
+        if(cal_para == CH6_DISPLAY_PARAMETER)
+    	{
+    		if (!(modbus_use_channel_flag & USE_CHANNEL_6_FLAG))               
+        			cal_para = CH7_DISPLAY_PARAMETER;
+    	}
+    	if(cal_para == CH7_DISPLAY_PARAMETER)
+    	{
+    		if (!(modbus_use_channel_flag & USE_CHANNEL_7_FLAG))               
+        			cal_para = CH8_DISPLAY_PARAMETER;
+    	}
+    		
+        if(cal_para == CH8_DISPLAY_PARAMETER)
+    	{
+    		if (!(modbus_use_channel_flag & USE_CHANNEL_8_FLAG))               
+        			cal_para = CH9_DISPLAY_PARAMETER;
+    	}
+    	if(cal_para == CH9_DISPLAY_PARAMETER)
+    	{
+    		if (!(modbus_use_channel_flag & USE_CHANNEL_9_FLAG))               
+        			cal_para = CH10_DISPLAY_PARAMETER;
+    	}
+    		
+        if(cal_para == CH10_DISPLAY_PARAMETER)
+    	{
+    		if (!(modbus_use_channel_flag & USE_CHANNEL_10_FLAG))               
+        			cal_para = CH11_DISPLAY_PARAMETER;
+    	}
+    	if(cal_para == CH11_DISPLAY_PARAMETER)
+    	{
+    		if (!(modbus_use_channel_flag & USE_CHANNEL_11_FLAG))               
+        			cal_para = CH12_DISPLAY_PARAMETER;
+    	}
+    		
+        if(cal_para == CH12_DISPLAY_PARAMETER)
+    	{
+    		if (!(modbus_use_channel_flag & USE_CHANNEL_12_FLAG))               
+        			cal_para = CH13_DISPLAY_PARAMETER;
+    	}
+    	if(cal_para == CH13_DISPLAY_PARAMETER)
+    	{
+    		if (!(modbus_use_channel_flag & USE_CHANNEL_13_FLAG))               
+        			cal_para = CH14_DISPLAY_PARAMETER;
+    	}
+    		
+        if(cal_para == CH14_DISPLAY_PARAMETER)
+    	{
+    		if (!(modbus_use_channel_flag & USE_CHANNEL_14_FLAG))               
+        			cal_para = CH15_DISPLAY_PARAMETER;
+    	}
+    	if(cal_para == CH15_DISPLAY_PARAMETER)
+    	{
+    		if (!(modbus_use_channel_flag & USE_CHANNEL_15_FLAG))               
+        			cal_para = CH16_DISPLAY_PARAMETER;
+    	}
+    		
+        if(cal_para == CH16_DISPLAY_PARAMETER)
+    	{
+    		if (!(modbus_use_channel_flag & USE_CHANNEL_16_FLAG))               
+        			cal_para = DISPLAY_EXIT_PARAMETER;
+    	}
+    	
+   		if(cal_para > DISPLAY_EXIT_PARAMETER)
+  		{
+  			if(exit_flags & EXIT_DISPLAY_MENU_FLAG)
+  			{
+  				
+  				menu = MAIN_MENU;
+  				cal_para = MODBUS_PARAMETER;
+  				password = 0;
+  				pos_cntr = 0;
+  				mode_flags &= ~DISPLAY_SETTING_MODE;
+  				exit_flags &= ~EXIT_DISPLAY_MENU_FLAG;
+  				display_menu_exit_flag = 0;
+  				indication_flags |= SHOW_MODE;
+  				indication_flags &= ~FACTORY_LED;            /* Clear flag FACTORY_LED */
+  				auto_mode_time_counter = auto_mode_time;
+  				update_display_channels_sd_value();
+  				update_modbus_channels_sd_value();
+  				
+  			}
+  			else
+  			{
+  				cal_para = DISPLAY_PARAMETER_1;
+  				password = 0;
+  				pos_cntr = 0;
+  			}
+  			
+  		}	
+   }
+   else if(menu == CHANNEL_DISPLAY_MENU)
+   {
+   		backlit_timer = 40;
+    	cal_para++;   
+    	
+    	if(cal_para > CHANNEL_PARAMETER_EXIT)
+  		{
+  			if(display_menu_exit_flag & exit_display)
+  			{
+  				menu = DISPLAY_SETTING_MENU;
+  				cal_para = DISPLAY_PARAMETER_1;
+  				password = 0;
+  				pos_cntr = 0;
+  				display_menu_exit_flag &= ~exit_display;
+  				
+  			}
+  			else
+  			{
+  				cal_para = CHANNEL_PARAMETER_1;
+  				password = 0;
+  				pos_cntr = 0;
+  			}
+  		}
+    	
+    	
+   		
+   }
+   else if(menu == CUSTOMIZED_LIST_MENU)
+   {
+   		backlit_timer = 40;
+    	cal_para++;                                         /* Increase the parameter counter */
+    	
+   		if(cal_para > NAME_EXIT_PARAMETER)
+  		{
+  			if(exit_flags_1 & EXIT_LIST_MENU_FLAG)
+  			{
+  				menu = DISPLAY_SETTING_MENU;
+  				cal_para = DISPLAY_PARAMETER_1;
+  				password = 0;
+  				pos_cntr = 0;
+  				exit_flags_1 &= ~EXIT_LIST_MENU_FLAG;
+  				
+  			}
+  			else
+  			{
+  				cal_para = NAME_1_PARAMETER;
+  				password = 0;
+  				pos_cntr = 0;
+  			}
+  		}
+   }
+   else if(menu == START_STOP_COMMUNICATION)
+   {
+   		backlit_timer = 40;
+    	cal_para++; 
+    	
+   		if(cal_para > EXIT_START_STOP_MENU)
+   		{
+   			if(exit_flags & EXIT_START_STOP_COMM)
+  			{
+	   			menu = MAIN_MENU;
+				cal_para = MODBUS_PARAMETER;
+				password = 0;
+				pos_cntr = 0;
+				exit_flags &= ~EXIT_START_STOP_COMM;
+				indication_flags |= SHOW_MODE;
+				indication_flags &= ~FACTORY_LED;            /* Clear flag FACTORY_LED */
+				
+				update_user_sd_value();
+								
+				RelayActiveFlag = 1;
+				
+				if(!(indication_flags_2 & START_STOP_COMM))
+				{
+					for(i=0; i<16 ; i++)
+	  				  	CommFail[i] = 0;
+	  				 
+	  				comm_fail_relay_flag_1 = 1;
+	  				comm_fail_relay_flag_2 = 1;
+	  				comm_fail_relay_flag_3 = 1;
+	  				comm_fail_relay_flag_4 = 1;
+	  				
+	  				CommFail_1 = 0;
+	  				CommFail_2 = 0;
+	  				CommFail_3 = 0;
+	  				CommFail_4 = 0;
+	  					
+	  				relay_set1 = 0;
+					relay_set2 = 0;
+					relay_set3 = 0;
+					relay_set4 = 0;
+					relay_set5 = 0;
+					relay_set6 = 0;
+					relay_set7 = 0;
+					relay_set8 = 0;
+				}
+  			}
+			else
+			{
+				cal_para = COMM_PARAMETER_1;
+				password = 0;
+				pos_cntr = 0;
+			}
+   		}
+   } 
+   else if(menu == ALARM_MENU)
+   {
+   		backlit_timer = 40;
+    	cal_para++;                                         /* Increase the parameter counter */
+    	
+		if(cal_para == CH1_ALARM_PARAMETER)
+    	{
+    		if (!(modbus_use_channel_flag & USE_CHANNEL_1_FLAG))               
+        			cal_para = CH2_ALARM_PARAMETER;
+    	}
+    	if(cal_para == CH2_ALARM_PARAMETER)
+    	{
+    		if (!(modbus_use_channel_flag & USE_CHANNEL_2_FLAG))               
+        			cal_para = CH3_ALARM_PARAMETER;
+    	}
+    	if(cal_para == CH3_ALARM_PARAMETER)
+    	{
+    		if (!(modbus_use_channel_flag & USE_CHANNEL_3_FLAG))               
+        			cal_para = CH4_ALARM_PARAMETER;
+    	}
+    	if(cal_para == CH4_ALARM_PARAMETER)
+    	{
+    		if (!(modbus_use_channel_flag & USE_CHANNEL_4_FLAG))               
+        			cal_para = CH5_ALARM_PARAMETER;
+    	}
+    	if(cal_para == CH5_ALARM_PARAMETER)
+    	{
+    		if (!(modbus_use_channel_flag & USE_CHANNEL_5_FLAG))               
+        			cal_para = CH6_ALARM_PARAMETER;
+    	}
+    	if(cal_para == CH6_ALARM_PARAMETER)
+    	{
+    		if (!(modbus_use_channel_flag & USE_CHANNEL_6_FLAG))               
+        			cal_para = CH7_ALARM_PARAMETER;
+    	}
+    	if(cal_para == CH7_ALARM_PARAMETER)
+    	{
+    		if (!(modbus_use_channel_flag & USE_CHANNEL_7_FLAG))               
+        			cal_para = CH8_ALARM_PARAMETER;
+    	}
+    	if(cal_para == CH8_ALARM_PARAMETER)
+    	{
+    		if (!(modbus_use_channel_flag & USE_CHANNEL_8_FLAG))               
+        			cal_para = CH9_ALARM_PARAMETER;
+    	}
+    	if(cal_para == CH9_ALARM_PARAMETER)
+    	{
+    		if (!(modbus_use_channel_flag & USE_CHANNEL_9_FLAG))               
+        			cal_para = CH10_ALARM_PARAMETER;
+    	}
+    	if(cal_para == CH10_ALARM_PARAMETER)
+    	{
+    		if (!(modbus_use_channel_flag & USE_CHANNEL_10_FLAG))               
+        			cal_para = CH11_ALARM_PARAMETER;
+    	}
+    	if(cal_para == CH11_ALARM_PARAMETER)
+    	{
+    		if (!(modbus_use_channel_flag & USE_CHANNEL_11_FLAG))               
+        			cal_para = CH12_ALARM_PARAMETER;
+    	}
+    	if(cal_para == CH12_ALARM_PARAMETER)
+    	{
+    		if (!(modbus_use_channel_flag & USE_CHANNEL_12_FLAG))               
+        			cal_para = CH13_ALARM_PARAMETER;
+    	}
+    	if(cal_para == CH13_ALARM_PARAMETER)
+    	{
+    		if (!(modbus_use_channel_flag & USE_CHANNEL_13_FLAG))               
+        			cal_para = CH14_ALARM_PARAMETER;
+    	}
+    	if(cal_para == CH14_ALARM_PARAMETER)
+    	{
+    		if (!(modbus_use_channel_flag & USE_CHANNEL_14_FLAG))               
+        			cal_para = CH15_ALARM_PARAMETER;
+    	}
+    	if(cal_para == CH15_ALARM_PARAMETER)
+    	{
+    		if (!(modbus_use_channel_flag & USE_CHANNEL_15_FLAG))               
+        			cal_para = CH16_ALARM_PARAMETER;
+    	}
+    	if(cal_para == CH16_ALARM_PARAMETER)
+    	{
+    		if (!(modbus_use_channel_flag & USE_CHANNEL_16_FLAG))               
+        			cal_para = USE_COMM_FAIL_RELAY;
+    	}
+    	if(cal_para == COMM_FAIL_RELAY_TIME)
+    	{
+    		if (!(indication_flags_2 & USE_COMM_FAIL_FLAG))    //if manual mode is selected           
+        			cal_para = FAILSAFE_RELAY_PARAMETER;
+    	}
+    	
+    	if(cal_para > ALARM_MENU_EXIT_PARAMETER)
+  		{
+  			if(exit_flags & EXIT_ALARM)
+  			{
+  				menu = MAIN_MENU;
+  				cal_para = DEFAULT_PARAMETER;
+  				password = 0;
+  				pos_cntr = 0;
+  				comm_fail_relay_time_counter = (comm_fail_relay_time * 60) - (comm_fail_relay_time * 12);	
+  				
+////  				for(i=0; i<16 ; i++)
+////  				  CommFail[i] = 0;
+				
+//				for(i=0;i<16;i++)
+//				{
+//					Channel_Database[i][0] = 0;
+//				}
+  				mode_flags &= ~ALARM_MODE;
+  				exit_flags &= ~EXIT_ALARM;
+  				indication_flags |= SHOW_MODE;
+  				indication_flags &= ~FACTORY_LED;            /* Clear flag FACTORY_LED */
+				update_alarm_channels_sd_value();
+  			}
+  			else
+  			{
+  				cal_para = ALARM_PARAMETER_1;
+  				password = 0;
+  				pos_cntr = 0;
+  			}
+  		}	
+   }
+   else if(menu == CHANNEL_ALARM_MENU)
+   {
+   		backlit_timer = 40;
+    	cal_para++;                                         /* Increase the parameter counter */
+    	
+    	if (cal_para == SET_ALARM1_PARAMETER)                                  /* If parameter is Use Alarm1 */
+    	{
+      		if (!(use_alarm_flag & use_alarm1))                /* If alarm1 is not to be used then skip all settings */
+        		cal_para = USE_ALARM2_PARAMETER;
+    	}
+    	if (cal_para == SET_ALARM2_PARAMETER)                                  /* If parameter is Use Alarm2 */
+    	{
+      		if (!(use_alarm_flag & use_alarm2))                /* If alarm2 is not to be used then skip al2 settings */
+        		cal_para = ALARM_EXIT_PARAMETER;
+      	}
+   		if(cal_para > ALARM_EXIT_PARAMETER)
+  		{
+  			if(alarm_channel_exit_flag & exit_alarm)
+  			{
+  				menu = ALARM_MENU;
+  				cal_para = ALARM_PARAMETER_1;
+  				password = 0;
+  				pos_cntr = 0;
+  				alarm_channel_exit_flag &= ~exit_alarm;
+  			}
+  			else
+  			{
+  				cal_para = USE_ALARM1_PARAMETER;
+  				password = 0;
+  				pos_cntr = 0;
+  			}
+  		}	
+   }
+   else if(menu == RTC_MENU)
+   {
+   		backlit_timer = 40;
+   		cal_para++;
+   		if(cal_para > EXIT_RTC_MENU_PARAMETER)
+  		{
+  			if(exit_flags_1 & EXIT_RTC_MENU)
+  			{
+  				menu = MAIN_MENU;
+  				cal_para = MODBUS_PARAMETER;
+  				password = 0;
+  				pos_cntr = 0;
+  				mode_flags_1 &= ~RTC_MODE;
+  				exit_flags_1 &= ~EXIT_RTC_MENU;
+  				indication_flags |= SHOW_MODE;
+  				indication_flags &= ~FACTORY_LED;            /* Clear flag FACTORY_LED */
+  				
+  				
+  				if(indication_flags_2 & SET_NEW_RTC_FLAG)
+  				{
+	  				rtcHexValue = DecimalToHex(rtc_sec);
+	  				write_RTC(SEC_REG_ADDRS, (rtcHexValue & 0x7F));
+	  				rtcHexValue = DecimalToHex(rtc_min);
+					write_RTC(MIN_REG_ADDRS, (rtcHexValue & 0x7F));
+					rtcHexValue = DecimalToHex(rtc_hour);
+					write_RTC(HOUR_REG_ADDRS, (rtcHexValue & 0x3F));
+					rtcHexValue = DecimalToHex(rtc_date);
+					write_RTC(DATE_REG_ADDRS, (rtcHexValue & 0x3F));
+					rtcHexValue = DecimalToHex(rtc_month);
+					write_RTC(MONTH_REG_ADDRS,(rtcHexValue & 0x1F));
+					rtcHexValue = DecimalToHex(rtc_year);
+					write_RTC(YEAR_REG_ADDRS, rtcHexValue);
+  				}
+				
+				indication_flags_2 &= ~SET_NEW_RTC_FLAG;
+  			}
+  			else
+  			{
+  				cal_para = RTC_PARAMETER_1;
+  				password = 0;
+  				pos_cntr = 0;
+  			}
+  		}
+   }	
+   else if(menu == LOG_SET_MENU)
+   {
+   		backlit_timer = 40;
+   		cal_para++;
+   		
+   		if(cal_para == SET_LOG_TRIGGER_START_YEAR_PARAMETER)
+   		{
+   			if (log_trigger == 0)    //if continous log           
+        		cal_para = STOP_LOGGING_PARAMETER;
+        	else if (log_trigger == 2)    //if key press log           
+        		cal_para = KEY_PRESS_START_DELAY_PARAMETER;
+        	
+    	}
+    	
+    	if(cal_para == KEY_PRESS_START_DELAY_PARAMETER)
+   		{
+   			if (log_trigger == 1)    //if start-stop log           
+        		cal_para = STOP_LOGGING_PARAMETER;
+       	}
+       	
+   			if(cal_para == STOP_LOGGING_PARAMETER)
+   		{
+   			if(!(set_start_log_flag) || stop_log)
+   			{
+   				cal_para = EXIT_LOG_SET_MENU_PARAMETER;
+   			}
+   		}
+   		
+   		if(cal_para > EXIT_LOG_SET_MENU_PARAMETER)
+  		{
+  			if(exit_flags_1 & EXIT_LOG_SET_FLAG)
+  			{
+  				menu = MAIN_MENU;
+  				cal_para = MODBUS_PARAMETER;
+  				password = 0;
+  				pos_cntr = 0;
+  				mode_flags_1 &= ~LOG_SET_MODE;
+  				exit_flags_1 &= ~EXIT_LOG_SET_FLAG;
+  				
+  				indication_flags |= SHOW_MODE;
+  				indication_flags &= ~FACTORY_LED;            /* Clear flag FACTORY_LED */
+  				
+  				if((indication_flags_3 & STOP_LOGGING_FLAG) && (log_trigger == 0))
+  					ContinousLogStopFlag = 0;
+  				
+  				if((log_trigger_temp != log_trigger) || (indication_flags_3 & STOP_LOGGING_FLAG))
+  					set_start_log_flag = 0;
+  				
+  				log_interval_time1 = (((uint32_t)log_hour * 3600) + ((uint32_t)log_min * 60) + (uint32_t)log_sec );
+  				
+  				if(indication_flags_3 & STOP_LOGGING_FLAG)
+  					StopLoggingFlag = 1;
+  				else 
+  					StopLoggingFlag = 0;
+  				
+  				indication_flags_3 &= ~STOP_LOGGING_FLAG;
+  								
+  				update_user_sd_value();
+  			}
+  			else
+  			{
+  				cal_para = LOG_SET_MENU_PARAMETER_1;
+  				password = 0;
+  				pos_cntr = 0;
+  			}
+  		}	
+   }
+   else if(menu == MEMORY_MENU)
+   {
+   		backlit_timer = 40;
+   		cal_para++;
+   		
+   		if(cal_para == MEMORY_CLEAR_CONFIRM_PARAMETER)
+   		{
+   			if(!(mode_flags_1 & MEMORY_CLEAR_FLAG))
+   				cal_para = EXIT_MEMORY_MENU_PARAMETER;
+    	}
+    	
+   		if(cal_para > EXIT_MEMORY_MENU_PARAMETER)
+  		{
+  			if(exit_flags_1 & EXIT_MEMORY_MENU)
+  			{
+  				if(indication_flags_2 & CONFIRM_MEM_CLEAR_FLAG)
+   					Clear_sd();
+   				menu = MAIN_MENU;
+  				cal_para = MODBUS_PARAMETER;
+  				password = 0;
+  				pos_cntr = 0;
+  				indication_flags_2 &= ~CONFIRM_MEM_CLEAR_FLAG;
+  				mode_flags_1 &= ~MEMORY_CLEAR_FLAG;
+  				mode_flags_1 &= ~MEMORY_MENU_MODE;
+  				exit_flags_1 &= ~EXIT_MEMORY_MENU;
+  				indication_flags |= SHOW_MODE;
+  				indication_flags &= ~FACTORY_LED;            /* Clear flag FACTORY_LED */
+				
+  			}
+  			else
+  			{
+  				cal_para = MEMORY_MENU_PARAMETER_1;
+  				password = 0;
+  				pos_cntr = 0;
+  			}
+  		}	
+   }  
+   
+   else if(menu == DOWNLOADING_MENU)
+   {
+   		backlit_timer = 40;
+   		
+   		if(!((cal_para == DOWNLOADING_STARTED_PARAMETER) && (StartDownloadFlag == 1 || StartDownloadFlag == 2)))
+   			cal_para++;
+   		
+   		if(cal_para == DEVICE_CONFIGURATION_PARAMETER)
+   		{
+   			
+   			if(!(mode_flags_1 & DEVICE_CONFIG_OPTION_FLAG))
+   			{
+   				cal_para = SELECT_DOWNLOADING_PARAMETER;
+   			}
+   			
+   		}
+   		if((cal_para == SELECT_DOWNLOADING_PARAMETER) && (mode_flags_1 & DEVICE_CONFIG_OPTION_FLAG))
+   		{
+   			cal_para = DOWNLOADING_EXIT_PARAMETER;
+   		}
+   		if(cal_para == BATCH_LOWER_LIMIT_PARAMETER)
+   		{
+   			if(log_count == 0)
+   				cal_para = NO_DATA_PARAMETER;
+   			else if(SelectDownloadOption == 0) // All Data
+   				cal_para = START_DOWNLOADING_PARAMETER;
+    	}
+    	if(cal_para == NO_DATA_PARAMETER)
+   		{
+   			if(log_count != 0)
+   				cal_para = DOWNLOADING_EXIT_PARAMETER;
+    	}
+    	if(cal_para == DOWNLOADING_STARTED_PARAMETER)
+   		{
+   			if(!(indication_flags & START_DOWNLOADING_FLAG))
+   				cal_para = DOWNLOADING_EXIT_PARAMETER;
+    	}
+    	if(cal_para == DOWNLOADING_COMPLETED_PARAMETER)
+   		{
+   			if(StartDownloadFlag == 0)
+   				cal_para = DOWNLOADING_EXIT_PARAMETER;
+    	}
+   		if(cal_para > DOWNLOADING_EXIT_PARAMETER)
+  		{
+  			if(exit_flags_1 & EXIT_DOWNLOADING_MENU)
+  			{
+  				menu = MAIN_MENU;
+  				cal_para = MODBUS_PARAMETER;
+  				password = 0;
+  				pos_cntr = 0;
+  				indication_flags &= ~START_DOWNLOADING_FLAG;
+  				mode_flags_1 &= ~DOWNLOADING_MENU_MODE;
+  				exit_flags_1 &= ~EXIT_DOWNLOADING_MENU;
+  				indication_flags |= SHOW_MODE;
+  				indication_flags &= ~FACTORY_LED;            /* Clear flag FACTORY_LED */
+				update_user_sd_value();
+  			}
+  			else
+  			{
+  				cal_para = DOWNLOADING_PARAMETER_1;
+  				password = 0;
+  				pos_cntr = 0;
+  			}
+  		}	
+   }  
+   else if(menu == PASSWORD_MENU)
+   {
+   		backlit_timer = 40;
+   		cal_para++;
+   		if(cal_para > PASSWORD_EXIT_PARAMETER)
+  		{
+  			if(exit_flags & EXIT_PASSWORD)
+  			{
+  				if(indication_flags_2 & SET_NEW_PASSWORD)
+   					code = new_password;
+   				new_password = 0;
+  				menu = MAIN_MENU;
+  				cal_para = MODBUS_PARAMETER;
+  				password = 0;
+  				pos_cntr = 0;
+  				indication_flags_2 &= ~SET_NEW_PASSWORD;
+  				mode_flags &= ~PASSWORD_MODE;
+  				exit_flags &= ~EXIT_PASSWORD;
+  				indication_flags |= SHOW_MODE;
+  				indication_flags &= ~FACTORY_LED;            /* Clear flag FACTORY_LED */
+				update_user_sd_value();
+  			}
+  			else
+  			{
+  				cal_para = PASSWORD_PARAMETER_1;
+  				password = 0;
+  				pos_cntr = 0;
+  			}
+  		}	
+   }  
+   else if(menu == BACKLIT_MENU)
+   {
+   		backlit_timer = 40;
+   		cal_para++;
+   		if(cal_para > BACKLIT_EXIT_PARAMETER)
+  		{
+  			if(exit_flags & EXIT_BACKLIT)
+  			{
+  				menu = MAIN_MENU;
+  				cal_para = MODBUS_PARAMETER;
+  				password = 0;
+  				pos_cntr = 0;
+  				mode_flags &= ~BACKLIT_MODE;
+  				exit_flags &= ~EXIT_BACKLIT;
+  				indication_flags |= SHOW_MODE;
+  				indication_flags &= ~FACTORY_LED;            /* Clear flag FACTORY_LED */
+				update_user_sd_value();
+  			}
+  			else
+  			{
+  				cal_para = BACKLIT_PARAMETER_1;
+  				password = 0;
+  				pos_cntr = 0;
+  			}
+  		}	
+   } 
+   else if(menu == FACTORY_MENU)
+   	{
+   		backlit_timer = 40;
+    	cal_para++;                                         /* Increase the parameter counter */
+    	
+    	if(cal_para > FACTORY_EXIT_PARAMETER)
+  		{
+  			if(exit_flags & EXIT_FACTORY)
+  			{
+  				RelayActiveFlag = 1;
+  				
+  				menu = NORMAL_MODE;
+  				cal_para = DEFAULT_PARAMETER;
+  				password = 0;
+  				pos_cntr = 0;
+  				mode_flags &= ~MODBUS_SETTING_MODE;
+  				exit_flags &= ~EXIT_FACTORY;
+  				indication_flags |= SHOW_MODE;
+  				indication_flags &= ~FACTORY_LED;            /* Clear flag FACTORY_LED */
+  				update_user_sd_value();
+  				
+  			}
+  			else
+  			{
+  				cal_para = FACTORY_PARAMETER_1;
+  				password = 0;
+  				pos_cntr = 0;
+  			}
+  		}	
+   	}
+   	else if(menu == SLAVE_MONITOR_MENU)
+   {
+   		backlit_timer = 40;
+    	cal_para++;                                         /* Increase the parameter counter */
+    	
+   		if(cal_para > EXIT_SLAVE_MONITOR_PARAMETER)
+  		{
+  			if(mode_flags_1 & EXIT_SLAVE_MONITOR_FLAG)
+	  			{
+	  				menu = MAIN_MENU;
+	  				cal_para = MODBUS_PARAMETER;
+	  				password = 0;
+	  				pos_cntr = 0;
+	  				mode_flags &= ~SLAVE_MONITOR_MODE;
+	  				mode_flags_1 &= ~EXIT_SLAVE_MONITOR_FLAG;
+	  				indication_flags |= SHOW_MODE;
+	  				indication_flags &= ~FACTORY_LED;            /* Clear flag FACTORY_LED */
+	  				update_user_sd_value();
+	  			}
+	  			else
+	  			{
+	  				cal_para = SLAVE_MONITOR_MENU_PARA;
+	  				password = 0;
+	  				pos_cntr = 0;
+	  			}
+  		}
+   }
+////   else if(menu == CHANNEL_SLAVE_MONITOR_MENU)
+////   {
+////   		backlit_timer = 40;
+////    	cal_para++;                                         /* Increase the parameter counter */
+////    	
+////    	if (cal_para == SET_SLAVE_ID_PARAMETER)                                  /* If parameter is Use Alarm2 */
+////    	{
+////      		if (!(use_slave_monitor_flag & use_slave_monitor))                /* If alarm2 is not to be used then skip al2 settings */
+////        		cal_para = EXIT_CHANNEL_SLAVE_MONITOR_PARAMETER;
+////      	}
+////   		if(cal_para > EXIT_CHANNEL_SLAVE_MONITOR_PARAMETER)
+////  		{
+////  			if(exit_slave_monitor_flag & exit_slave_monitor)
+////  			{
+////  				menu = SLAVE_MONITOR_MENU;
+////  				cal_para = SLAVE_MONITOR_MENU_PARA;
+////  				password = 0;
+////  				pos_cntr = 0;
+////  				exit_slave_monitor_flag &= ~exit_slave_monitor;
+////  			}
+////  			else
+////  			{
+////  				cal_para = USE_SLAVE_MONITOR_PARAMETER;
+////  				password = 0;
+////  				pos_cntr = 0;
+////  			}
+////  		}	
+////   }
+   	
+   menu_timeout = 60;	 
+    	
+}
+
+/*---------------------------------------------------------------------------
+* Function name       : void inc_key(void)
+*     returns         : -
+*     arg1            : -
+*     arg2            : -
+* Created by          : Nitin Singh
+* Date created        : 20/01/11
+* Description         : This function is used to set parameters or to switch 
+*                       one menu/parameter to other 
+*---------------------------------------------------------------------------*/
+
+void inc_key(void)
+{
+	uint8_t i;
+	uint16_t  temp_use_channel = 0x0001;
+	uint16_t  temp_use_channel_1 = 0x0001;
+	uint32_t  temp_relay1 = 0x00000001;
+	uint32_t  temp_relay2 = 0x00000002;
+	uint32_t  temp_ack1   = 0x00000001;
+	uint32_t  temp_ack2   = 0x00000002;
+	uint32_t  temp_alarm_use_channel = 0x00000001;
+	
+	backlit_timer = 40;
+	
+	if(menu == NORMAL_MODE)
+	{
+		menu = NORMAL_MODE;
+    	cal_para = DEFAULT_PARAMETER;
+    	
+    				
+    	for(i=0; i<16 ; i++)
+    	{
+  			//CommFail[i] = 0;
+  			if(i <= 3)
+				comm_fail_relay_flag_1 = 0;
+			else if(i >= 4 && i <= 7)
+				comm_fail_relay_flag_2 = 0;
+			else if(i >= 8 && i <= 11)
+				comm_fail_relay_flag_3 = 0;
+			else if(i >= 12 && i <= 15)
+				comm_fail_relay_flag_4 = 0;
+    	}
+  		
+    	for(i=0;i<16;i++)
+    	{
+    		if(modbus_use_channel_flag & temp_use_channel)
+			{
+		    	if((relay_flags & temp_relay1))// && (relay_flags & TIME_RELAY1))                          
+		      		ack_flags |= temp_ack1;                         /* Acknowledge relay1 if it is ON */     
+		      	else
+		    		relay_flags &= ~temp_relay1;						 /* Else turn off relay1 */
+		    		
+		    	if((relay_flags & temp_relay2))// && (relay_flags & TIME_RELAY2))
+		      		ack_flags |= temp_ack2;                         /* Acknowledge relay2 if it is ON */ 
+		      	else
+		    		relay_flags &= ~temp_relay2;                      /* Else turn off relay2 */
+			}
+			temp_use_channel = temp_use_channel << 1;	
+	    	temp_relay1 = temp_relay1 << 2;
+			temp_relay2 = temp_relay2 << 2;
+			temp_ack1 = temp_ack1 << 2;
+			temp_ack2 = temp_ack2 << 2;
+    	} 
+  	}
+	else if(menu == MAIN_MENU)
+	{
+		switch(cal_para)
+		{
+			case MODBUS_PARAMETER: 
+					mode_flags |= MODBUS_SETTING_MODE;
+					menu = ENTER_PASSWORD;
+					break;
+					
+			case DISPLAY_SETTING_PARAMETER: 
+					mode_flags |= DISPLAY_SETTING_MODE;
+					menu = ENTER_PASSWORD;
+					break;
+					
+			case PASSWORD_PARAMETER: 
+					mode_flags |= PASSWORD_MODE;
+					menu = ENTER_PASSWORD;
+					break;
+			
+			case RTC_MENU_PARAMETER: 
+					mode_flags_1 |= RTC_MODE;
+					menu = ENTER_PASSWORD;
+					break;
+			
+			case LOG_SET_MENU_PARAMETER: 
+					mode_flags_1 |= LOG_SET_MODE;
+					menu = ENTER_PASSWORD;
+					break;
+					
+			case DOWNLOADING_PARAMETER: 
+					mode_flags_1 |= DOWNLOADING_MENU_MODE;
+					menu = ENTER_PASSWORD;
+					break;
+			case START_STOP_COMMUNICATION_PARAMETER:
+			
+					mode_flags |= START_STOP_COMM_MODE;
+					menu = ENTER_PASSWORD;		
+						
+			break;	
+			
+			case SLAVE_MONITOR_PARAMETER: 
+					mode_flags |= SLAVE_MONITOR_MODE;
+					menu = ENTER_PASSWORD;
+			break;
+				
+			case MEMORY_MENU_PARAMETER: 
+					mode_flags_1 |= MEMORY_MENU_MODE;
+					menu = ENTER_PASSWORD;
+					break;
+							
+			case BACKLIT_PARAMETER: 
+					mode_flags |= BACKLIT_MODE;
+					menu = ENTER_PASSWORD;
+					break;
+
+			case ALARM_MENU_PARAMETER: 
+					mode_flags |= ALARM_MODE;
+					menu = ENTER_PASSWORD;
+					break;
+						
+			case MAIN_MENU_EXIT_PARAMETER:
+					exit_flags &= ~EXIT_MENU;
+					break;
+		}
+	}
+					
+	else if (menu == ENTER_PASSWORD)
+  	{
+	    password = inc_digit(password, pos_cntr, 9999);           /* Increase the password display based on pos_cntr upto 9999*/
+  	}
+  	else if(menu == ALARM_MENU && (indication_flags & SHOW_MODE))
+	{	
+		for(i=0;i<16;i++)
+		{
+			if(modbus_use_channel_flag & temp_use_channel_1)
+			{
+				Temp_Alarm_Channels[i].Alarm1_Hys = Alarm_Channels[i].Alarm1_Hys;
+				Temp_Alarm_Channels[i].Alarm2_Hys = Alarm_Channels[i].Alarm2_Hys;
+				Temp_Alarm_Channels[i].Alarm1_SetPt = Alarm_Channels[i].Alarm1_SetPt;
+				Temp_Alarm_Channels[i].Alarm2_SetPt = Alarm_Channels[i].Alarm2_SetPt;
+			}
+		
+			temp_use_channel_1 = temp_use_channel_1 << 1;
+		}
+		temp_use_channel_1 = 0x0001;
+		
+		use_alarm_flag_temp =use_alarm_flag;
+		logic_flag_temp =logic_flag;
+		latch_flag_temp =latch_flag; 
+		
+		if((cal_para >= CH1_ALARM_PARAMETER) && (cal_para <= CH16_ALARM_PARAMETER))
+  		{
+  			temp_alarm_use_channel = 0x00000001;
+			  			
+			use_alarm1 = (temp_alarm_use_channel << ((cal_para - CH1_ALARM_PARAMETER)*2));
+			use_alarm2 = (temp_alarm_use_channel << (((cal_para - CH1_ALARM_PARAMETER)+1)*2)-1);
+			alarm1_low = (temp_alarm_use_channel << ((cal_para - CH1_ALARM_PARAMETER)*2));
+			alarm2_low = (temp_alarm_use_channel << (((cal_para - CH1_ALARM_PARAMETER)+1)*2)-1);
+			alarm1_latch = (temp_alarm_use_channel << ((cal_para - CH1_ALARM_PARAMETER)*2));
+			alarm2_latch = (temp_alarm_use_channel << (((cal_para - CH1_ALARM_PARAMETER)+1)*2)-1);
+			exit_alarm = (temp_alarm_use_channel << (cal_para - CH1_ALARM_PARAMETER));
+			channel_no = cal_para - (CH1_ALARM_PARAMETER - 1);
+			menu = CHANNEL_ALARM_MENU;
+			cal_para = 0;
+			
+			temp_alarm_use_channel = 0x00000001;	  			
+  		}
+  		else if(cal_para == ALARM_MENU_EXIT_PARAMETER)
+  		{
+  			exit_flags &= ~EXIT_ALARM;
+  		}
+    	
+	}
+	else if(menu == MODBUS_MENU && (indication_flags & SHOW_MODE))
+	{	
+		modbus_use_channel_flag_temp = modbus_use_channel_flag;
+	
+		for(i=0;i<16;i++)
+		{
+			if(modbus_use_channel_flag & temp_use_channel_1)
+			{
+				Temp_Modbus_Channels[i].SlaveID = Modbus_Channels[i].SlaveID;
+				Temp_Modbus_Channels[i].ReadRegister = Modbus_Channels[i].ReadRegister;
+				Temp_Modbus_Channels[i].PvAddress = Modbus_Channels[i].PvAddress;
+			}
+		
+			temp_use_channel_1 = temp_use_channel_1 << 1;
+		}
+		temp_use_channel_1 = 0x0001;
+		
+		Modbus_parity_temp = Modbus_parity;
+		Modbus_stopbits_temp = Modbus_stopbits;
+		Modbus_baudrate_temp = Modbus_baudrate;
+		
+		if((cal_para >= CH1_MODBUS_PARAMETER) && (cal_para <= CH16_MODBUS_PARAMETER))          
+        {
+        	temp_use_channel = 0x0001;
+        	
+        	temp_use_channel_flag = (temp_use_channel << (cal_para - CH1_MODBUS_PARAMETER));
+			exit_modbus = (temp_use_channel << (cal_para - CH1_MODBUS_PARAMETER));
+			channel_no = cal_para - (CH1_MODBUS_PARAMETER - 1);
+			menu = CHANNEL_MODBUS_MENU;
+			cal_para = 0;
+			
+        	temp_use_channel = 0x0001;
+        }
+        else if(cal_para == MODBUS_EXIT_PARAMETER)
+        {
+  			exit_flags &= ~EXIT_MODBUS_MENU_FLAG;
+			
+        } 
+	}
+	else if(menu == DISPLAY_SETTING_MENU && (indication_flags & SHOW_MODE))
+	{	
+		indication_flags_temp = (indication_flags & DISPLAY_AUTO_MODE);
+		auto_mode_time_temp =auto_mode_time;
+		
+		for(i=0;i<16;i++)
+		{
+			if(modbus_use_channel_flag & temp_use_channel_1)
+			{
+				Temp_Display_Channels[i].dp = Display_Channels[i].dp;
+				Temp_Display_Channels[i].units = Display_Channels[i].units;
+				Temp_Display_Channels[i].gas_no = Display_Channels[i].gas_no;
+			}
+		
+			temp_use_channel_1 = temp_use_channel_1 << 1;
+		}
+		temp_use_channel_1 = 0x0001;    			
+	
+		for(i=0;i<13;i++)
+		{
+			Temp_Name_List.Name1[i] = Name_List.Name1[i];
+			Temp_Name_List.Name2[i] = Name_List.Name2[i];
+			Temp_Name_List.Name3[i] = Name_List.Name3[i];
+			Temp_Name_List.Name4[i] = Name_List.Name4[i];
+			Temp_Name_List.Name5[i] = Name_List.Name5[i];
+		}
+		
+		if(cal_para == CUSTOMIZED_NAME_LIST_PARAMETER)
+  		{
+  			menu = CUSTOMIZED_LIST_MENU;
+			cal_para = 0;
+  		}
+  		else if((cal_para >= CH1_DISPLAY_PARAMETER) && (cal_para <= CH16_DISPLAY_PARAMETER))
+  		{
+  			temp_use_channel = 0x0001;
+    	
+  			exit_display = (temp_use_channel << (cal_para - CH1_DISPLAY_PARAMETER));
+			channel_no = cal_para - (CH1_DISPLAY_PARAMETER - 1);
+			menu = CHANNEL_DISPLAY_MENU;
+			cal_para = 0;
+			
+			temp_use_channel = 0x0001;
+  		}
+  		else if(cal_para == DISPLAY_EXIT_PARAMETER)
+  		{
+  			exit_flags &= ~EXIT_DISPLAY_MENU_FLAG;
+  		}     
+  		
+    	
+	}
+//////	else if(menu == SLAVE_MONITOR_MENU)
+//////	{
+//////			use_slave_monitor_flag_temp = use_slave_monitor_flag;
+//////			
+//////			Slave_monitor_ID_temp[0] = Slave_monitor_ID[0];
+//////			Slave_monitor_ID_temp[1] = Slave_monitor_ID[1]; 	
+//////			
+//////			if((cal_para >= SLAVE_MONITOR_1_PARAMETER) && (cal_para <= SLAVE_MONITOR_2_PARAMETER))
+//////			{
+//////				use_slave_monitor = (temp_use_channel << (cal_para - SLAVE_MONITOR_1_PARAMETER));
+//////				exit_slave_monitor = (temp_use_channel << (cal_para - SLAVE_MONITOR_1_PARAMETER));
+//////				channel_no = cal_para - (SLAVE_MONITOR_1_PARAMETER - 1);;
+//////				menu = CHANNEL_SLAVE_MONITOR_MENU;
+//////				cal_para = 0;
+//////			}
+//////			else if(cal_para == EXIT_SLAVE_MONITOR_PARAMETER)
+//////			{
+//////				exit_flags_1 &= ~EXIT_SLAVE_MONITOR_FLAG;
+//////			}
+//////			
+//////
+//////	}
+	else if (!(indication_flags & SHOW_MODE))
+  	{
+  		
+  		switch (menu)
+	  	{  
+	  		case MODBUS_MENU:
+	  			
+	  			modbus_use_channel_flag_temp = modbus_use_channel_flag;
+	
+				for(i=0;i<16;i++)
+				{
+					if(modbus_use_channel_flag & temp_use_channel_1)
+					{
+						Temp_Modbus_Channels[i].SlaveID = Modbus_Channels[i].SlaveID;
+						Temp_Modbus_Channels[i].ReadRegister = Modbus_Channels[i].ReadRegister;
+						Temp_Modbus_Channels[i].PvAddress = Modbus_Channels[i].PvAddress;
+					}
+				
+					temp_use_channel_1 = temp_use_channel_1 << 1;
+				}
+				temp_use_channel_1 = 0x0001;
+				
+				Modbus_parity_temp = Modbus_parity;
+				Modbus_stopbits_temp = Modbus_stopbits;
+				Modbus_baudrate_temp = Modbus_baudrate;
+		        
+		        if((cal_para >= CH1_MODBUS_PARAMETER) && (cal_para <= CH16_MODBUS_PARAMETER))          
+		        {
+		        	temp_use_channel = 0x0001;
+		        	temp_use_channel_flag = (temp_use_channel << (cal_para - CH1_MODBUS_PARAMETER));
+					exit_modbus = (temp_use_channel << (cal_para - CH1_MODBUS_PARAMETER));
+					channel_no = cal_para - (CH1_MODBUS_PARAMETER - 1);
+					menu = CHANNEL_MODBUS_MENU;
+					cal_para = 0;
+		        	temp_use_channel = 0x0001;
+		        }
+		        else if(cal_para == BAUD_RATE_PARAMETER)
+		        {
+    	  			Modbus_baudrate = Modbus_baudrate*2;
+          			if(Modbus_baudrate > 38400)
+          				Modbus_baudrate = 9600; 
+		          	
+		        }
+		        else if(cal_para == PARITY_PARAMETER)
+		        {
+  					Modbus_parity++;
+          			if(Modbus_parity > 3)
+          				Modbus_parity = 1;
+		        }    
+		        else if(cal_para == STOPBITS_PARAMETER)
+		        {
+    	  			Modbus_stopbits++;
+          			if(Modbus_stopbits > 2)
+          				Modbus_stopbits = 1;
+		          	
+		        }    
+		        else if(cal_para == MODBUS_EXIT_PARAMETER)
+		        {
+    	  			exit_flags &= ~EXIT_MODBUS_MENU_FLAG;
+					
+		        }             
+		                                 
+
+		    break;
+		    case CHANNEL_MODBUS_MENU:                                        /* Modbus menu */
+		    		switch(cal_para)
+		    		{
+		    			case ENABLE_CHANNEL:
+		    				 pos_cntr = 0;
+						     modbus_use_channel_flag &= ~temp_use_channel_flag;        
+						break;
+  						case SET_CHANNEL_PARAMETER_1:
+  							 if(pos_cntr <= 3)
+  							 {
+						     	Modbus_Channels[channel_no-1].SlaveID = inc_digit(Modbus_Channels[channel_no-1].SlaveID, pos_cntr1, 255);
+						     	if(Modbus_Channels[channel_no-1].SlaveID == 0)
+						     		Modbus_Channels[channel_no-1].SlaveID = 1;
+  							 }
+						     else if(pos_cntr == 4)
+						     { 
+						     	Modbus_Channels[channel_no-1].ReadRegister++;
+						     	if(Modbus_Channels[channel_no-1].ReadRegister > 1)
+						     		Modbus_Channels[channel_no-1].ReadRegister = 0;
+						     }
+						     else 
+						     	Modbus_Channels[channel_no-1].PvAddress = inc_digit(Modbus_Channels[channel_no-1].PvAddress, pos_cntr2, 9999);
+						     
+						break;
+						
+  						case CHANNEL_EXIT:
+		    				 pos_cntr = 0;
+						     modbus_channel_exit_flag &= ~exit_modbus;        
+						break;
+												
+		    		}
+		    break;
+		    
+		    case DISPLAY_SETTING_MENU:       
+		    
+		    		indication_flags_temp = (indication_flags & DISPLAY_AUTO_MODE);
+					auto_mode_time_temp =auto_mode_time;
+					
+					for(i=0;i<16;i++)
+					{
+						if(modbus_use_channel_flag & temp_use_channel_1)
+						{
+							Temp_Display_Channels[i].dp = Display_Channels[i].dp;
+							Temp_Display_Channels[i].units = Display_Channels[i].units;
+							Temp_Display_Channels[i].gas_no = Display_Channels[i].gas_no;
+						}
+					
+						temp_use_channel_1 = temp_use_channel_1 << 1;
+					}
+					temp_use_channel_1 = 0x0001;
+					
+					for(i=0;i<13;i++)
+					{
+						Temp_Name_List.Name1[i] = Name_List.Name1[i];
+						Temp_Name_List.Name2[i] = Name_List.Name2[i];
+						Temp_Name_List.Name3[i] = Name_List.Name3[i];
+						Temp_Name_List.Name4[i] = Name_List.Name4[i];
+						Temp_Name_List.Name5[i] = Name_List.Name5[i];
+					}
+					
+					if(cal_para == PAGE_CHANGING_PARAMETER)
+			  		{
+			  			indication_flags &= ~DISPLAY_AUTO_MODE;
+			  		}
+			  		else if(cal_para == AUTO_PAGE_CHANGING_TIME_PARAMETER)
+			  		{
+			  			auto_mode_time = inc_digit((uint32_t)auto_mode_time, pos_cntr, 999);
+						if(auto_mode_time == 0)
+							auto_mode_time = 1;
+						auto_mode_time_counter = auto_mode_time; 
+			  		}
+			  		else if(cal_para == CUSTOMIZED_NAME_LIST_PARAMETER)
+			  		{
+			  			menu = CUSTOMIZED_LIST_MENU;
+						cal_para = 0;
+			  		}
+			  		else if(cal_para >= CH1_DISPLAY_PARAMETER && cal_para <= CH16_DISPLAY_PARAMETER)
+			  		{
+			  			temp_use_channel = 0x0001;
+		        	
+			  			exit_display = (temp_use_channel << (cal_para - CH1_DISPLAY_PARAMETER));
+						channel_no = cal_para - (CH1_DISPLAY_PARAMETER - 1);
+						menu = CHANNEL_DISPLAY_MENU;
+						cal_para = 0;
+						
+						temp_use_channel = 0x0001;
+			  		}
+			  		else if(cal_para == DISPLAY_EXIT_PARAMETER)
+			  		{
+			  			exit_flags &= ~EXIT_DISPLAY_MENU_FLAG;
+			  		}                           
+
+			break;
+			case CHANNEL_DISPLAY_MENU:
+			
+					switch(cal_para)
+		    		{
+		    			
+						case CHANNEL_PARAMETER_1:
+								
+								Display_Channels[channel_no - 1].gas_no++;
+								if(Display_Channels[channel_no - 1].gas_no > MAX_GAS_NO)
+									Display_Channels[channel_no - 1].gas_no = 0;
+						break;
+						case CHANNEL_PARAMETER_2:
+						
+								Display_Channels[channel_no - 1].dp++;
+							     	if(Display_Channels[channel_no - 1].dp > 3)
+						     			Display_Channels[channel_no - 1].dp = 0;
+						break;
+						
+						case CHANNEL_PARAMETER_3:
+								Display_Channels[channel_no - 1].units++;
+						     	if(Display_Channels[channel_no - 1].units > MAX_UNIT)
+					     			Display_Channels[channel_no - 1].units = 0;
+					    break;
+					    
+						case CHANNEL_PARAMETER_EXIT:
+								display_menu_exit_flag &= ~exit_display;
+						break;
+						
+		    		}
+			break;
+			
+			
+			
+			case CUSTOMIZED_LIST_MENU:
+				switch(cal_para)
+		    		{
+		    			
+						case NAME_1_PARAMETER:
+							
+							Name_List.Name1[pos_cntr-1]++;
+							
+							if(Name_List.Name1[pos_cntr-1] < 32 )
+								Name_List.Name1[pos_cntr-1] = 32;
+								
+					     	if(Name_List.Name1[pos_cntr-1] > 90)
+				     			Name_List.Name1[pos_cntr-1] = 32;
+				     			
+				     		if(Name_List.Name1[pos_cntr-1] == 33)
+				     			Name_List.Name1[pos_cntr-1] = 65;
+								
+						break;
+						case NAME_2_PARAMETER:
+							
+							Name_List.Name2[pos_cntr-1]++;
+							
+							if(Name_List.Name2[pos_cntr-1] < 32 )
+								Name_List.Name2[pos_cntr-1] = 32;
+								
+					     	if(Name_List.Name2[pos_cntr-1] > 90)
+				     			Name_List.Name2[pos_cntr-1] = 32;
+				     			
+				     		if(Name_List.Name2[pos_cntr-1] == 33)
+				     			Name_List.Name2[pos_cntr-1] = 65;
+								
+						break;
+						
+						case NAME_3_PARAMETER:
+								
+							Name_List.Name3[pos_cntr-1]++;
+							
+							if(Name_List.Name3[pos_cntr-1] < 32 )
+								Name_List.Name3[pos_cntr-1] = 32;
+								
+					     	if(Name_List.Name3[pos_cntr-1] > 90)
+				     			Name_List.Name3[pos_cntr-1] = 32;
+				     			
+				     		if(Name_List.Name3[pos_cntr-1] == 33)
+				     			Name_List.Name3[pos_cntr-1] = 65;
+				     			
+					    break;
+					    
+					    case NAME_4_PARAMETER:
+								
+							Name_List.Name4[pos_cntr-1]++;
+							
+							if(Name_List.Name4[pos_cntr-1] < 32 )
+								Name_List.Name4[pos_cntr-1] = 32;
+								
+					     	if(Name_List.Name4[pos_cntr-1] > 90)
+				     			Name_List.Name4[pos_cntr-1] = 32;
+				     			
+				     		if(Name_List.Name4[pos_cntr-1] == 33)
+				     			Name_List.Name4[pos_cntr-1] = 65;
+								
+						break;
+						case NAME_5_PARAMETER:
+							
+							Name_List.Name5[pos_cntr-1]++;
+							
+							if(Name_List.Name5[pos_cntr-1] < 32 )
+								Name_List.Name5[pos_cntr-1] = 32;
+								
+					     	if(Name_List.Name5[pos_cntr-1] > 90)
+				     			Name_List.Name5[pos_cntr-1] = 32;
+				     			
+				     		if(Name_List.Name5[pos_cntr-1] == 33)
+				     			Name_List.Name5[pos_cntr-1] = 65;
+								
+						break;
+						
+						case NAME_EXIT_PARAMETER:
+								exit_flags_1 &= ~EXIT_LIST_MENU_FLAG;
+						break;
+						
+		    		}
+			break;
+			
+						
+			case ALARM_MENU:
+					
+					for(i=0;i<16;i++)
+					{
+						if(modbus_use_channel_flag & temp_use_channel_1)
+						{
+							Temp_Alarm_Channels[i].Alarm1_Hys = Alarm_Channels[i].Alarm1_Hys;
+							Temp_Alarm_Channels[i].Alarm2_Hys = Alarm_Channels[i].Alarm2_Hys;
+							Temp_Alarm_Channels[i].Alarm1_SetPt = Alarm_Channels[i].Alarm1_SetPt;
+							Temp_Alarm_Channels[i].Alarm2_SetPt = Alarm_Channels[i].Alarm2_SetPt;
+						}
+					
+						temp_use_channel_1 = temp_use_channel_1 << 1;
+					}
+					temp_use_channel_1 = 0x0001;
+					
+					use_alarm_flag_temp =use_alarm_flag;
+					logic_flag_temp =logic_flag;
+					latch_flag_temp =latch_flag; 
+					
+					if(cal_para >= CH1_ALARM_PARAMETER && cal_para <= CH16_ALARM_PARAMETER)
+			  		{
+			  			temp_alarm_use_channel = 0x00000001;
+			  			
+			  			use_alarm1 = (temp_alarm_use_channel << ((cal_para - CH1_ALARM_PARAMETER)*2));
+						use_alarm2 = (temp_alarm_use_channel << (((cal_para - CH1_ALARM_PARAMETER)+1)*2)-1);
+						alarm1_low = (temp_alarm_use_channel << ((cal_para - CH1_ALARM_PARAMETER)*2));
+						alarm2_low = (temp_alarm_use_channel << (((cal_para - CH1_ALARM_PARAMETER)+1)*2)-1);
+						alarm1_latch = (temp_alarm_use_channel << ((cal_para - CH1_ALARM_PARAMETER)*2));
+						alarm2_latch = (temp_alarm_use_channel << (((cal_para - CH1_ALARM_PARAMETER)+1)*2)-1);
+						exit_alarm = (temp_alarm_use_channel << (cal_para - CH1_ALARM_PARAMETER));
+						channel_no = cal_para - (CH1_ALARM_PARAMETER - 1);
+						menu = CHANNEL_ALARM_MENU;
+						cal_para = 0;
+						
+						temp_alarm_use_channel = 0x00000001;	
+						
+						 			
+			  		}
+			  		else if(cal_para == USE_COMM_FAIL_RELAY)
+			  		{
+			  			indication_flags_2 &= ~USE_COMM_FAIL_FLAG;
+			  		}
+			  		else if(cal_para == COMM_FAIL_RELAY_TIME)
+			  		{
+			  			comm_fail_relay_time = inc_digit((uint32_t)comm_fail_relay_time, pos_cntr, 999); // in minute
+						if(comm_fail_relay_time == 0)
+							comm_fail_relay_time = 1;
+						comm_fail_relay_time_counter = (comm_fail_relay_time * 60) - (comm_fail_relay_time * 12);	 // in seconds
+							
+			  		}
+			  		else if(cal_para == FAILSAFE_RELAY_PARAMETER)
+			  		{
+			  			indication_flags_2 &= ~FAIL_SAFE_RELAY_FLAG;
+			  		}
+			  		else if(cal_para == ALARM_MENU_EXIT_PARAMETER)
+			  		{
+			  			exit_flags &= ~EXIT_ALARM;
+			  		}
+
+	    	break;	
+			
+	    	case CHANNEL_ALARM_MENU:
+	    			
+	    		switch(cal_para)
+		    		{
+		    			case USE_ALARM1_PARAMETER:
+						        pos_cntr = 0;
+						        use_alarm_flag &= ~use_alarm1;        /* Alarm1 is not used */
+						        break;
+						case SET_ALARM1_PARAMETER:  
+						      	
+						      	Alarm_Channels[channel_no - 1].Alarm1_SetPt = inc_neg_digit(Alarm_Channels[channel_no - 1].Alarm1_SetPt, pos_cntr);
+						        break;
+						case SET_HYSTERESIS1_PARAMETER:       
+						        Alarm_Channels[channel_no - 1].Alarm1_Hys = inc_digit(Alarm_Channels[channel_no - 1].Alarm1_Hys, pos_cntr, 9999);
+						        break;
+					    case SEL_ALARM1_LOGIC_PARAMETER:      
+				      			logic_flag &= ~alarm1_low;                     /* Alarm1 is operated in High mode */
+				      			break;
+				        case SEL_ALARM1_LATCH_PARAMETER:
+				        		latch_flag &= ~alarm1_latch;                   /* Alarm1 is not latched */
+				        		break;
+				       
+				        case USE_ALARM2_PARAMETER:
+				        		use_alarm_flag &= ~use_alarm2;                      /* Alarm2 is not used */
+				        		break;
+				        case SET_ALARM2_PARAMETER:  
+						      	Alarm_Channels[channel_no - 1].Alarm2_SetPt = inc_neg_digit(Alarm_Channels[channel_no - 1].Alarm2_SetPt, pos_cntr);
+								break;        
+				        case SET_HYSTERESIS2_PARAMETER:
+						        Alarm_Channels[channel_no - 1].Alarm2_Hys = inc_digit(Alarm_Channels[channel_no - 1].Alarm2_Hys, pos_cntr, 9999);
+						        break;
+				        case SEL_ALARM2_LOGIC_PARAMETER:
+				        		logic_flag &= ~alarm2_low;                       /* Alarm2 is in operated in low mode */
+				        		break;
+				      	case SEL_ALARM2_LATCH_PARAMETER:
+				      			latch_flag &= ~alarm2_latch;                    /* Alarm2 is not latched */
+				      			break;
+				       
+				        case ALARM_EXIT_PARAMETER:
+				        		alarm_channel_exit_flag &= ~exit_alarm;
+				      }      
+			break;  
+			
+			case RTC_MENU:
+				if (cal_para == SET_RTC_PARAMETER_1)
+				{
+					if(pos_cntr <= 2)
+					 {
+				     	rtc_date = inc_digit(rtc_date, pos_cntr1, 31);
+						if(rtc_date == 0)
+						   rtc_date = 1;
+					 }
+				     else if(pos_cntr >= 3 && pos_cntr <= 4)
+				     { 
+				     	rtc_month = inc_digit(rtc_month, pos_cntr2, 12);
+						if(rtc_month == 0)
+						 	rtc_month = 1;
+				     }
+				     else 
+				     {
+						rtc_year = inc_digit(rtc_year, pos_cntr3, 99);
+						 if(rtc_year == 0 )
+							 	rtc_year = 1;
+					 }
+					
+				}
+				else if (cal_para == SET_RTC_PARAMETER_2)
+				{
+					if(pos_cntr <= 2)
+					 {
+				     	rtc_hour = inc_digit(rtc_hour, pos_cntr1, 23);
+					 }
+				     else if(pos_cntr >= 3 && pos_cntr <= 4)
+				     { 
+				     	rtc_min = inc_digit(rtc_min, pos_cntr2, 59);
+				     }
+				     else 
+				     {
+						rtc_sec = inc_digit(rtc_sec, pos_cntr3, 59);
+					 }
+				}
+				else if (cal_para == CONFIRM_RTC_PARAMETER)
+				{
+					indication_flags_2 &= ~SET_NEW_RTC_FLAG;
+				}
+				else if(cal_para == EXIT_RTC_MENU_PARAMETER)
+				{
+					exit_flags_1 &= ~EXIT_RTC_MENU;
+				}
+			break;
+			
+			case LOG_SET_MENU:
+				
+				if (cal_para == LOG_INTERVAL_PARAMETER)
+				{
+					 if(pos_cntr <= 2)
+					 {
+				     	log_hour = inc_digit(log_hour, pos_cntr1, 23);
+					 }
+				     else if(pos_cntr >= 3 && pos_cntr <= 4)
+				     { 
+				     	log_min = inc_digit(log_min, pos_cntr2, 59);
+				     }
+				     else 
+				     {
+						log_sec = inc_digit(log_sec, pos_cntr3, 59);
+						
+					 }
+					 if(log_hour == 0 && log_min==0 && log_sec == 0)
+							log_sec = 1;
+//					if(pos_cntr > 0 && pos_cntr < 2)
+//					 {
+//				     	log_interval_unit++;
+//				     	
+//				     	if((log_interval_unit == 2) && (log_interval_time > 23)) 
+//				     	{
+//				     		log_interval_time = 01;// For Hours
+//				     	}
+//					    if(log_interval_unit > 2)
+//						 	log_interval_unit = 0;
+//					 }
+//				     else if(pos_cntr >= 2)
+//				     { 
+//				     	if(log_interval_unit == 2) 
+//				     		log_interval_time = inc_digit(log_interval_time, pos_cntr1, 23);// For Hours
+//				     	else 						
+//				     		log_interval_time = inc_digit(log_interval_time, pos_cntr1, 59);// For Minutes & Seconds
+//				     	
+//				     	if(log_interval_time == 0)
+//				     		log_interval_time = 1;
+//				     }
+				}
+				else if (cal_para == LOG_MODE_PARAMETER)
+				{
+					indication_flags_2 &= ~LOG_MODE_FLAG;
+				}
+				else if (cal_para == LOG_TRIGGER_PARAMETER)
+				{
+					log_trigger++;
+					if(log_trigger > 2)
+						log_trigger = 0;
+				}
+				else if (cal_para == SET_LOG_TRIGGER_START_YEAR_PARAMETER)
+				{
+					if(pos_cntr <= 2)
+					 {
+				     	log_trigger_start_date = inc_digit(log_trigger_start_date, pos_cntr1, 31);
+						if(log_trigger_start_date == 0)
+						 	log_trigger_start_date = 1;
+					 }
+				     else if(pos_cntr >= 3 && pos_cntr <= 4)
+				     { 
+				     	log_trigger_start_month = inc_digit(log_trigger_start_month, pos_cntr2, 12);
+						if(log_trigger_start_month == 0)
+						 	log_trigger_start_month = 1;
+				     }
+				     else 
+				     {
+						log_trigger_start_year = inc_digit(log_trigger_start_year, pos_cntr3, 99);
+						if(log_trigger_start_year == 0)
+						 	log_trigger_start_year = 1;
+					 }
+					
+				}
+				
+				else if (cal_para == SET_LOG_TRIGGER_START_HOUR_PARAMETER)
+				{
+					 if(pos_cntr <= 2)
+					 {
+				     	log_trigger_start_hour = inc_digit(log_trigger_start_hour, pos_cntr1, 23);
+					 }
+				     else 
+				     { 
+				     	log_trigger_start_min = inc_digit(log_trigger_start_min, pos_cntr2, 59);
+				     }
+					
+				}
+				else if (cal_para == SET_LOG_TRIGGER_STOP_YEAR_PARAMETER)
+				{
+					if(pos_cntr <= 2)
+					 {
+				     	log_trigger_stop_date = inc_digit(log_trigger_stop_date, pos_cntr1, 31);
+						if(log_trigger_stop_date == 0)
+						 	log_trigger_stop_date = 1;
+					 }
+				     else if(pos_cntr >= 3 && pos_cntr <= 4)
+				     { 
+				     	log_trigger_stop_month = inc_digit(log_trigger_stop_month, pos_cntr2, 12);
+						if(log_trigger_stop_month == 0)
+						 	log_trigger_stop_month = 1;
+				     }
+				     else 
+				     {
+						log_trigger_stop_year = inc_digit(log_trigger_stop_year, pos_cntr3, 99);
+						if(log_trigger_stop_year == 0)
+						 	log_trigger_stop_year = 1;
+					 }
+					
+				}
+				else if (cal_para == SET_LOG_TRIGGER_STOP_HOUR_PARAMETER)
+				{
+					if(pos_cntr <= 2)
+					 {
+				     	log_trigger_stop_hour = inc_digit(log_trigger_stop_hour, pos_cntr1, 23);
+					 }
+				     else 
+				     { 
+				     	log_trigger_stop_min = inc_digit(log_trigger_stop_min, pos_cntr2, 59);
+				     }
+					
+				}
+				else if (cal_para == KEY_PRESS_START_DELAY_PARAMETER)
+				{
+					log_key_press_delay = inc_digit(log_key_press_delay, pos_cntr, 999);
+					if(log_key_press_delay == 0)
+						log_key_press_delay = 1;
+				}
+				else if (cal_para == STOP_LOGGING_PARAMETER)
+				{
+					indication_flags_3 &= ~STOP_LOGGING_FLAG;
+				}
+				else if(cal_para == EXIT_LOG_SET_MENU_PARAMETER)
+					exit_flags_1 &= ~EXIT_LOG_SET_FLAG;
+			break;
+			
+			case DOWNLOADING_MENU:
+				switch(cal_para)
+		    		{
+		    			case DEVICE_ID_PARAMETER:
+							
+							DeviceId = inc_digit((uint32_t)DeviceId, pos_cntr, 255);
+							if(DeviceId == 0)
+								DeviceId = 1;	
+						break;
+						
+						case SELECT_OPTION_PARAMETER:
+								
+								mode_flags_1 &= ~DEVICE_CONFIG_OPTION_FLAG;
+						break;
+						
+						case SELECT_DOWNLOADING_PARAMETER:
+							
+							SelectDownloadOption++;
+								if(SelectDownloadOption > 1)
+									SelectDownloadOption = 0;
+							
+								
+						break;
+						case BATCH_LOWER_LIMIT_PARAMETER:
+							
+							DownloadDataLowerLimit = inc_digit((uint32_t)DownloadDataLowerLimit, pos_cntr, log_count);
+							if(DownloadDataLowerLimit == 0)
+								DownloadDataLowerLimit = 1;	
+						break;
+						
+						case BATCH_UPPER_LIMIT_PARAMETER:
+								
+							DownloadDataUpperLimit = inc_digit((uint32_t)DownloadDataUpperLimit, pos_cntr, log_count);
+							if(DownloadDataUpperLimit == 0)
+								DownloadDataUpperLimit = 1;			
+					    break;
+					    
+					    case START_DOWNLOADING_PARAMETER:
+								
+								indication_flags &= ~START_DOWNLOADING_FLAG;
+						break;
+						
+
+						case DOWNLOADING_EXIT_PARAMETER:
+								exit_flags_1 &= ~EXIT_DOWNLOADING_MENU;
+						break;
+						
+		    		}
+			break;
+			case MEMORY_MENU:
+			
+				if (cal_para == MEMORY_CLEAR_PARAMETER)
+					mode_flags_1 &= ~MEMORY_CLEAR_FLAG;
+				else if(cal_para == MEMORY_CLEAR_CONFIRM_PARAMETER)
+					indication_flags_2 &= ~CONFIRM_MEM_CLEAR_FLAG;
+				else if(cal_para == EXIT_MEMORY_MENU_PARAMETER)
+					exit_flags_1 &= ~EXIT_MEMORY_MENU;
+					
+			break;
+			case PASSWORD_MENU:       												 /* Password menu */
+				    if (cal_para == SET_PASSWORD_PARAMETER)
+				      new_password = inc_digit(new_password, pos_cntr, 9999);          /* Increment password and assign it to code based on pos_cntr upto range */
+				    else if(cal_para == CONFIRM_PASSWORD_PARAMETER)
+			      		indication_flags_2 &= ~SET_NEW_PASSWORD; 
+			      	else if(cal_para == PASSWORD_EXIT_PARAMETER)
+				      exit_flags &= ~EXIT_PASSWORD;
+			break;
+			case BACKLIT_MENU:
+					if(cal_para == BACKLIT_ON_OFF_PARAMETER)
+					{
+						if(backlit_select != 0)
+							backlit_select--;
+						else
+							backlit_select = 2;
+					}
+					else if(cal_para == BACKLIT_EXIT_PARAMETER)
+				     	exit_flags &= ~EXIT_BACKLIT;
+			break; 
+			
+			case SLAVE_MONITOR_MENU:
+					
+					if(cal_para == SLAVE_MONITOR_1_PARAMETER)
+			  		{
+			  			mode_flags_1 &= ~USE_REPEATER_FLAG;
+			  		}
+					else if(cal_para == EXIT_SLAVE_MONITOR_PARAMETER)
+	    				mode_flags_1 &= ~EXIT_SLAVE_MONITOR_FLAG;
+	    	break;	
+	    	
+////	    	case CHANNEL_SLAVE_MONITOR_MENU:
+////					
+////					switch(cal_para)
+////		    		{
+////		    			case USE_SLAVE_MONITOR_PARAMETER:
+////						        use_slave_monitor_flag &= ~use_slave_monitor;
+////						break;
+////						
+////						case SET_SLAVE_ID_PARAMETER:
+////						        Slave_monitor_ID[channel_no-1] = inc_digit(Slave_monitor_ID[channel_no-1], pos_cntr, 255);
+////						     	if(Slave_monitor_ID[channel_no-1] == 0)
+////						     		Slave_monitor_ID[channel_no-1] = 1;
+////						break;
+////						
+////						case EXIT_CHANNEL_SLAVE_MONITOR_PARAMETER:
+////					    		exit_slave_monitor_flag &= ~exit_slave_monitor;
+////				        break; 
+////		    		}
+////	    	break;	
+	    	
+			case START_STOP_COMMUNICATION:
+				if (cal_para == START_STOP_PARAMETER)
+					indication_flags_2 &= ~START_STOP_COMM;
+				else if(cal_para == EXIT_START_STOP_MENU)
+					exit_flags &= ~EXIT_START_STOP_COMM;
+			break;
+			     
+			
+			
+			case FACTORY_MENU:       												  /* Factory menu */
+	    		switch(cal_para)
+	    		{
+	    			case SET_WARMUP_PARAMETER:
+					        warm_time_set = inc_digit(warm_time_set, pos_cntr, 9999);
+					      	if(warm_time_set == 0)
+					      		warm_time_set = 1;
+					break;
+					
+					case MAX_LOG_COUNT_PARAMETER:
+					        MaxLogCount = MaxLogCount+400000;
+					      	if(MaxLogCount > 900000)
+			          				MaxLogCount = 100000; 
+					break;
+					case SERIAL_YEAR_PARAMETER:
+					        SerialYear = inc_digit(SerialYear, pos_cntr, 99);
+					      	
+					break;
+					case SERIAL_MONTH_PARAMETER:
+					        SerialMonth = inc_digit(SerialMonth, pos_cntr, 12);
+					      	if(SerialMonth == 0)
+					      		SerialMonth = 1;
+					break;
+					case SERIAL_NUMBER_PARAMETER:
+					        SerialNumber = inc_digit(SerialNumber, pos_cntr, 9999);
+					      	if(SerialNumber == 0)
+					      		SerialNumber = 1;
+					break;
+					case FACTORY_EXIT_PARAMETER:
+				    		exit_flags &= ~EXIT_FACTORY;
+			        break; 
+	    		}
+	    	break;
+	    	
+	    	
+	    	
+	  	}
+  	}
+  	else
+  	{
+  		switch(menu)
+  		{
+  			case MODBUS_MENU:
+  			
+  				if(cal_para == MODBUS_EXIT_PARAMETER)
+  					 exit_flags &= ~EXIT_MODBUS_MENU_FLAG;
+
+  			break;
+  			
+  			case CHANNEL_MODBUS_MENU:
+  			
+  				if(cal_para == CHANNEL_EXIT)
+  					modbus_channel_exit_flag &= ~exit_modbus;
+
+  			break;
+  			
+  			case DISPLAY_SETTING_MENU:
+  			
+  				if(cal_para == DISPLAY_EXIT_PARAMETER)
+  					 exit_flags &= ~EXIT_DISPLAY_MENU_FLAG;
+
+  			break;
+  			
+  			case CHANNEL_DISPLAY_MENU:
+  			
+  				if(cal_para == CHANNEL_PARAMETER_EXIT)
+  					display_menu_exit_flag &= ~exit_display;
+
+  			break;
+  			
+  			case CUSTOMIZED_LIST_MENU:
+  					if(cal_para == NAME_EXIT_PARAMETER)
+				       	exit_flags_1 &= ~EXIT_LIST_MENU_FLAG;
+			break;
+			
+			case ALARM_MENU:
+  					if(cal_para == ALARM_MENU_EXIT_PARAMETER)
+  					   exit_flags &= ~EXIT_ALARM;
+  			break;
+  			
+			case CHANNEL_ALARM_MENU:
+  					if(cal_para == ALARM_EXIT_PARAMETER)
+				       		alarm_channel_exit_flag &= ~exit_alarm;
+			break;
+			
+  			case LOG_SET_MENU:
+				if(cal_para == EXIT_LOG_SET_MENU_PARAMETER)
+				   exit_flags_1 &= ~EXIT_LOG_SET_FLAG;
+			break;
+			
+			case DOWNLOADING_MENU:
+				if(cal_para == DOWNLOADING_EXIT_PARAMETER)
+				   exit_flags_1 &= ~EXIT_DOWNLOADING_MENU;
+			break;
+			
+  			case MEMORY_MENU:
+  					if(cal_para == EXIT_MEMORY_MENU_PARAMETER)
+  					   exit_flags_1 &= ~EXIT_MEMORY_MENU;
+  			break;
+  			
+  			case RTC_MENU:
+  				if(cal_para == EXIT_RTC_MENU_PARAMETER)
+				   exit_flags_1 &= ~EXIT_RTC_MENU;
+  			break;
+  			
+  			case PASSWORD_MENU:
+  					if(cal_para == PASSWORD_EXIT_PARAMETER)
+  					   exit_flags &= ~EXIT_PASSWORD;
+  			break;
+  			
+  			case BACKLIT_MENU:
+  					if(cal_para == BACKLIT_EXIT_PARAMETER)
+  					   exit_flags &= ~EXIT_BACKLIT;
+  			break;
+  			
+  			case SLAVE_MONITOR_MENU:
+					
+					if(cal_para == EXIT_SLAVE_MONITOR_PARAMETER)
+	    				mode_flags_1 &= ~EXIT_SLAVE_MONITOR_FLAG;
+	    	break;	
+////	    	case CHANNEL_SLAVE_MONITOR_MENU:
+////					
+////					if(cal_para == EXIT_CHANNEL_SLAVE_MONITOR_PARAMETER)
+////	    				exit_slave_monitor_flag &= ~exit_slave_monitor;
+////	    	break;	
+			case START_STOP_COMMUNICATION:
+  					if(cal_para == EXIT_START_STOP_MENU)
+  						 exit_flags &= ~EXIT_START_STOP_COMM;
+  			break;
+  				
+  		}
+  	}
+  	menu_timeout = 60;
+}
+
+/*---------------------------------------------------------------------------
+* Function name       : void shift_key(void)
+*     returns         : -
+*     arg1            : -
+*     arg2            : -
+* Created by          : Nitin Singh
+* Date created        : 20/01/11
+* Description         : This function moves the cursor on LCD screen to set 
+*                       values and  also to display peak value when it is 
+*                       called in normal menu.
+*---------------------------------------------------------------------------*/
+void shift_key(void)
+{
+	backlit_timer = 40;
+	
+	if(menu == MAIN_MENU)
+  	{
+  		if(cal_para == MAIN_MENU_EXIT_PARAMETER)
+  			exit_flags |= EXIT_MENU;
+  	}
+  	else if(menu == ENTER_PASSWORD)                              /* Password */
+  	{
+  		
+  		pos_cntr++; 						        /* Increment the cursor position */
+	    if (pos_cntr > 4)
+		   	pos_cntr = 0;
+  	}
+  	else if (!(indication_flags & SHOW_MODE))        /* If device is not in show mode */
+  	{
+  		switch (menu)
+	  	{	
+	  		case MODBUS_MENU:                                  
+	    		switch(cal_para)
+	    		{
+					
+					case BAUD_RATE_PARAMETER:
+		          			Modbus_baudrate = Modbus_baudrate/2;
+		          			if(Modbus_baudrate < 9600)
+		          				Modbus_baudrate = 38400; 
+		          			break;
+		          	case PARITY_PARAMETER:
+		          			Modbus_parity--;
+		          			if(Modbus_parity < 1)
+		          				Modbus_parity = 3;
+		          			break;
+		          	case STOPBITS_PARAMETER:
+		          			Modbus_stopbits--;
+		          			if(Modbus_stopbits < 1)
+		          				Modbus_stopbits = 2;
+					case MODBUS_EXIT_PARAMETER:
+						 exit_flags |= EXIT_MODBUS_MENU_FLAG;
+					break;
+	    		}
+		    break;
+		    case CHANNEL_MODBUS_MENU:                                  
+		    		switch(cal_para)
+		    		{
+						case ENABLE_CHANNEL:
+		    				 pos_cntr = 0;
+						     modbus_use_channel_flag |= temp_use_channel_flag;        
+						break;
+
+					    case SET_CHANNEL_PARAMETER_1:
+							 pos_cntr++;                  /* Increase the cursor position */
+					         if((pos_cntr >= 1) && (pos_cntr <= 3))
+							 {
+							 	pos_cntr1 = pos_cntr;
+							 	pos_cntr2 = 0;
+							 }
+							 else if( (pos_cntr >= 5) && (pos_cntr <= 8))
+							 {
+							 	pos_cntr1 = 0;
+							 	pos_cntr2 = pos_cntr-4;
+							 }
+					         else if (pos_cntr > 8)
+					         	pos_cntr = 0;
+					    break;
+					    case CHANNEL_EXIT:
+							 modbus_channel_exit_flag |= exit_modbus;
+						break;
+		    		}
+		    break;
+		    
+		    case DISPLAY_SETTING_MENU:                                  
+		    		switch(cal_para)
+		    		{
+		    			case PAGE_CHANGING_PARAMETER:
+	    					pos_cntr = 0;
+							indication_flags |= DISPLAY_AUTO_MODE;
+						break;
+						case AUTO_PAGE_CHANGING_TIME_PARAMETER:
+							pos_cntr++;                  /* Increase the cursor position */
+				            if (pos_cntr > 3)
+				       		  	pos_cntr = 0;
+						break;
+						
+		    			case DISPLAY_EXIT_PARAMETER:
+					    	 exit_flags |= EXIT_DISPLAY_MENU_FLAG;
+					    break;
+		    		}
+			break;
+			
+			case CHANNEL_DISPLAY_MENU:                                  
+		    		switch(cal_para)
+		    		{
+						case CHANNEL_PARAMETER_1:
+							 
+							 if (Display_Channels[channel_no-1].gas_no != 0)
+					         	Display_Channels[channel_no-1].gas_no--;                                     /* Change the gas no. */   
+					        else
+					          	Display_Channels[channel_no-1].gas_no = MAX_GAS_NO;
+					    break;
+					    case CHANNEL_PARAMETER_2:
+							
+							if (Display_Channels[channel_no-1].dp != 0)
+					         	Display_Channels[channel_no-1].dp--;                                     /* Change the dp */   
+					        else
+					          	Display_Channels[channel_no-1].dp = 3;
+
+					    break; 
+					    case CHANNEL_PARAMETER_3:
+							 if (Display_Channels[channel_no-1].units != 0)
+					         	Display_Channels[channel_no-1].units--;                                     /* Change the units */   
+					        else
+					          	Display_Channels[channel_no-1].units = MAX_UNIT;
+					    break;
+					    
+					    case CHANNEL_PARAMETER_EXIT:
+					    	 display_menu_exit_flag |= exit_display;
+						break;
+						
+		    		}
+			break;
+			
+			case CUSTOMIZED_LIST_MENU:
+				switch(cal_para)
+		    		{
+		    			
+						case NAME_1_PARAMETER:
+							
+							pos_cntr++;                  /* Increase the cursor position */
+				            if (pos_cntr > 13)
+				       		  	pos_cntr = 0;
+								
+						break;
+						case NAME_2_PARAMETER:
+							
+							pos_cntr++;                  /* Increase the cursor position */
+				            if (pos_cntr > 13)
+				       		  	pos_cntr = 0;
+								
+						break;
+						
+						case NAME_3_PARAMETER:
+							
+							pos_cntr++;                  /* Increase the cursor position */
+				            if (pos_cntr > 13)
+				       		  	pos_cntr = 0;
+				       		  		
+					    break;
+					    
+					    case NAME_4_PARAMETER:
+								
+							pos_cntr++;                  /* Increase the cursor position */
+				            if (pos_cntr > 13)
+				       		  	pos_cntr = 0;
+				       		  		
+						break;
+						case NAME_5_PARAMETER:
+							
+							pos_cntr++;                  /* Increase the cursor position */
+				            if (pos_cntr > 13)
+				       		  	pos_cntr = 0;
+								
+						break;
+						
+						case NAME_EXIT_PARAMETER:
+								exit_flags_1 |= EXIT_LIST_MENU_FLAG;
+						break;
+						
+		    		}
+			break;
+			
+			case START_STOP_COMMUNICATION:
+				if (cal_para == START_STOP_PARAMETER)
+					indication_flags_2 |= START_STOP_COMM;
+				else if(cal_para == EXIT_START_STOP_MENU)
+					exit_flags |= EXIT_START_STOP_COMM;
+			break;
+			
+			case ALARM_MENU:
+					
+					if(cal_para ==  USE_COMM_FAIL_RELAY)
+					{
+    					pos_cntr = 0;
+						indication_flags_2 |= USE_COMM_FAIL_FLAG;
+					}
+					else if(cal_para ==  COMM_FAIL_RELAY_TIME)
+					{
+						pos_cntr++;                  /* Increase the cursor position */
+			            if (pos_cntr > 3)
+			       		  	pos_cntr = 0;
+					}
+					else if(cal_para ==  FAILSAFE_RELAY_PARAMETER)
+					{
+						indication_flags_2 |= FAIL_SAFE_RELAY_FLAG;
+					}
+					else if(cal_para == ALARM_MENU_EXIT_PARAMETER)
+	    				exit_flags |= EXIT_ALARM;
+	    	break;			
+			
+			case CHANNEL_ALARM_MENU:                                  /* Alarm menu */
+			
+				switch(cal_para)
+		    	{
+		    			case USE_ALARM1_PARAMETER:
+		    					pos_cntr = 0;
+			        			use_alarm_flag |= use_alarm1;   /* If it is in 1st parameter alarm1 is used */
+			        	break;
+			        			
+			      		case SET_ALARM1_PARAMETER:
+					      		pos_cntr++;                  /* Increase the cursor position */
+					        	if (pos_cntr > 5)
+					          		pos_cntr = 0;
+					        	
+					    break;
+			    
+			      		case SET_HYSTERESIS1_PARAMETER:
+					      		pos_cntr++;                  /* Increase the cursor position */
+					        	if (pos_cntr > 4)
+					          		pos_cntr = 0;
+					    break;
+					    
+				      	case SEL_ALARM1_LOGIC_PARAMETER:
+					      		pos_cntr = 0;
+					        	logic_flag |= alarm1_low;   /* Alarm1 is operated in low condition */
+					    break;
+				      	case SEL_ALARM1_LATCH_PARAMETER:
+					      		pos_cntr = 0;
+					        	latch_flag |= alarm1_latch; /* Alarm1 is Latched */
+					    break; 
+				      	
+				      	case USE_ALARM2_PARAMETER:
+					      		pos_cntr = 0;
+					        	use_alarm_flag |= use_alarm2;   /* Alarm2 is used */
+					    break;
+					    case SET_ALARM2_PARAMETER:
+						    	pos_cntr++;                  /* Increase the cursor position */
+					        	if (pos_cntr > 5)
+					          		pos_cntr = 0;
+					    break;
+				      	case SET_HYSTERESIS2_PARAMETER:
+					      		pos_cntr++;                  /* Increase the cursor position */  
+					        	if (pos_cntr > 4)
+					          		pos_cntr = 0;
+					    break;
+				      	case SEL_ALARM2_LOGIC_PARAMETER:
+					      		pos_cntr = 0;
+					        	logic_flag |= alarm2_low;   /* Alarm2 is in low condition */
+					        	break;
+					    case SEL_ALARM2_LATCH_PARAMETER:
+					   			pos_cntr = 0;
+				        		latch_flag |= alarm2_latch; /* Alarm2 is latched */
+				        		break;
+				        
+				   		case ALARM_EXIT_PARAMETER:
+				   				pos_cntr = 0;
+				   				alarm_channel_exit_flag |= exit_alarm;
+				   				break;
+				  }                    
+			break;  
+			
+			case RTC_MENU:
+				if (cal_para == SET_RTC_PARAMETER_1)
+				{
+					 pos_cntr++;                  /* Increase the cursor position */
+			         if((pos_cntr >= 1) && (pos_cntr <= 2))
+					 {
+					 	pos_cntr1 = 3-pos_cntr;
+					 	pos_cntr2 = 0;
+					 	pos_cntr3 = 0;
+					 }
+					 else if( (pos_cntr >= 3) && (pos_cntr <= 4))
+					 {
+					 	pos_cntr1 = 0;
+					 	pos_cntr2 = 5-pos_cntr;
+					 	pos_cntr3 = 0;
+					 }
+					 else if( (pos_cntr >= 5) && (pos_cntr <= 6))
+					 {
+					 	pos_cntr1 = 0;
+					 	pos_cntr2 = 0;
+					 	pos_cntr3 = 7-pos_cntr;
+					 }
+			         else if (pos_cntr > 6)
+			         	pos_cntr = 0;
+				}
+				else if (cal_para == SET_RTC_PARAMETER_2)
+				{
+					 pos_cntr++;                  /* Increase the cursor position */
+			         if((pos_cntr >= 1) && (pos_cntr <= 2))
+					 {
+					 	pos_cntr1 = 3-pos_cntr;
+					 	pos_cntr2 = 0;
+					 	pos_cntr3 = 0;
+					 }
+					 else if( (pos_cntr >= 3) && (pos_cntr <= 4))
+					 {
+					 	pos_cntr1 = 0;
+					 	pos_cntr2 = 5-pos_cntr;
+					 	pos_cntr3 = 0;
+					 }
+					 else if( (pos_cntr >= 5) && (pos_cntr <= 6))
+					 {
+					 	pos_cntr1 = 0;
+					 	pos_cntr2 = 0;
+					 	pos_cntr3 = 7-pos_cntr;
+					 }
+			         else if (pos_cntr > 6)
+			         	pos_cntr = 0;
+				}
+				else if (cal_para == CONFIRM_RTC_PARAMETER)
+					indication_flags_2 |= SET_NEW_RTC_FLAG;
+				else if(cal_para == EXIT_RTC_MENU_PARAMETER)
+					exit_flags_1 |= EXIT_RTC_MENU;
+			break;
+			
+			case LOG_SET_MENU:
+				
+				if (cal_para == LOG_INTERVAL_PARAMETER)
+				{
+					 pos_cntr++;                  /* Increase the cursor position */
+					 
+					 if((pos_cntr >= 1) && (pos_cntr <= 2))
+					 {
+					 	pos_cntr1 = 3-pos_cntr;
+					 	pos_cntr2 = 0;
+					 	pos_cntr3 = 0;
+					 }
+					 else if( (pos_cntr >= 3) && (pos_cntr <= 4))
+					 {
+					 	pos_cntr1 = 0;
+					 	pos_cntr2 = 5-pos_cntr;
+					 	pos_cntr3 = 0;
+					 }
+					 else if( (pos_cntr >= 5) && (pos_cntr <= 6))
+					 {
+					 	pos_cntr1 = 0;
+					 	pos_cntr2 = 0;
+					 	pos_cntr3 = 7-pos_cntr;
+					 }
+			         else if (pos_cntr > 6)
+			         	pos_cntr = 0;
+				}
+				else if (cal_para == LOG_MODE_PARAMETER)
+				{
+					indication_flags_2 |= LOG_MODE_FLAG;
+				}
+				else if (cal_para == LOG_TRIGGER_PARAMETER)
+				{
+					if(log_trigger != 0)
+						log_trigger--;
+					else
+						log_trigger = 2;
+
+				}
+				else if (cal_para == SET_LOG_TRIGGER_START_YEAR_PARAMETER)
+				{
+					 pos_cntr++;                  /* Increase the cursor position */
+			         if((pos_cntr >= 1) && (pos_cntr <= 2))
+					 {
+					 	pos_cntr1 = 3-pos_cntr;
+					 	pos_cntr2 = 0;
+					 	pos_cntr3 = 0;
+					 }
+					 else if( (pos_cntr >= 3) && (pos_cntr <= 4))
+					 {
+					 	pos_cntr1 = 0;
+					 	pos_cntr2 = 5-pos_cntr;
+					 	pos_cntr3 = 0;
+					 }
+					 else if( (pos_cntr >= 5) && (pos_cntr <= 6))
+					 {
+					 	pos_cntr1 = 0;
+					 	pos_cntr2 = 0;
+					 	pos_cntr3 = 7-pos_cntr;
+					 }
+			         else if (pos_cntr > 6)
+			         	pos_cntr = 0;
+				}
+				else if (cal_para == SET_LOG_TRIGGER_START_HOUR_PARAMETER)
+				{
+					 pos_cntr++;                  /* Increase the cursor position */
+			         if((pos_cntr >= 1) && (pos_cntr <= 2))
+					 {
+					 	pos_cntr1 = 3-pos_cntr;
+					 	pos_cntr2 = 0;
+					 	
+					 }
+					 else if( (pos_cntr >= 3) && (pos_cntr <= 4))
+					 {
+					 	pos_cntr1 = 0;
+					 	pos_cntr2 = 5-pos_cntr;
+					 	
+					 }
+					 else if (pos_cntr > 4)
+			         	pos_cntr = 0;
+				}
+				else if (cal_para == SET_LOG_TRIGGER_STOP_YEAR_PARAMETER)
+				{
+					pos_cntr++;                  /* Increase the cursor position */
+			         if((pos_cntr >= 1) && (pos_cntr <= 2))
+					 {
+					 	pos_cntr1 = 3-pos_cntr;
+					 	pos_cntr2 = 0;
+					 	pos_cntr3 = 0;
+					 }
+					 else if( (pos_cntr >= 3) && (pos_cntr <= 4))
+					 {
+					 	pos_cntr1 = 0;
+					 	pos_cntr2 = 5-pos_cntr;
+					 	pos_cntr3 = 0;
+					 }
+					 else if( (pos_cntr >= 5) && (pos_cntr <= 6))
+					 {
+					 	pos_cntr1 = 0;
+					 	pos_cntr2 = 0;
+					 	pos_cntr3 = 7-pos_cntr;
+					 }
+			         else if (pos_cntr > 6)
+			         	pos_cntr = 0;
+				}
+				else if (cal_para == SET_LOG_TRIGGER_STOP_HOUR_PARAMETER)
+				{
+					pos_cntr++;                  /* Increase the cursor position */
+			         if((pos_cntr >= 1) && (pos_cntr <= 2))
+					 {
+					 	pos_cntr1 = 3-pos_cntr;
+					 	pos_cntr2 = 0;
+					 	
+					 }
+					 else if( (pos_cntr >= 3) && (pos_cntr <= 4))
+					 {
+					 	pos_cntr1 = 0;
+					 	pos_cntr2 = 5-pos_cntr;
+					 	
+					 }
+					 else if (pos_cntr > 4)
+			         	pos_cntr = 0;
+				}
+				else if (cal_para == KEY_PRESS_START_DELAY_PARAMETER)
+				{
+					pos_cntr++;                  /* Increase the cursor position */
+		            if (pos_cntr > 3)
+		       		  	pos_cntr = 0;
+				}
+				else if (cal_para == STOP_LOGGING_PARAMETER)
+				{
+					indication_flags_3 |= STOP_LOGGING_FLAG;
+				}
+				else if(cal_para == EXIT_LOG_SET_MENU_PARAMETER)
+					exit_flags_1 |= EXIT_LOG_SET_FLAG;
+			break;
+			
+			case MEMORY_MENU:
+			
+				if (cal_para == MEMORY_CLEAR_PARAMETER)
+					mode_flags_1 |= MEMORY_CLEAR_FLAG;
+				else if(cal_para == MEMORY_CLEAR_CONFIRM_PARAMETER)
+					indication_flags_2 |= CONFIRM_MEM_CLEAR_FLAG;
+				else if(cal_para == EXIT_MEMORY_MENU_PARAMETER)
+					exit_flags_1 |= EXIT_MEMORY_MENU;
+					
+			break;
+			
+			case DOWNLOADING_MENU:
+				switch(cal_para)
+		    		{
+		    			
+		    			case DEVICE_ID_PARAMETER:
+							
+							pos_cntr++;                  /* Increase the cursor position */  
+				        	if (pos_cntr > 3)
+				          		pos_cntr = 0;		
+						break;
+						
+						case SELECT_OPTION_PARAMETER:
+								
+							mode_flags_1 |= DEVICE_CONFIG_OPTION_FLAG;
+						break;
+						
+						case SELECT_DOWNLOADING_PARAMETER:
+							
+							if(SelectDownloadOption != 0)
+								SelectDownloadOption--;
+							else
+								SelectDownloadOption = 1;
+								
+						break;
+						case BATCH_LOWER_LIMIT_PARAMETER:
+							
+							pos_cntr++;                  /* Increase the cursor position */  
+				        	if (pos_cntr > 6)
+				          		pos_cntr = 0;	
+						break;
+						
+						case BATCH_UPPER_LIMIT_PARAMETER:
+								
+							pos_cntr++;                  /* Increase the cursor position */  
+				        	if (pos_cntr > 6)
+				          		pos_cntr = 0;			
+					    break;
+					    
+					    case START_DOWNLOADING_PARAMETER:
+								
+								indication_flags |= START_DOWNLOADING_FLAG;
+						break;
+////						case DOWNLOADING_STARTED_PARAMETER:
+////							StartDownloadFlag = 2;
+////						break;
+						case DOWNLOADING_EXIT_PARAMETER:
+								exit_flags_1 |= EXIT_DOWNLOADING_MENU;
+						break;
+						
+		    		}
+			break;
+			
+			case PASSWORD_MENU:       							 /* Password menu */
+			      	if (cal_para == SET_PASSWORD_PARAMETER)
+			      	{
+			        	pos_cntr++;                  /* Increase the cursor position */
+			        	if (pos_cntr > 4)
+			          		pos_cntr = 0;
+			      	} 
+			      	else if(cal_para == CONFIRM_PASSWORD_PARAMETER)
+			      		indication_flags_2 |= SET_NEW_PASSWORD; 
+			      	else if(cal_para == PASSWORD_EXIT_PARAMETER)
+						exit_flags |= EXIT_PASSWORD;
+			break;
+			
+			case BACKLIT_MENU:
+					if(cal_para == BACKLIT_ON_OFF_PARAMETER)
+					{
+						backlit_select++;
+						if(backlit_select > 2)
+							backlit_select = 0;
+					}
+					else if(cal_para == BACKLIT_EXIT_PARAMETER)
+						exit_flags |= EXIT_BACKLIT;
+			break;	
+			
+			case SLAVE_MONITOR_MENU:
+					
+					if(cal_para == SLAVE_MONITOR_1_PARAMETER)
+			  		{
+			  			mode_flags_1 |= USE_REPEATER_FLAG;
+			  		}
+					else if(cal_para == EXIT_SLAVE_MONITOR_PARAMETER)
+	    				mode_flags_1 |= EXIT_SLAVE_MONITOR_FLAG;
+	    	break;	
+	    	
+////	    	case CHANNEL_SLAVE_MONITOR_MENU:
+////					
+////					switch(cal_para)
+////		    		{
+////		    			case USE_SLAVE_MONITOR_PARAMETER:
+////						        use_slave_monitor_flag |= use_slave_monitor;
+////						break;
+////						
+////						case SET_SLAVE_ID_PARAMETER:
+////						        pos_cntr++;                  /* Increase the cursor position */
+////			        			if (pos_cntr > 3)
+////			          				pos_cntr = 0;
+////						break;
+////						
+////						case EXIT_CHANNEL_SLAVE_MONITOR_PARAMETER:
+////					    		exit_slave_monitor_flag |= exit_slave_monitor;
+////				        break; 
+////		    		}
+////	    	break;	
+			
+			
+		   case FACTORY_MENU:									  /* Factory settings menu */
+		    		switch(cal_para)
+		    		{
+		    			case SET_WARMUP_PARAMETER:
+				    			pos_cntr++;                  /* Increase the cursor position */
+			        			if(pos_cntr > 4)
+			          				pos_cntr = 0;
+			          	break;  
+			          	
+			          	case MAX_LOG_COUNT_PARAMETER:
+			          		if(MaxLogCount >= 500000)
+					        	MaxLogCount = MaxLogCount-400000;
+					        else 
+					        	MaxLogCount = MaxLogCount-1; // decrement by 1 to make it less then 100000
+					        	
+					      	if(MaxLogCount < 100000)
+			          				MaxLogCount = 900000; 
+						break;
+			          	case SERIAL_YEAR_PARAMETER:
+					        	pos_cntr++;                  /* Increase the cursor position */
+			        			if (pos_cntr > 2)
+			          				pos_cntr = 0;
+					      	
+						break;
+						case SERIAL_MONTH_PARAMETER:
+						        pos_cntr++;                  /* Increase the cursor position */
+			        			if (pos_cntr > 2)
+			          				pos_cntr = 0;
+						break;
+						case SERIAL_NUMBER_PARAMETER:
+						        pos_cntr++;                  /* Increase the cursor position */
+			        			if (pos_cntr > 4)
+			          				pos_cntr = 0;
+						break;
+			          	case FACTORY_EXIT_PARAMETER:
+				    			exit_flags |= EXIT_FACTORY;
+			          	break;  
+		    		}
+		    break; 
+			
+			
+	  	}
+  	}
+  	else
+  	{
+  		switch(menu)
+  		{
+  			case MODBUS_MENU:
+  			
+  				if(cal_para == MODBUS_EXIT_PARAMETER)
+  					exit_flags |= EXIT_MODBUS_MENU_FLAG;
+  				
+  			break;
+  			case CHANNEL_MODBUS_MENU:
+  			
+  				if(cal_para == CHANNEL_EXIT)
+  					modbus_channel_exit_flag |= exit_modbus;
+  				
+  			break;
+  			case DISPLAY_SETTING_MENU:
+  			
+  				if(cal_para == DISPLAY_EXIT_PARAMETER)
+  					 exit_flags |= EXIT_DISPLAY_MENU_FLAG;
+
+  			break;
+  			
+  			case CHANNEL_DISPLAY_MENU:
+  			
+  				if(cal_para == CHANNEL_PARAMETER_EXIT)
+  					display_menu_exit_flag |= exit_display;
+
+  			break;
+  			case CUSTOMIZED_LIST_MENU:
+  					if(cal_para == NAME_EXIT_PARAMETER)
+				       	exit_flags_1 |= EXIT_LIST_MENU_FLAG;
+			break;
+			
+			case DOWNLOADING_MENU:
+				if(cal_para == DOWNLOADING_EXIT_PARAMETER)
+				   exit_flags_1 |= EXIT_DOWNLOADING_MENU;
+			break;
+			
+  			case ALARM_MENU:
+  					if(cal_para == ALARM_MENU_EXIT_PARAMETER)
+  					   exit_flags |= EXIT_ALARM;
+  			break;
+  			
+  			case RTC_MENU:
+  				if(cal_para == EXIT_RTC_MENU_PARAMETER)
+					exit_flags_1 |= EXIT_RTC_MENU;
+  			break;
+  			
+  			case LOG_SET_MENU:
+				if(cal_para == EXIT_LOG_SET_MENU_PARAMETER)
+					exit_flags_1 |= EXIT_LOG_SET_FLAG;
+			break;
+			
+			case MEMORY_MENU:
+				if(cal_para == EXIT_MEMORY_MENU_PARAMETER)
+					exit_flags_1 |= EXIT_MEMORY_MENU;
+			break;
+			
+  			case PASSWORD_MENU:
+  					if(cal_para == PASSWORD_EXIT_PARAMETER)
+  					   exit_flags |= EXIT_PASSWORD;
+  			break;
+  			case CHANNEL_ALARM_MENU:
+  					if(cal_para == ALARM_EXIT_PARAMETER)
+				       	alarm_channel_exit_flag |= exit_alarm;
+			break;
+			
+			case SLAVE_MONITOR_MENU:
+					
+					if(cal_para == EXIT_SLAVE_MONITOR_PARAMETER)
+	    				mode_flags_1 |= EXIT_SLAVE_MONITOR_FLAG;
+	    	break;	
+////	    	case CHANNEL_SLAVE_MONITOR_MENU:
+////					
+////					if(cal_para == EXIT_CHANNEL_SLAVE_MONITOR_PARAMETER)
+////	    				exit_slave_monitor_flag |= exit_slave_monitor;
+////	    	break;	
+  			case BACKLIT_MENU:
+  					if(cal_para == BACKLIT_EXIT_PARAMETER)
+  					   exit_flags |= EXIT_BACKLIT;
+  			break;
+			case START_STOP_COMMUNICATION:
+  					if(cal_para == EXIT_START_STOP_MENU)
+  						 exit_flags |= EXIT_START_STOP_COMM;
+  			break;
+  			
+  		}
+  	}
+  	menu_timeout = 60;
+}
+/*-------------------------------------------------------------------------------------
+* Function name       : float inc_digit_with_dp(float , unsigned char , unsigned int )
+*     returns         : A float number
+*     arg1            : float num, Number to be incremented
+*     arg2            : unsigned char pos, position of the cursor
+*     arg3            : unsigned int lim, highest limit upto which number to be
+*                       incremented.
+* Created by          : Nitin Singh
+* Date created        : 20/01/11
+* Description         : This function increments the passed float value based on 
+*                       passed cursor position and returns it to called function
+*--------------------------------------------------------------------------------------*/
+float64_t inc_digit_with_dp(float64_t num, uint8_t pos, float64_t lim)
+{
+	float64_t num1;
+	num=num*100;
+ 	break_digits_with_dp(num);        /* Breaking the number into individual digits */
+  
+/* Based on position increase the digit from 0-9 and then to 0 */  	
+  	switch (pos)                      
+  	{
+	    case 16:
+	      bcd[0]++;  
+	      if (bcd[0] > 9)
+	        bcd[0] = 0;
+	    break;
+	    
+	    case 2:
+	      bcd[1]++;  
+	      if (bcd[1] > 9)
+	        bcd[1] = 0;
+	    break;
+	    
+	    case 3:
+	      bcd[2]++;  
+	      if (bcd[2] > 9)
+	        bcd[2] = 0;
+	    break;
+	    
+	    case 4:
+	      bcd[3]++;  
+	      if (bcd[3] > 9)
+	        bcd[3] = 0;
+	    break;
+	    
+	    case 5:
+	      bcd[4]++;  
+	      if (bcd[4] > 9)
+	        bcd[4] = 0;
+	    break;
+		
+  	} 
+  
+  	num1 = make_digits_with_dp();                 /* Then make individual digits to a number */
+  	if (num1 >  (float64_t)(lim*100))
+  	{
+    	break_digits_with_dp(num1);
+/* Based on position counter make all digits to zero if it is greater than limit specified */  
+    	switch (pos)
+    	{
+		      case 1:
+		        bcd[0] = 0;
+		      break;
+		    
+		      case 2:
+		        bcd[1] = 0;
+		      break;
+		    
+		      case 3:
+		        bcd[2] = 0;
+		      break;
+		    
+		      case 4:
+		        bcd[3] = 0;
+		      break;
+		      
+		      case 5:
+		        bcd[4] = 0;
+		      break;
+		 
+		} 
+    	num1 = make_digits_with_dp();
+  	}
+  	return (num1/100);                 /* return number to called function */   
+}  
+/*-------------------------------------------------------------------------------------
+* Function name       : void break_digits_with_dp (unsigned int value)
+*     returns         : -
+*     arg1            : unsigned int value, value to be divided
+* Created by          : Nitin Singh
+* Date created        : 20/01/11
+* Description         : This function breaks the passed number into characters and 
+*                       updates it to a string.
+*--------------------------------------------------------------------------------------*/
+void break_digits_with_dp (unsigned long value)
+{
+	unsigned long digit;
+		 digit=((value/10000));                  //calculating thousands place digit
+         bcd[4] = digit; 
+         digit=(value%10000)/1000;               //calculating hundred place digit
+         bcd[3]=digit;
+         digit=((value%10000)%1000)/100;         //calculating tens place digit
+         bcd[2]=digit;
+         digit=(((value%10000)%1000)%100)/10;    //calculating ones place digit
+         bcd[1]=digit;
+         digit=(((value%10000)%1000)%100)%10;    //calculating ones place digit
+         bcd[0]=digit;
+}    
+/*-------------------------------------------------------------------------------------
+* Function name       : unsigned int make_digits_with_dp(void)
+*     returns         : unsigned integer number
+*     arg1            : -
+* Created by          : Nitin Singh
+* Date created        : 20/01/11
+* Description         : This function transforms the indvidual characters of the string to
+*                       a number and returns it to called function.
+*--------------------------------------------------------------------------------------*/
+unsigned long make_digits_with_dp(void)
+{
+	unsigned long num1;
+  
+  	num1 = (int)bcd[0];                     /* Unit digit */
+  	num1 += 10 * (int)bcd[1];               /* Add 10's digitmultipled by 10 with unit digit */ 
+  	num1 += 100 * (int)bcd[2];              /* Add 100's digitmultipled by 100 with previous number */
+  	num1 += 1000 * (int)bcd[3];             /* Add 1000's digitmultipled by 1000 with unit previous number */
+  	num1 += 10000 * (int)bcd[4];            /* Add 10000's digitmultipled by 10000 with unit previous number */
+  	return num1;                            /* Return the number */
+} 
+/*-------------------------------------------------------------------------------------
+* Function name       : unsigned int inc_digit_with_dp(unsigned int , unsigned char , unsigned int )
+*     returns         : An unsigned integer 
+*     arg1            : unsigned int num, Number to be incremented
+*     arg2            : unsigned char pos, position of the cursor
+*     arg3            : unsigned int lim, highest limit upto which number to be
+*                       incremented.
+* Created by          : Nitin Singh
+* Date created        : 20/01/11
+* Description         : This function increments the passed integer value based on 
+*                       passed cursor position and returns it to called function
+*--------------------------------------------------------------------------------------*/
+uint32_t inc_digit(uint32_t num, uint8_t pos,uint32_t lim)
+{
+	
+	uint32_t num1;
+	
+  	if (num > 999999)
+    	num = 999999;  
+  
+ 	break_digits(num);                             /* Break the number to individual digits */
+
+/* Increase the individual digit based on pos specified */  
+  	switch (pos)
+  	{
+	    case 1:
+	      bcd[0]++;  
+	      if (bcd[0] > 9)
+	        bcd[0] = 0;
+	    break;
+	    
+	    case 2:
+	      bcd[1]++;  
+	      if (bcd[1] > 9)
+	        bcd[1] = 0;
+	    break;
+	    
+	    case 3:
+	      bcd[2]++;  
+	      if (bcd[2] > 9)
+	        bcd[2] = 0;
+	    break;
+	    
+	    case 4:
+	      bcd[3]++;  
+	      if (bcd[3] > 9)
+	        bcd[3] = 0;
+	    break;
+	    
+	    case 5:
+	      bcd[4]++;  
+	      if (bcd[4] > 9)
+	        bcd[4] = 0;
+	    break;
+	    
+	    case 6:
+	      bcd[5]++;  
+	      if (bcd[5] > 9)
+	        bcd[5] = 0;
+	    break;
+	    
+	
+  	} 
+  
+  	num1 = make_digits();                             /* Make the individual digits into a number */
+  	if (num1 >  lim)
+  	{
+    	break_digits(num1);
+/* Based on position counter make all digits to zero if it is greater than limit specified */
+    	switch (pos)
+    	{
+		      case 1:
+		        bcd[0] = 0;
+		      break;
+		    
+		      case 2:
+		        bcd[1] = 0;
+		      break;
+		    
+		      case 3:
+		        bcd[2] = 0;
+		      break;
+		    
+		      case 4:
+		        bcd[3] = 0;
+		      break;
+		      
+		      case 5:
+		        bcd[4] = 0;
+		      break;
+		      
+		      case 6:
+		        bcd[5] = 0;
+		      break;
+		 
+		} 
+    	num1 = make_digits();
+  	}
+  	return num1;  
+}  
+/*-------------------------------------------------------------------------------------
+* Function name       : void break_digits (unsigned int value)
+*     returns         : -
+*     arg1            : unsigned int value, value to be divided
+* Created by          : Nitin Singh
+* Date created        : 20/01/11
+* Description         : This function breaks the passed number into characters and 
+*                       updates it to a string.
+*--------------------------------------------------------------------------------------*/
+void break_digits (uint32_t value)
+{
+	int digit;
+		 digit=value/100000;               //calculating thousands place digit
+         bcd[5]=digit; 
+         digit=(value%100000)/10000;               //calculating thousands place digit
+         bcd[4]=digit;
+         digit=((value%100000)%10000)/1000;         //calculating hundreds place digit
+         bcd[3]=digit;
+         digit=(((value%100000)%10000)%1000)/100;    //calculating tens place digit
+         bcd[2]=digit;
+         digit=((((value%100000)%10000)%1000)%100)/10;    //calculating ones place digit
+         bcd[1]=digit;
+         digit=((((value%100000)%10000)%1000)%100)%10;    //calculating ones place digit
+         bcd[0]=digit;
+}    
+/*-------------------------------------------------------------------------------------
+* Function name       : unsigned int make_digits(void)
+*     returns         : unsigned integer number
+*     arg1            : -
+* Created by          : Nitin Singh
+* Date created        : 20/01/11
+* Description         : This function transforms the indvidual characters of the string to
+*                       a number and returns it to called function.
+*--------------------------------------------------------------------------------------*/
+uint32_t make_digits(void)
+{
+	uint32_t num1;
+  
+  	num1 = (uint32_t)bcd[0];                     /* Unit digit */
+  	num1 += 10 * (uint32_t)bcd[1];               /* Add 10's digitmultipled by 10 with unit digit */ 
+  	num1 += 100 * (uint32_t)bcd[2];              /* Add 100's digitmultipled by 100 with previous number */
+  	num1 += 1000 * (uint32_t)bcd[3];             /* Add 1000's digitmultipled by 1000 with unit previous number */
+ 	num1 += 10000 * (uint32_t)bcd[4];             /* Add 10000's digitmultipled by 10000 with unit previous number */
+ 	num1 += 100000 * (uint32_t)bcd[5];             /* Add 10000's digitmultipled by 10000 with unit previous number */
+ 
+  	return num1;                            /* Return the number */ 
+}  
+
+/*-------------------------------------------------------------------------------------
+* Function name       : float32_t inc_neg_digit(int16_t num, uint8_t pos, uint8_t dp1)
+*     returns         : A float number
+*     arg1            : float num, Number to be incremented
+*     arg2            : unsigned char pos, position of the cursor
+*     arg3            : unsigned int lim, highest limit upto which number to be
+*                       incremented.
+* Created by          : Nitin Singh
+* Date created        : 20/01/11
+* Description         : This function increments the passed float value based on 
+*                       passed cursor position and returns it to called function
+*--------------------------------------------------------------------------------------*/
+int32_t inc_neg_digit(int16_t num, uint8_t pos)
+{
+	int16_t num1, negetive_limit;
+	uint8_t negetive_flag = 0;
+	negetive_limit = 9999;
+	if(num < 0)
+	{
+		negetive_flag = 1;
+		num=num * (-1);
+	}
+	else
+	{
+		negetive_flag = 0;
+
+	}
+	break_digits_with_dp(num);        /* Breaking the number into individual digits */
+  
+/* Based on position increase the digit from 0-9 and then to 0 */  	
+  	switch (pos)                      
+  	{
+	    case 1:
+	      bcd[0]++;  
+	      if (bcd[0] > 9)
+	        bcd[0] = 0;
+	    break;
+	    
+	    case 2:
+	      bcd[1]++;  
+	      if (bcd[1] > 9)
+	        bcd[1] = 0;
+	    break;
+	    
+	    case 3:
+	      bcd[2]++;  
+	      if (bcd[2] > 9)
+	        bcd[2] = 0;
+	    break;
+	    
+	    case 4:
+	      bcd[3]++;  
+	      if (bcd[3] > 9)
+	        bcd[3] = 0;
+	    break;
+	    
+	    case 5:
+	      if(negetive_flag == 0)
+	      	negetive_flag = 1;
+	      else
+	      	negetive_flag = 0;
+	    break;
+		
+  	} 
+  
+  	num1 = make_digits_with_dp();                 /* Then make individual digits to a number */
+
+	if (num1 >  9999)
+  	{
+    	break_digits_with_dp(num1);
+/* Based on position counter make all digits to span if it is greater than limit specified */  
+    	switch (pos)
+    	{
+		      case 1:
+		        bcd[0] = 0;
+		      break;
+		    
+		      case 2:
+		        bcd[1] = 0;
+		      break;
+		    
+		      case 3:
+		        bcd[2] = 0;
+		      break;
+		    
+		      case 4:
+		        bcd[3] = 0;
+		      break;
+		      
+		      case 5:
+		       negetive_flag = 0;
+		      break;
+		 
+		} 
+    	num1 = make_digits_with_dp();
+  	}
+  	if(negetive_flag == 1)
+  	{
+  		return (num1*(-1));                 /* return number to called function */
+  	}
+  	else
+  	{
+  		return (num1);                 /* return number to called function */
+  	}      
+}  						
+					    
+					        	
+						
+						
+						
+						
+						
+						
+						
+						
+						
+						
+						
+						
+						
+						
+						
+						
+						
+						

@@ -1,0 +1,426 @@
+#include "msp430x26x.h"
+#include "DataTypes.h"
+#include "lcd.h"
+#include "display.h"
+#include "disp_udl.h"
+#include "rtc.h"
+
+extern uint8_t Time_Format;
+extern uint8_t Time_Stamp;
+extern uint8_t Seconds;
+extern uint8_t Minutes;
+extern uint8_t Hours;
+extern uint8_t Day;
+extern uint8_t Date;
+extern uint8_t Month;
+extern uint16_t Year;
+extern int8_t str[70];
+
+
+uint8_t Seconds1;
+uint8_t Minutes1;
+uint8_t Hours1;
+uint8_t Date1;
+uint8_t Month1;
+uint8_t Year1;
+
+
+uint8_t ch1_tmp;
+uint8_t ch2_tmp;
+uint8_t ch3_tmp;
+uint8_t ch4_tmp;
+uint8_t ch5_tmp;
+uint8_t ch6_tmp;
+uint8_t ch7_tmp;
+uint8_t ch8_tmp;
+
+
+rtc_pswd()
+{
+int cnt=0,j=1;
+
+while((P2IN & 0x01)==1)
+{
+	
+while((P2IN & 0x02)==0)
+{
+cnt+=1;
+if(cnt>3)
+cnt=0;
+j=0;
+delay_ms(580);
+}
+while((P2IN & 0x04)==0)
+{
+j++;
+if(j>9)
+j=0;
+str[23+cnt]=j+0x30;
+UpdateLcd();
+delay_ms(580);
+}
+
+}
+}
+
+
+
+r_time()
+{
+int cnt=0,j=1;
+unsigned int d1,d2,m1,m2,y1,y2;
+
+while((P2IN & 0x01)==1)
+{
+
+while((P2IN & 0x02)==0)
+{
+cnt+=1;
+if(cnt>5)
+cnt=0;
+j=0;
+delay_ms(580);
+}
+
+
+while((P2IN & 0x04)==0)
+{
+switch(cnt)
+{
+case 0:
+j+=1;
+if(j>2)
+j=0;
+if((str[37]>=0x35) & (j==2))
+j=0;
+str[36]=j+0x30;
+if((str[36]==0x32) & (str[37]==0x34))
+str[39]=str[40]=str[42]=str[43]=0x30;
+break;
+
+case 1:
+j+=1;
+if(j>9)
+j=0;
+if((str[36]==0x32) & (j>4))
+j=0;
+str[37]=j+0x30;
+if((str[36]==0x32) & (str[37]==0x34))
+str[39]=str[40]=str[42]=str[43]=0x30;
+break;
+
+case 2:
+j+=1;
+if(j>6)
+j=0;
+if((str[40]>0x30) & (j==6))
+j=0;
+if((str[36]==0x32) & (str[37]==0x34))
+j=0;
+str[39]=j+0x30;
+break;
+
+case 3:
+j+=1;
+if(j>9)
+j=0;
+if((str[39]==0x36) & (j>=0))
+j=0;
+if((str[36]==0x32) & (str[37]==0x34))
+j=0;
+str[40]=j+0x30;
+break;
+
+case 4:
+j+=1;
+if(j>6)
+j=0;
+if((str[43]>0x30) & (j==6))
+j=0;
+if((str[36]==0x32) & (str[37]==0x34))
+j=0;
+str[42]=j+0x30;
+break;
+
+case 5:
+j+=1;
+if(j>9)
+j=0;
+if((str[42]==0x36) & (j>0))
+j=0;
+if((str[36]==0x32) & (str[37]==0x34))
+j=0;
+str[43]=j+0x30;
+break;
+	
+}
+UpdateLcd();
+delay_ms(580);
+
+}
+}
+d1=str[36] & 0x0f;
+d2=str[37] & 0x0f;
+m1=str[39] & 0x0f;
+m2=str[40] & 0x0f;
+y1=str[42] & 0x0f;
+y2=str[43] & 0x0f;
+d1=(d1*10)+d2;
+m1=(m1*10)+m2;
+y1=(y1*10)+y2;
+
+
+Seconds1=DecimalToHex(y1) & 0x7f;
+Minutes1=DecimalToHex(m1) & 0x7f;
+Hours1=DecimalToHex(d1) & 0x3f;
+
+}
+
+
+
+
+r_date()
+{
+int cnt=0,j=1;
+unsigned int m1,m2,y1,y2,d1,d2;
+while((P2IN & 0x01)==1)
+{
+	
+while((P2IN & 0x02)==0)
+{
+cnt+=1;
+if(cnt>5)
+cnt=0;
+j=0;
+delay_ms(580);
+}
+
+
+while((P2IN & 0x04)==0)
+{
+
+switch(cnt)
+{
+case 0:
+j+=1;
+if(j>3)
+j=0;
+if((str[37]>0x31) & (j==3))
+j=0;
+if((str[39]==0x30) & (str[40]==0x32) & (j==3))
+j=0;
+str[36]=j+0x30;
+break;
+
+case 1:
+j+=1;
+if(j>9)
+j=0;
+if((str[36]==0x33) & (j>1))
+j=0;
+str[37]=j+0x30;
+break;
+
+case 2:
+j+=1;
+if(j>1)
+j=0;
+if((str[40]>0x32) & (j==1))
+j=0;
+str[39]=j+0x30;
+if((str[39]==0x30) & (str[40]==0x32) & (str[36]==0x33))
+{
+str[36]=0x32;
+str[37]=0x39;
+}
+
+break;
+
+case 3:
+j+=1;
+if(j>9)
+j=0;
+if((str[39]==0x31) & (j>=3))
+j=0;
+str[40]=j+0x30;
+if((str[39]==0x30) & (str[40]==0x32) & (str[36]==0x33))
+{
+str[36]=0x32;
+str[37]=0x39;
+}
+break;
+
+case 4:
+j+=1;
+if(j>9)
+j=0;
+str[42]=j+0x30;
+break;
+
+case 5:
+j+=1;
+if(j>9)
+j=0;
+str[43]=j+0x30;
+break;
+}
+
+UpdateLcd();
+delay_ms(580);
+
+
+
+}
+}
+
+
+d1=str[36] & 0x0f;
+d2=str[37] & 0x0f;
+m1=str[39] & 0x0f;
+m2=str[40] & 0x0f;
+y1=str[42] & 0x0f;
+y2=str[43] & 0x0f;
+
+d1=(d1*10)+d2;
+m1=(m1*10)+m2;
+y1=(y1*10)+y2;
+
+
+Year1=DecimalToHex(y1) & 0xff;
+Month1=DecimalToHex(m1) & 0x1f;
+Date1=DecimalToHex(d1) & 0x3f;
+
+
+}
+
+
+
+
+
+
+
+
+rtc_save()
+{
+write_RTC(SEC_REG_ADDRS, Seconds1);
+write_RTC(MIN_REG_ADDRS, Minutes);
+write_RTC(HOUR_REG_ADDRS, Hours1);
+write_RTC(DATE_REG_ADDRS, Date1);
+write_RTC(MONTH_REG_ADDRS, Month1);
+write_RTC(YEAR_REG_ADDRS, Year1);
+
+//write_RTC(SEC_REG_ADDRS, 0x08);
+//write_RTC(MIN_REG_ADDRS, 0x45);
+//write_RTC(HOUR_REG_ADDRS, 0x18);
+//write_RTC(DATE_REG_ADDRS, 0x28);
+//write_RTC(MONTH_REG_ADDRS, 0x10);
+//write_RTC(YEAR_REG_ADDRS, 0x12);
+	
+}
+
+
+
+
+enabl_chng()
+{
+	int cnt=1;
+	int k=0; 
+	while((P2IN & 0x01)==1)
+	{
+	
+	while((P2IN & 0x04)==0)
+	{
+	 k++;
+	 if((k%2)==0)
+	 display_enabl_menu(4);
+	 if((k%2)==1)
+	 display_enabl_menu(5);
+	 str[26]=cnt+0x30;
+	 UpdateLcd();
+	 enabl_mon(cnt,str[37]);
+	 delay_ms(280);
+	}
+	
+	while((P2IN & 0x02)==0)
+	{
+	cnt++;
+	if(cnt>8)
+	cnt=1;
+	display_enabl_menu(4);
+    str[26]=cnt+0x30;
+	UpdateLcd();
+    enabl_mon(cnt,str[37]);
+	delay_ms(280);
+	}
+	
+	}
+	
+}
+
+
+enabl_mon(int cnt,int en_ch)
+{
+
+switch(cnt)
+{
+case 1:
+if(en_ch=='E')
+ch1_tmp=1;
+else
+ch1_tmp=0;
+break;
+
+case 2:
+if(en_ch=='E')
+ch2_tmp=1;
+else
+ch2_tmp=0;
+break;
+
+case 3:
+if(en_ch=='E')
+ch3_tmp=1;
+else
+ch3_tmp=0;
+break;
+
+case 4:
+if(en_ch=='E')
+ch4_tmp=1;
+else
+ch4_tmp=0;
+break;
+
+case 5:
+if(en_ch=='E')
+ch5_tmp=1;
+else
+ch5_tmp=0;
+break;
+
+case 6:
+if(en_ch=='E')
+ch6_tmp=1;
+else
+ch6_tmp=0;
+break;
+
+case 7:
+if(en_ch=='E')
+ch7_tmp=1;
+else
+ch7_tmp=0;
+break;
+
+case 8:
+if(en_ch=='E')
+ch8_tmp=1;
+else
+ch8_tmp=0;
+break;
+}
+
+
+}
+
+

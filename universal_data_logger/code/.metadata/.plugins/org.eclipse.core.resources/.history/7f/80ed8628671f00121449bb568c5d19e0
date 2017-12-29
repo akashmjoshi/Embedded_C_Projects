@@ -1,0 +1,16 @@
+#ifndef DISPLAY_UDL_H_
+#define DISPLAY_UDL_H_
+
+
+void display_dummy(int mode);
+void display_chn1(int mode);
+void display_chn2(int mode);
+void display_chn3(int mode);
+void display_chn4(int mode);
+void display_chn5(int mode);
+void display_chn6(int mode);
+void display_chn7(int mode);
+void display_chn8(int mode);
+
+
+#endif /*DISPLAY_UDL_H_*/
