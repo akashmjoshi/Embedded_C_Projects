@@ -1,0 +1,1 @@
+"./port_setup.obj" "./main.obj" "./logic.obj" "./keysensing.obj" "./gas_calculation.obj" "./eeprom_SPI.obj" "./display.obj" "./decode_slave.obj" "./decode_master.obj" "./Uart_Init_1.obj" "./Uart_Init.obj" "./TIMER_B.obj" "./TIMER_A.obj" "./Send_Request.obj" "./SPI_Setup.obj" "./LCD.obj" "./IR_REMOTE.obj" "./DAC.obj" -l"rts430xl.lib" "../lnk_msp430f2618.cmd" 

@@ -1,0 +1,1623 @@
+******************************************************************************
+                  MSP430 Linker PC v3.3.0                      
+******************************************************************************
+>> Linked Wed Nov 06 03:40:25 2013
+
+OUTPUT FILE NAME:   <GM-6611.out>
+ENTRY POINT SYMBOL: "_c_int00"  address: 00003af8
+
+
+MEMORY CONFIGURATION
+
+         name            origin    length      used     unused   attr    fill
+----------------------  --------  ---------  --------  --------  ----  --------
+  SFR                   00000000   00000010  00000000  00000010  RWIX
+  PERIPHERALS_8BIT      00000010   000000f0  00000000  000000f0  RWIX
+  PERIPHERALS_16BIT     00000100   00000100  00000000  00000100  RWIX
+  INFOD                 00001000   00000040  00000000  00000040  RWIX
+  INFOC                 00001040   00000040  00000000  00000040  RWIX
+  INFOB                 00001080   00000040  00000000  00000040  RWIX
+  INFOA                 000010c0   00000040  00000000  00000040  RWIX
+  RAM                   00001100   00002000  0000065e  000019a2  RWIX
+  FLASH                 00003100   0000cebe  0000c550  0000096e  RWIX
+  INT00                 0000ffc0   00000002  00000000  00000002  RWIX
+  INT01                 0000ffc2   00000002  00000000  00000002  RWIX
+  INT02                 0000ffc4   00000002  00000000  00000002  RWIX
+  INT03                 0000ffc6   00000002  00000000  00000002  RWIX
+  INT04                 0000ffc8   00000002  00000000  00000002  RWIX
+  INT05                 0000ffca   00000002  00000000  00000002  RWIX
+  INT06                 0000ffcc   00000002  00000000  00000002  RWIX
+  INT07                 0000ffce   00000002  00000000  00000002  RWIX
+  INT08                 0000ffd0   00000002  00000000  00000002  RWIX
+  INT09                 0000ffd2   00000002  00000000  00000002  RWIX
+  INT10                 0000ffd4   00000002  00000000  00000002  RWIX
+  INT11                 0000ffd6   00000002  00000000  00000002  RWIX
+  INT12                 0000ffd8   00000002  00000000  00000002  RWIX
+  INT13                 0000ffda   00000002  00000000  00000002  RWIX
+  INT14                 0000ffdc   00000002  00000000  00000002  RWIX
+  INT15                 0000ffde   00000002  00000000  00000002  RWIX
+  INT16                 0000ffe0   00000002  00000002  00000000  RWIX
+  INT17                 0000ffe2   00000002  00000002  00000000  RWIX
+  INT18                 0000ffe4   00000002  00000002  00000000  RWIX
+  INT19                 0000ffe6   00000002  00000000  00000002  RWIX
+  INT20                 0000ffe8   00000002  00000000  00000002  RWIX
+  INT21                 0000ffea   00000002  00000000  00000002  RWIX
+  INT22                 0000ffec   00000002  00000000  00000002  RWIX
+  INT23                 0000ffee   00000002  00000002  00000000  RWIX
+  INT24                 0000fff0   00000002  00000000  00000002  RWIX
+  INT25                 0000fff2   00000002  00000002  00000000  RWIX
+  INT26                 0000fff4   00000002  00000000  00000002  RWIX
+  INT27                 0000fff6   00000002  00000000  00000002  RWIX
+  INT28                 0000fff8   00000002  00000000  00000002  RWIX
+  INT29                 0000fffa   00000002  00000002  00000000  RWIX
+  INT30                 0000fffc   00000002  00000000  00000002  RWIX
+  RESET                 0000fffe   00000002  00000002  00000000  RWIX
+  FLASH2                00010000   00010000  00000000  00010000  RWIX
+
+
+SECTION ALLOCATION MAP
+
+ output                                  attributes/
+section   page    origin      length       input sections
+--------  ----  ----------  ----------   ----------------
+.pinit     0    00003100    00000000     UNINITIALIZED
+
+.bss       0    00001100    0000060e     UNINITIALIZED
+                  00001100    0000019e     decode_master.obj (.bss)
+                  0000129e    00000102     eeprom_SPI.obj (.bss)
+                  000013a0    000000d0     Uart_Init.obj (.bss)
+                  00001470    000000d0     Uart_Init_1.obj (.bss)
+                  00001540    00000062     display.obj (.bss)
+                  000015a2    0000005f     logic.obj (.bss)
+                  00001601    00000001     --HOLE--
+                  00001602    0000004b     keysensing.obj (.bss)
+                  0000164d    00000001     --HOLE--
+                  0000164e    0000002c     LCD.obj (.bss)
+                  0000167a    0000001e     DAC.obj (.bss)
+                  00001698    0000001d     gas_calculation.obj (.bss)
+                  000016b5    00000001     --HOLE--
+                  000016b6    00000018     TIMER_A.obj (.bss)
+                  000016ce    00000016     SPI_Setup.obj (.bss)
+                  000016e4    00000008     rts430xl.lib : _lock.obj (.bss)
+                  000016ec    00000008                  : boot.obj (.bss)
+                  000016f4    00000007     IR_REMOTE.obj (.bss)
+                  000016fb    00000001     --HOLE--
+                  000016fc    00000007     decode_slave.obj (.bss)
+                  00001703    00000001     --HOLE--
+                  00001704    00000005     TIMER_B.obj (.bss)
+                  00001709    00000001     --HOLE--
+                  0000170a    00000002     Send_Request.obj (.bss)
+                  0000170c    00000002     rts430xl.lib : errno.obj (.bss)
+
+.stack     0    000030b0    00000050     UNINITIALIZED
+                  000030b0    00000004     rts430xl.lib : boot.obj (.stack)
+                  000030b4    0000004c     --HOLE--
+
+.text:_isr 
+*          0    00003100    00000a22     
+                  00003100    0000045a     TIMER_B.obj (.text:_isr:Timer_B)
+                  0000355a    00000412     TIMER_A.obj (.text:_isr:TA0_ISR)
+                  0000396c    000000a8     SPI_Setup.obj (.text:_isr:USCIB1TX_ISR)
+                  00003a14    0000005c     Uart_Init.obj (.text:_isr:USCI0RX_ISR)
+                  00003a70    00000058     Uart_Init_1.obj (.text:_isr:USCI1RX_ISR)
+                  00003ac8    00000030     IR_REMOTE.obj (.text:_isr:PORT1_ISR)
+                  00003af8    0000002a     rts430xl.lib : boot.obj (.text:_isr:_c_int00_noexit)
+
+.cinit     0    00003b22    0000075e     
+                  00003b22    000001a8     eeprom_SPI.obj (.cinit)
+                  00003cca    00000157     logic.obj (.cinit)
+                  00003e21    00000001     --HOLE-- [fill = 0]
+                  00003e22    00000149     decode_master.obj (.cinit)
+                  00003f6b    00000001     --HOLE-- [fill = 0]
+                  00003f6c    000000d9     keysensing.obj (.cinit)
+                  00004045    00000001     --HOLE-- [fill = 0]
+                  00004046    0000007f     TIMER_A.obj (.cinit)
+                  000040c5    00000001     --HOLE-- [fill = 0]
+                  000040c6    0000006f     gas_calculation.obj (.cinit)
+                  00004135    00000001     --HOLE-- [fill = 0]
+                  00004136    00000040     DAC.obj (.cinit)
+                  00004176    00000037     IR_REMOTE.obj (.cinit)
+                  000041ad    00000001     --HOLE-- [fill = 0]
+                  000041ae    00000037     Uart_Init.obj (.cinit)
+                  000041e5    00000001     --HOLE-- [fill = 0]
+                  000041e6    0000002f     decode_slave.obj (.cinit)
+                  00004215    00000001     --HOLE-- [fill = 0]
+                  00004216    00000027     display.obj (.cinit)
+                  0000423d    00000001     --HOLE-- [fill = 0]
+                  0000423e    00000017     TIMER_B.obj (.cinit)
+                  00004255    00000001     --HOLE-- [fill = 0]
+                  00004256    00000017     Uart_Init_1.obj (.cinit)
+                  0000426d    00000001     --HOLE-- [fill = 0]
+                  0000426e    00000008     Send_Request.obj (.cinit)
+                  00004276    00000008     rts430xl.lib : errno.obj (.cinit)
+                  0000427e    00000002     --HOLE-- [fill = 0]
+
+.text      0    00004280    0000a73c     
+                  00004280    00001d9a     keysensing.obj (.text:Next_Routine)
+                  0000601a    00001a1c     display.obj (.text:Start_up)
+                  00007a36    00000f24     DAC.obj (.text:DAC_Output)
+                  0000895a    00000946     eeprom_SPI.obj (.text:get_initial_eeprom_values)
+                  000092a0    00000854     logic.obj (.text:logic)
+                  00009af4    0000077c     keysensing.obj (.text:Incr_Routine)
+                  0000a270    00000702     logic.obj (.text:logic1)
+                  0000a972    0000053e     decode_master.obj (.text:send_data)
+                  0000aeb0    00000526     decode_master.obj (.text:DecodeMaster)
+                  0000b3d6    0000040c     keysensing.obj (.text:Shift_Routine)
+                  0000b7e2    00000386     display.obj (.text:display_with_dp_adv)
+                  0000bb68    00000372     eeprom_SPI.obj (.text:update_values)
+                  0000beda    00000336     display.obj (.text:display)
+                  0000c210    000002fe     display.obj (.text:display_with_dp_adv1)
+                  0000c50e    000002ec     eeprom_SPI.obj (.text:send_factory_eeprom_values)
+                  0000c7fa    00000204     display.obj (.text:Display_units)
+                  0000c9fe    0000016c     main.obj (.text:main)
+                  0000cb6a    00000160     eeprom_SPI.obj (.text:DP_change_factory_values)
+                  0000ccca    00000146     decode_slave.obj (.text:DecodeSlave)
+                  0000ce10    00000132     rts430xl.lib : _log.obj (.text:_log)
+                  0000cf42    00000130                  : fs_add.obj (.text)
+                  0000d072    00000124     TIMER_B.obj (.text:led_display)
+                  0000d196    0000011e     rts430xl.lib : exp.obj (.text:exp)
+                  0000d2b4    0000011c     Uart_Init_1.obj (.text:UARTInit_1)
+                  0000d3d0    00000116     Uart_Init.obj (.text:UARTInit)
+                  0000d4e6    000000f0     rts430xl.lib : pow.obj (.text:pow)
+                  0000d5d6    000000e8     gas_calculation.obj (.text:Handle_Gas_Calculation)
+                  0000d6be    000000e2     display.obj (.text:break_digits)
+                  0000d7a0    000000cc     DAC.obj (.text:write_to_register)
+                  0000d86c    000000b6     rts430xl.lib : fs_mpy.obj (.text)
+                  0000d922    000000a8     Send_Request.obj (.text:send_request)
+                  0000d9ca    000000a6     rts430xl.lib : ldexp.obj (.text:ldexp)
+                  0000da70    0000009e     LCD.obj (.text:LcdInit)
+                  0000db0e    0000009c     display.obj (.text:Display_Name)
+                  0000dbaa    00000098     IR_REMOTE.obj (.text:scan_ir_keys)
+                  0000dc42    00000094     display.obj (.text:make_digits)
+                  0000dcd6    0000008e     rts430xl.lib : fs_div.obj (.text)
+                  0000dd64    0000008a     keysensing.obj (.text:Alarm_Flags_Reset)
+                  0000ddee    0000006e     Send_Request.obj (.text:modrtuChecksum)
+                  0000de5c    00000068     rts430xl.lib : fs_toi.obj (.text)
+                  0000dec4    0000005e     decode_master.obj (.text:modbusSendUARTPacket1)
+                  0000df22    0000005c     LCD.obj (.text:UpdateLcd)
+                  0000df7e    0000005c     rts430xl.lib : autoinit.obj (.text:_auto_init)
+                  0000dfda    00000058     port_setup.obj (.text:Init_Ports)
+                  0000e032    00000058     rts430xl.lib : div32u.obj (.text)
+                  0000e08a    00000056     LCD.obj (.text:LcdPutCh_8bit)
+                  0000e0e0    00000056     LCD.obj (.text:LcdSendCmd_8bit)
+                  0000e136    00000054     rts430xl.lib : frexp.obj (.text:frexp)
+                  0000e18a    00000050     keysensing.obj (.text:Key_Function)
+                  0000e1da    00000050     decode_master.obj (.text:send_echo)
+                  0000e22a    0000004e     keysensing.obj (.text:Init_flags)
+                  0000e278    0000004c     rts430xl.lib : fs_toul.obj (.text)
+                  0000e2c4    0000004a     logic.obj (.text:Logic_Flags_Reset)
+                  0000e30e    0000004a     rts430xl.lib : fs_cmp.obj (.text)
+                  0000e358    0000004a                  : fs_ltof.obj (.text)
+                  0000e3a2    00000048     main.obj (.text:Init_Module)
+                  0000e3ea    00000046     rts430xl.lib : fs_tou.obj (.text)
+                  0000e430    00000044     eeprom_SPI.obj (.text:write_byte_memory)
+                  0000e474    00000042     SPI_Setup.obj (.text:setup_spi_port)
+                  0000e4b6    00000042     eeprom_SPI.obj (.text:write_2byte_memory)
+                  0000e4f8    00000040     decode_master.obj (.text:modbusReturnException)
+                  0000e538    0000003e     eeprom_SPI.obj (.text:read_2byte_memory)
+                  0000e576    0000003e     eeprom_SPI.obj (.text:read_byte_memory)
+                  0000e5b4    0000003a     keysensing.obj (.text:General_Flags_Reset)
+                  0000e5ee    0000003a     keysensing.obj (.text:Output_Flags_Reset)
+                  0000e628    0000003a     LCD.obj (.text:Send_str)
+                  0000e662    0000003a     display.obj (.text:inc_digit)
+                  0000e69c    00000038     LCD.obj (.text:delay_ms)
+                  0000e6d4    00000038     display.obj (.text:inc_digit1)
+                  0000e70c    00000036     rts430xl.lib : fs_itof.obj (.text)
+                  0000e742    00000034     Send_Request.obj (.text:modbusSendUARTPacket)
+                  0000e776    00000032     rts430xl.lib : fs_ultof.obj (.text)
+                  0000e7a8    00000030                  : mult32_hw.obj (.text)
+                  0000e7d8    0000002e     keysensing.obj (.text:Serial_Flags_Reset)
+                  0000e806    0000002a     keysensing.obj (.text:Display_Flags_Reset)
+                  0000e830    0000002a     keysensing.obj (.text:Menu_Flags_Reset)
+                  0000e85a    0000002a     rts430xl.lib : memcpy.obj (.text:memcpy)
+                  0000e884    00000024                  : fs_utof.obj (.text)
+                  0000e8a8    0000001a     eeprom_SPI.obj (.text:wait_for_eeprom)
+                  0000e8c2    00000016     TIMER_B.obj (.text:Timer_B_init)
+                  0000e8d8    00000016     rts430xl.lib : mult16_hw.obj (.text)
+                  0000e8ee    00000012     main.obj (.text:Clock_Init)
+                  0000e900    00000012     keysensing.obj (.text:Passward_Flags_Reset)
+                  0000e912    00000010     keysensing.obj (.text:Incr_Para_reset)
+                  0000e922    00000010     TIMER_A.obj (.text:Timer_A_init)
+                  0000e932    00000010     eeprom_SPI.obj (.text:eeprom_write_enable)
+                  0000e942    0000000e     keysensing.obj (.text:Backlit_Flags_Reset)
+                  0000e950    0000000e     keysensing.obj (.text:Button_Flags_Reset)
+                  0000e95e    0000000e     keysensing.obj (.text:Global_Values_Reset)
+                  0000e96c    0000000e     eeprom_SPI.obj (.text:eeprom_write_disable)
+                  0000e97a    0000000a     IR_REMOTE.obj (.text:Key_Interrupt_Init)
+                  0000e984    0000000a     keysensing.obj (.text:Test_Flags_Reset)
+                  0000e98e    0000000a     rts430xl.lib : asr16.obj (.text)
+                  0000e998    0000000a                  : fs_neg.obj (.text)
+                  0000e9a2    0000000a                  : lsr16.obj (.text)
+                  0000e9ac    00000006     keysensing.obj (.text:Shift_Para_reset)
+                  0000e9b2    00000004     rts430xl.lib : pre_init.obj (.text:_system_pre_init)
+                  0000e9b6    00000004                  : exit.obj (.text:abort)
+                  0000e9ba    00000002                  : _lock.obj (.text:_nop)
+
+.const     0    0000e9bc    00000c94     
+                  0000e9bc    00000a7e     display.obj (.const:.string)
+                  0000f43a    00000100     decode_slave.obj (.const:auchCRCHi_exp)
+                  0000f53a    00000100     decode_slave.obj (.const:auchCRCLo_exp)
+                  0000f63a    00000016     main.obj (.const:.string)
+
+.int16     0    0000ffe0    00000002     
+                  0000ffe0    00000002     SPI_Setup.obj (.int16)
+
+.int17     0    0000ffe2    00000002     
+                  0000ffe2    00000002     Uart_Init_1.obj (.int17)
+
+.int18     0    0000ffe4    00000002     
+                  0000ffe4    00000002     IR_REMOTE.obj (.int18)
+
+.int23     0    0000ffee    00000002     
+                  0000ffee    00000002     Uart_Init.obj (.int23)
+
+.int25     0    0000fff2    00000002     
+                  0000fff2    00000002     TIMER_A.obj (.int25)
+
+.int29     0    0000fffa    00000002     
+                  0000fffa    00000002     TIMER_B.obj (.int29)
+
+.reset     0    0000fffe    00000002     
+                  0000fffe    00000002     rts430xl.lib : boot.obj (.reset)
+
+
+GLOBAL SYMBOLS: SORTED ALPHABETICALLY BY Name 
+
+address    name
+--------   ----
+00001100   .bss
+ffffffff   .text
+000001a0   ADC12CTL0
+000001a2   ADC12CTL1
+000001a6   ADC12IE
+000001a4   ADC12IFG
+000001a8   ADC12IV
+00000080   ADC12MCTL0
+00000081   ADC12MCTL1
+0000008a   ADC12MCTL10
+0000008b   ADC12MCTL11
+0000008c   ADC12MCTL12
+0000008d   ADC12MCTL13
+0000008e   ADC12MCTL14
+0000008f   ADC12MCTL15
+00000082   ADC12MCTL2
+00000083   ADC12MCTL3
+00000084   ADC12MCTL4
+00000085   ADC12MCTL5
+00000086   ADC12MCTL6
+00000087   ADC12MCTL7
+00000088   ADC12MCTL8
+00000089   ADC12MCTL9
+00000140   ADC12MEM0
+00000142   ADC12MEM1
+00000154   ADC12MEM10
+00000156   ADC12MEM11
+00000158   ADC12MEM12
+0000015a   ADC12MEM13
+0000015c   ADC12MEM14
+0000015e   ADC12MEM15
+00000144   ADC12MEM2
+00000146   ADC12MEM3
+00000148   ADC12MEM4
+0000014a   ADC12MEM5
+0000014c   ADC12MEM6
+0000014e   ADC12MEM7
+00000150   ADC12MEM8
+00000152   ADC12MEM9
+00001300   AL1_High_Logic_update
+00001301   AL1_Latch_update
+0000131e   AL2_High_Logic_update
+0000131f   AL2_Latch_update
+0000133c   AL3_High_Logic_update
+0000133d   AL3_Latch_update
+0000135a   AL4_High_Logic_update
+0000135b   AL4_Latch_update
+000012e8   AL_Failsafe_update
+000012b6   AL_High_Logic
+000012b7   AL_Latch
+0000dd64   Alarm_Flags_Reset
+00000057   BCSCTL1
+00000058   BCSCTL2
+00000053   BCSCTL3
+0000161a   Backlit_Count
+0000161b   Backlit_Count_update
+0000e942   Backlit_Flags_Reset
+0000161c   Backlit_damp
+000012c3   Baudrate_Count
+000012cd   Baudrate_Count_update
+00001618   Button
+0000e950   Button_Flags_Reset
+000015e3   Buzzer1_ack
+000015e7   Buzzer1_start
+000015e4   Buzzer2_ack
+000015e8   Buzzer2_start
+000015e5   Buzzer3_ack
+000015e9   Buzzer3_start
+000015e6   Buzzer4_ack
+000015ea   Buzzer4_start
+000015e0   Buzzer_Flag
+00001361   Buzzer_ON
+00001362   Buzzer_ON_update
+000015aa   Buzzer_Toggle
+000015e2   Buzzer_ack
+000015a8   Buzzer_counter
+000015e1   Buzzer_start
+0000e9b6   C$$EXIT
+00000059   CACTL1
+0000005a   CACTL2
+000010fb   CALBC1_12MHZ
+000010f9   CALBC1_16MHZ
+000010ff   CALBC1_1MHZ
+000010fd   CALBC1_8MHZ
+000010fa   CALDCO_12MHZ
+000010f8   CALDCO_16MHZ
+000010fe   CALDCO_1MHZ
+000010fc   CALDCO_8MHZ
+0000005b   CAPD
+000012bd   Channel_Enable_data
+000012c6   Channel_Enable_update
+0000e8ee   Clock_Init
+000016ff   ComFail
+00001700   ComFail_Count
+00001701   Com_data_recv
+00001609   Current_Alarm
+00001610   Current_Backlit
+00001604   Current_Button
+00001608   Current_Display
+00001605   Current_Menu
+0000160d   Current_Output
+0000160f   Current_Passward
+00001606   Current_Serial
+00001611   Current_Test
+000001c0   DAC12_0CTL
+000001c8   DAC12_0DAT
+000001c2   DAC12_1CTL
+000001ca   DAC12_1DAT
+00007a36   DAC_Output
+00000056   DCOCTL
+000001d0   DMA0CTL
+000001d6   DMA0DA
+000001d6   DMA0DAL
+000001d2   DMA0SA
+000001d2   DMA0SAL
+000001da   DMA0SZ
+000001dc   DMA1CTL
+000001e2   DMA1DA
+000001e2   DMA1DAL
+000001de   DMA1SA
+000001de   DMA1SAL
+000001e6   DMA1SZ
+000001e8   DMA2CTL
+000001ee   DMA2DA
+000001ee   DMA2DAL
+000001ea   DMA2SA
+000001ea   DMA2SAL
+000001f2   DMA2SZ
+00000122   DMACTL0
+00000124   DMACTL1
+00000126   DMAIV
+0000cb6a   DP_change_factory_values
+000016cd   Data_captured
+0000aeb0   DecodeMaster
+0000ccca   DecodeSlave
+000012c2   Device_ID_data
+000012cc   Device_ID_data_update
+0000e806   Display_Flags_Reset
+0000db0e   Display_Name
+0000c7fa   Display_units
+00000128   FCTL1
+0000012a   FCTL2
+0000012c   FCTL3
+000001be   FCTL4
+000012d8   Fail_Safe_Delay_data
+000012e4   Fail_Safe_Delay_data_update
+000016c8   Fail_show
+000016c4   Failsafe_Counter
+000016c6   Failsafe_Counter1
+0000159d   Failsafe_ON
+000012aa   Fault_Flash_ON
+000012ab   Fault_Flash_ON_update
+000015b8   Flash_Toggle
+000015b6   Flashing_Counter
+00001602   GF
+0000e5b4   General_Flags_Reset
+00001648   Global_Counter
+0000164a   Global_Value
+0000e95e   Global_Values_Reset
+0000d5d6   Handle_Gas_Calculation
+000012ee   Hysterisis1_data
+00001630   Hysterisis1_data_temp
+000012fc   Hysterisis1_data_update
+0000130c   Hysterisis2_data
+00001634   Hysterisis2_data_temp
+0000131a   Hysterisis2_data_update
+0000132a   Hysterisis3_data
+00001338   Hysterisis3_data_update
+00001348   Hysterisis4_data
+00001356   Hysterisis4_data_update
+000012b2   Hysterisis_data
+00000000   IE1
+00000001   IE2
+00000002   IFG1
+00000003   IFG2
+0000e98e   I_ASR
+0000e9a2   I_LSR
+0000e912   Incr_Para_reset
+00001613   Incr_Parameter
+00009af4   Incr_Routine
+0000e3a2   Init_Module
+0000dfda   Init_Ports
+0000e22a   Init_flags
+000016ae   Input4_20
+000016aa   Input4_20mA
+00001172   Input_Register
+000015b4   Key_Counter
+0000e18a   Key_Function
+0000e97a   Key_Interrupt_Init
+0000da70   LcdInit
+0000e08a   LcdPutCh_8bit
+0000e0e0   LcdSendCmd_8bit
+000015ac   Leds
+0000163a   Limit
+000015a2   Logic
+0000e2c4   Logic_Flags_Reset
+000016b8   Logic_counter
+000016b6   Logic_counter1
+00000134   MAC
+00000136   MACS
+00000130   MPY
+00000132   MPYS
+00001100   MainDataArray
+00001619   Menu
+0000e830   Menu_Flags_Reset
+00001594   Modbus_baudrate
+0000168a   N_HI
+00001540   Name_List
+0000159b   Negative_value
+00001612   Next_Parameter
+00004280   Next_Routine
+00001624   Number
+00000138   OP2
+0000e5ee   Output_Flags_Reset
+0000136c   Output_High_Negative
+0000138a   Output_High_Negative_update
+00001368   Output_High_data
+00001386   Output_High_data_update
+0000136d   Output_Low_Negative
+0000138b   Output_Low_Negative_update
+00001364   Output_Low_data
+00001382   Output_Low_data_update
+0000136e   Output_Type
+0000138c   Output_Type_update
+00001694   Output_high
+00001690   Output_low
+00000022   P1DIR
+00000025   P1IE
+00000024   P1IES
+00000023   P1IFG
+00000020   P1IN
+00000021   P1OUT
+00000027   P1REN
+00000026   P1SEL
+0000002a   P2DIR
+0000002d   P2IE
+0000002c   P2IES
+0000002b   P2IFG
+00000028   P2IN
+00000029   P2OUT
+0000002f   P2REN
+0000002e   P2SEL
+0000001a   P3DIR
+00000018   P3IN
+00000019   P3OUT
+00000010   P3REN
+0000001b   P3SEL
+0000001e   P4DIR
+0000001c   P4IN
+0000001d   P4OUT
+00000011   P4REN
+0000001f   P4SEL
+00000032   P5DIR
+00000030   P5IN
+00000031   P5OUT
+00000012   P5REN
+00000033   P5SEL
+00000036   P6DIR
+00000034   P6IN
+00000035   P6OUT
+00000013   P6REN
+00000037   P6SEL
+0000003c   P7DIR
+00000038   P7IN
+0000003a   P7OUT
+00000014   P7REN
+0000003e   P7SEL
+0000003d   P8DIR
+00000039   P8IN
+0000003b   P8OUT
+00000015   P8REN
+0000003f   P8SEL
+0000003c   PADIR
+00000038   PAIN
+0000003a   PAOUT
+00000014   PAREN
+0000003e   PASEL
+00003ac8   PORT1_ISR
+000012c0   PV_Address_data
+000012ca   PV_Address_update
+0000170a   PV_address
+000012c4   Parity_Count
+000012ce   Parity_Count_update
+0000e900   Passward_Flags_Reset
+000015c0   Peak_Counter
+000015c2   Peak_Counter1
+000015c4   Peak_Counter2
+000015c6   Peak_Counter3
+000016a4   Peak_Gas_Concentration
+000016a8   Peak_Negative
+00001638   Position
+000015ad   Power_on
+000016c9   Power_on1
+000016a2   Process_Negative
+00001702   Query_sent
+0000013c   RESHI
+0000013a   RESLO
+000015ab   R_count
+000012bf   Read_Register_data
+000012c8   Read_Register_update
+000016fe   ReceivedByteCount
+000016fa   Remote_Incr
+0000013e   SUMEXT
+00000055   SVSCTL
+0000136f   Scale_Type
+0000138d   Scale_Type_update
+0000e628   Send_str
+00001166   Sending_flag
+0000e7d8   Serial_Flags_Reset
+000012ad   Set_Point
+000012f6   Set_point1_Negative
+00001306   Set_point1_Negative_update
+000012ea   Set_point1_data
+000012f8   Set_point1_data_update
+000015ec   Set_point1_temp
+00001314   Set_point2_Negative
+00001324   Set_point2_Negative_update
+00001308   Set_point2_data
+00001316   Set_point2_data_update
+000015f0   Set_point2_temp
+00001332   Set_point3_Negative
+00001342   Set_point3_Negative_update
+00001326   Set_point3_data
+00001334   Set_point3_data_update
+000015f4   Set_point3_temp
+00001350   Set_point4_Negative
+00001360   Set_point4_Negative_update
+00001344   Set_point4_data
+00001352   Set_point4_data_update
+000015f8   Set_point4_temp
+000012bc   Set_point_Negative
+000012ae   Set_point_data
+0000e9ac   Shift_Para_reset
+00001614   Shift_Parameter
+0000b3d6   Shift_Routine
+000015bf   Show_Clear_Peak
+000015be   Show_Peak
+0000159c   Show_Peak1
+000012be   Slave_ID_data
+000012c7   Slave_ID_update
+0000153e   StartCommCounter
+0000153d   StartCommCounterFlag
+000016b4   Start_Failsafe_Timer
+0000601a   Start_up
+00001165   Status_Flag
+000015a6   Status_Flag1
+000015a7   Status_Flag2
+000012c5   Stop_bit_Count
+000012cf   Stop_bit_Count_update
+000015b9   System_Chk_Flag
+000015ba   System_Chk_counter
+000015bc   System_Chk_counter1
+0000355a   TA0_ISR
+00000172   TACCR0
+00000174   TACCR1
+00000176   TACCR2
+00000162   TACCTL0
+00000164   TACCTL1
+00000166   TACCTL2
+00000160   TACTL
+0000012e   TAIV
+00000170   TAR
+00000192   TBCCR0
+00000194   TBCCR1
+00000196   TBCCR2
+00000198   TBCCR3
+0000019a   TBCCR4
+0000019c   TBCCR5
+0000019e   TBCCR6
+00000182   TBCCTL0
+00000184   TBCCTL1
+00000186   TBCCTL2
+00000188   TBCCTL3
+0000018a   TBCCTL4
+0000018c   TBCCTL5
+0000018e   TBCCTL6
+00000180   TBCTL
+0000011e   TBIV
+00000190   TBR
+000010db   TLV_ADC12_1_LEN
+000010da   TLV_ADC12_1_TAG
+000010c0   TLV_CHECKSUM
+000010f7   TLV_DCO_30_LEN
+000010f6   TLV_DCO_30_TAG
+0000e984   Test_Flags_Reset
+00001682   Test_data
+00001686   Test_data_Negative
+000012f2   Time_delay1_data
+00001302   Time_delay1_data_update
+00001310   Time_delay2_data
+00001320   Time_delay2_data_update
+0000132e   Time_delay3_data
+0000133e   Time_delay3_data_update
+0000134c   Time_delay4_data
+0000135c   Time_delay4_data_update
+000012b8   Time_delay_data
+0000161d   Timeout_Count
+000015af   Timeout_Count1
+000015ca   TimerA_off_count
+0000e922   Timer_A_init
+00003100   Timer_B
+0000e8c2   Timer_B_init
+00001470   UART1_RX_buf
+000014d4   UART1_TX_Buf
+00001538   UART1_rcv_count
+0000d3d0   UARTInit
+0000d2b4   UARTInit_1
+000013a0   UART_RX_buf
+00001404   UART_TX_Buffer
+00001468   UART_rcv_count
+00000006   UC1IE
+00000007   UC1IFG
+0000005d   UCA0ABCTL
+00000062   UCA0BR0
+00000063   UCA0BR1
+00000060   UCA0CTL0
+00000061   UCA0CTL1
+0000005f   UCA0IRRCTL
+0000005e   UCA0IRTCTL
+00000064   UCA0MCTL
+00000066   UCA0RXBUF
+00000065   UCA0STAT
+00000067   UCA0TXBUF
+000000cd   UCA1ABCTL
+000000d2   UCA1BR0
+000000d3   UCA1BR1
+000000d0   UCA1CTL0
+000000d1   UCA1CTL1
+000000cf   UCA1IRRCTL
+000000ce   UCA1IRTCTL
+000000d4   UCA1MCTL
+000000d6   UCA1RXBUF
+000000d5   UCA1STAT
+000000d7   UCA1TXBUF
+0000006a   UCB0BR0
+0000006b   UCB0BR1
+00000068   UCB0CTL0
+00000069   UCB0CTL1
+0000006c   UCB0I2CIE
+00000118   UCB0I2COA
+0000011a   UCB0I2CSA
+0000006e   UCB0RXBUF
+0000006d   UCB0STAT
+0000006f   UCB0TXBUF
+000000da   UCB1BR0
+000000db   UCB1BR1
+000000d8   UCB1CTL0
+000000d9   UCB1CTL1
+000000dc   UCB1I2CIE
+0000017c   UCB1I2COA
+0000017e   UCB1I2CSA
+000000de   UCB1RXBUF
+000000dd   UCB1STAT
+000000df   UCB1TXBUF
+00003a14   USCI0RX_ISR
+00003a70   USCI1RX_ISR
+0000396c   USCIB1TX_ISR
+0000df22   UpdateLcd
+000012ac   Use_AL
+000012f7   Use_AL1_update
+00001315   Use_AL2_update
+00001333   Use_AL3_update
+00001351   Use_AL4_update
+00000120   WDTCTL
+00003100   __STACK_END
+00000050   __STACK_SIZE
+00000001   __TI_args_main
+00000001   __TI_auto_init
+00000001   __TI_exit
+ffffffff   __binit__
+00001100   __bss__
+ffffffff   __c_args__
+00003b22   __cinit__
+0000e032   __divul
+0000170e   __end__
+ffffffff   __etext__
+0000cf48   __fs_add
+0000e30e   __fs_cmp
+0000dcd6   __fs_div
+0000e70c   __fs_itof
+0000e358   __fs_ltof
+0000d86c   __fs_mpy
+0000e998   __fs_neg
+0000cf42   __fs_sub
+0000de5c   __fs_toi
+0000e3ea   __fs_tou
+0000e278   __fs_toul
+0000e776   __fs_ultof
+0000e884   __fs_utof
+0000e8d8   __mpyi_hw
+0000e7a8   __mpyl_hw
+ffffffff   __pinit__
+0000e032   __remul
+ffffffff   __text__
+0000df7e   _auto_init
+00003af8   _c_int00
+00003af8   _c_int00_noexit
+000016ec   _cleanup_ptr
+000016f0   _dtors_ptr
+000016e4   _lock
+0000ce10   _log
+0000e9ba   _nop
+0000fffe   _reset_vector
+000030b0   _stack
+0000e9b2   _system_pre_init
+000016e8   _unlock
+0000e9b6   abort
+000015fe   ack_counter
+0000139c   address_val
+0000f43a   auchCRCHi_exp
+0000f53a   auchCRCLo_exp
+00001672   bcd
+ffffffff   binit
+0000d6be   break_digits
+00001469   chTemp
+00001539   chTemp1
+00001646   channel
+00003b22   cinit
+0000169c   comfail_error
+00001378   correction_factor_12mA
+00001394   correction_factor_12mA_update
+0000137a   correction_factor_16mA
+00001396   correction_factor_16mA_update
+0000137c   correction_factor_20mA
+00001398   correction_factor_20mA_update
+0000137e   correction_factor_21mA
+0000139a   correction_factor_21mA_update
+00001380   correction_factor_23mA
+00001370   correction_factor_3_7mA
+00001372   correction_factor_3_8mA
+0000138e   correction_factor_3_8mA_update
+00001374   correction_factor_4mA
+00001390   correction_factor_4mA_update
+00001376   correction_factor_8mA
+00001392   correction_factor_8mA_update
+000016f7   count_delay
+0000167a   current_output
+0000168c   dac_concentration
+00001688   dac_counts
+000015c8   damp_count
+000016ba   damping_counter
+000016de   data_from_eeprom_buffer
+0000116c   data_length
+000016fc   data_received
+000016d8   data_to_eeprom_buffer
+0000159e   default_correction_factor
+0000e69c   delay_ms
+0000beda   display
+0000b7e2   display_with_dp_adv
+0000c210   display_with_dp_adv1
+00001642   downcount
+000012d0   dp
+000012dc   dp_update
+000016ce   eeprom_action_complete
+000016d0   eeprom_data_pointer
+000016cf   eeprom_data_size
+000016d4   eeprom_receive_pointer
+0000e96c   eeprom_write_disable
+0000e932   eeprom_write_enable
+0000170e   end
+000012a9   entry
+0000170c   errno
+ffffffff   etext
+0000d196   exp
+000012a4   factory_passward
+000016f8   first_enter
+000016f9   first_enter2
+00001620   flash1
+0000e136   frexp
+000012d2   gas_no
+000012de   gas_no_update
+0000895a   get_initial_eeprom_values
+00001617   hour_complete
+000016cc   hour_count
+000012d7   hour_lmp
+000012e3   hour_lmp_update
+0000e662   inc_digit
+0000e6d4   inc_digit1
+000016f6   internal_count
+000016f5   key_code
+000015ae   key_pressed
+0000d9ca   ldexp
+0000d072   led_display
+0000116a   length_msg
+000016c2   lmp_counter
+000092a0   logic
+0000a270   logic1
+000015fc   logic_off
+0000c9fe   main
+0000dc42   make_digits
+0000e85a   memcpy
+000012a8   message
+00001616   minute_complete
+000016cb   minute_count
+000012d6   minute_lmp
+000012e2   minute_lmp_update
+0000e4f8   modbusReturnException
+0000e742   modbusSendUARTPacket
+0000dec4   modbusSendUARTPacket1
+0000ddee   modrtuChecksum
+00001704   ms_1000_counter1
+00001706   ms_1000_counter2
+000012a6   new_passward
+0000161f   number_of_digits1
+000015b0   one_sec_counter
+00001698   open_error
+0000169a   over_error
+0000162c   overrange_temp
+000012a2   passward
+00001622   passward_1
+ffffffff   pinit
+0000d4e6   pow
+000016b0   process_range
+0000169e   process_value
+00001600   query_no
+0000129e   range
+00001628   range_temp
+0000e538   read_2byte_memory
+0000e576   read_byte_memory
+000015d4   relayy1
+000015cc   relayy1_counter
+000015d6   relayy2
+000015ce   relayy2_counter
+000015d8   relayy3
+000015d0   relayy3_counter
+000015da   relayy4
+000015d2   relayy4_counter
+000015b2   remote_counter
+0000146e   run_timer
+0000153b   run_timer1
+00001164   save_data
+0000161e   saving_value
+0000dbaa   scan_ir_keys
+000016f4   scanned_key
+00001615   sec_complete
+000016ca   sec_count
+000012d5   sec_lmp
+000012e1   sec_lmp_update
+0000a972   send_data
+0000e1da   send_echo
+0000c50e   send_factory_eeprom_values
+0000d922   send_request
+0000159a   set_polarity
+0000e474   setup_spi_port
+0000164c   start_counting
+00001168   start_msg
+000015dc   start_timer1
+000015dd   start_timer2
+000015de   start_timer3
+000015df   start_timer4
+0000164e   str
+0000146a   timeout
+0000153a   timeout1
+0000146f   timeout_flag
+0000153c   timeout_flag1
+0000146c   timeout_temp
+000016bb   toggle2
+000016bc   toggle2_counter
+00001598   toggle_counter
+0000169b   undefined_error
+00001699   under_error
+000012d4   unit_count
+000012e0   unit_count_update
+0000163e   upcount
+000016be   update_counter
+000016c0   update_counter1
+0000bb68   update_values
+0000167e   voltage_output
+0000e8a8   wait_for_eeprom
+0000e4b6   write_2byte_memory
+0000116e   write_address
+0000e430   write_byte_memory
+00001170   write_data
+0000d7a0   write_to_register
+
+
+GLOBAL SYMBOLS: SORTED BY Symbol Address 
+
+address    name
+--------   ----
+00000000   IE1
+00000001   IE2
+00000001   __TI_args_main
+00000001   __TI_auto_init
+00000001   __TI_exit
+00000002   IFG1
+00000003   IFG2
+00000006   UC1IE
+00000007   UC1IFG
+00000010   P3REN
+00000011   P4REN
+00000012   P5REN
+00000013   P6REN
+00000014   P7REN
+00000014   PAREN
+00000015   P8REN
+00000018   P3IN
+00000019   P3OUT
+0000001a   P3DIR
+0000001b   P3SEL
+0000001c   P4IN
+0000001d   P4OUT
+0000001e   P4DIR
+0000001f   P4SEL
+00000020   P1IN
+00000021   P1OUT
+00000022   P1DIR
+00000023   P1IFG
+00000024   P1IES
+00000025   P1IE
+00000026   P1SEL
+00000027   P1REN
+00000028   P2IN
+00000029   P2OUT
+0000002a   P2DIR
+0000002b   P2IFG
+0000002c   P2IES
+0000002d   P2IE
+0000002e   P2SEL
+0000002f   P2REN
+00000030   P5IN
+00000031   P5OUT
+00000032   P5DIR
+00000033   P5SEL
+00000034   P6IN
+00000035   P6OUT
+00000036   P6DIR
+00000037   P6SEL
+00000038   P7IN
+00000038   PAIN
+00000039   P8IN
+0000003a   P7OUT
+0000003a   PAOUT
+0000003b   P8OUT
+0000003c   P7DIR
+0000003c   PADIR
+0000003d   P8DIR
+0000003e   P7SEL
+0000003e   PASEL
+0000003f   P8SEL
+00000050   __STACK_SIZE
+00000053   BCSCTL3
+00000055   SVSCTL
+00000056   DCOCTL
+00000057   BCSCTL1
+00000058   BCSCTL2
+00000059   CACTL1
+0000005a   CACTL2
+0000005b   CAPD
+0000005d   UCA0ABCTL
+0000005e   UCA0IRTCTL
+0000005f   UCA0IRRCTL
+00000060   UCA0CTL0
+00000061   UCA0CTL1
+00000062   UCA0BR0
+00000063   UCA0BR1
+00000064   UCA0MCTL
+00000065   UCA0STAT
+00000066   UCA0RXBUF
+00000067   UCA0TXBUF
+00000068   UCB0CTL0
+00000069   UCB0CTL1
+0000006a   UCB0BR0
+0000006b   UCB0BR1
+0000006c   UCB0I2CIE
+0000006d   UCB0STAT
+0000006e   UCB0RXBUF
+0000006f   UCB0TXBUF
+00000080   ADC12MCTL0
+00000081   ADC12MCTL1
+00000082   ADC12MCTL2
+00000083   ADC12MCTL3
+00000084   ADC12MCTL4
+00000085   ADC12MCTL5
+00000086   ADC12MCTL6
+00000087   ADC12MCTL7
+00000088   ADC12MCTL8
+00000089   ADC12MCTL9
+0000008a   ADC12MCTL10
+0000008b   ADC12MCTL11
+0000008c   ADC12MCTL12
+0000008d   ADC12MCTL13
+0000008e   ADC12MCTL14
+0000008f   ADC12MCTL15
+000000cd   UCA1ABCTL
+000000ce   UCA1IRTCTL
+000000cf   UCA1IRRCTL
+000000d0   UCA1CTL0
+000000d1   UCA1CTL1
+000000d2   UCA1BR0
+000000d3   UCA1BR1
+000000d4   UCA1MCTL
+000000d5   UCA1STAT
+000000d6   UCA1RXBUF
+000000d7   UCA1TXBUF
+000000d8   UCB1CTL0
+000000d9   UCB1CTL1
+000000da   UCB1BR0
+000000db   UCB1BR1
+000000dc   UCB1I2CIE
+000000dd   UCB1STAT
+000000de   UCB1RXBUF
+000000df   UCB1TXBUF
+00000118   UCB0I2COA
+0000011a   UCB0I2CSA
+0000011e   TBIV
+00000120   WDTCTL
+00000122   DMACTL0
+00000124   DMACTL1
+00000126   DMAIV
+00000128   FCTL1
+0000012a   FCTL2
+0000012c   FCTL3
+0000012e   TAIV
+00000130   MPY
+00000132   MPYS
+00000134   MAC
+00000136   MACS
+00000138   OP2
+0000013a   RESLO
+0000013c   RESHI
+0000013e   SUMEXT
+00000140   ADC12MEM0
+00000142   ADC12MEM1
+00000144   ADC12MEM2
+00000146   ADC12MEM3
+00000148   ADC12MEM4
+0000014a   ADC12MEM5
+0000014c   ADC12MEM6
+0000014e   ADC12MEM7
+00000150   ADC12MEM8
+00000152   ADC12MEM9
+00000154   ADC12MEM10
+00000156   ADC12MEM11
+00000158   ADC12MEM12
+0000015a   ADC12MEM13
+0000015c   ADC12MEM14
+0000015e   ADC12MEM15
+00000160   TACTL
+00000162   TACCTL0
+00000164   TACCTL1
+00000166   TACCTL2
+00000170   TAR
+00000172   TACCR0
+00000174   TACCR1
+00000176   TACCR2
+0000017c   UCB1I2COA
+0000017e   UCB1I2CSA
+00000180   TBCTL
+00000182   TBCCTL0
+00000184   TBCCTL1
+00000186   TBCCTL2
+00000188   TBCCTL3
+0000018a   TBCCTL4
+0000018c   TBCCTL5
+0000018e   TBCCTL6
+00000190   TBR
+00000192   TBCCR0
+00000194   TBCCR1
+00000196   TBCCR2
+00000198   TBCCR3
+0000019a   TBCCR4
+0000019c   TBCCR5
+0000019e   TBCCR6
+000001a0   ADC12CTL0
+000001a2   ADC12CTL1
+000001a4   ADC12IFG
+000001a6   ADC12IE
+000001a8   ADC12IV
+000001be   FCTL4
+000001c0   DAC12_0CTL
+000001c2   DAC12_1CTL
+000001c8   DAC12_0DAT
+000001ca   DAC12_1DAT
+000001d0   DMA0CTL
+000001d2   DMA0SA
+000001d2   DMA0SAL
+000001d6   DMA0DA
+000001d6   DMA0DAL
+000001da   DMA0SZ
+000001dc   DMA1CTL
+000001de   DMA1SA
+000001de   DMA1SAL
+000001e2   DMA1DA
+000001e2   DMA1DAL
+000001e6   DMA1SZ
+000001e8   DMA2CTL
+000001ea   DMA2SA
+000001ea   DMA2SAL
+000001ee   DMA2DA
+000001ee   DMA2DAL
+000001f2   DMA2SZ
+000010c0   TLV_CHECKSUM
+000010da   TLV_ADC12_1_TAG
+000010db   TLV_ADC12_1_LEN
+000010f6   TLV_DCO_30_TAG
+000010f7   TLV_DCO_30_LEN
+000010f8   CALDCO_16MHZ
+000010f9   CALBC1_16MHZ
+000010fa   CALDCO_12MHZ
+000010fb   CALBC1_12MHZ
+000010fc   CALDCO_8MHZ
+000010fd   CALBC1_8MHZ
+000010fe   CALDCO_1MHZ
+000010ff   CALBC1_1MHZ
+00001100   .bss
+00001100   MainDataArray
+00001100   __bss__
+00001164   save_data
+00001165   Status_Flag
+00001166   Sending_flag
+00001168   start_msg
+0000116a   length_msg
+0000116c   data_length
+0000116e   write_address
+00001170   write_data
+00001172   Input_Register
+0000129e   range
+000012a2   passward
+000012a4   factory_passward
+000012a6   new_passward
+000012a8   message
+000012a9   entry
+000012aa   Fault_Flash_ON
+000012ab   Fault_Flash_ON_update
+000012ac   Use_AL
+000012ad   Set_Point
+000012ae   Set_point_data
+000012b2   Hysterisis_data
+000012b6   AL_High_Logic
+000012b7   AL_Latch
+000012b8   Time_delay_data
+000012bc   Set_point_Negative
+000012bd   Channel_Enable_data
+000012be   Slave_ID_data
+000012bf   Read_Register_data
+000012c0   PV_Address_data
+000012c2   Device_ID_data
+000012c3   Baudrate_Count
+000012c4   Parity_Count
+000012c5   Stop_bit_Count
+000012c6   Channel_Enable_update
+000012c7   Slave_ID_update
+000012c8   Read_Register_update
+000012ca   PV_Address_update
+000012cc   Device_ID_data_update
+000012cd   Baudrate_Count_update
+000012ce   Parity_Count_update
+000012cf   Stop_bit_Count_update
+000012d0   dp
+000012d2   gas_no
+000012d4   unit_count
+000012d5   sec_lmp
+000012d6   minute_lmp
+000012d7   hour_lmp
+000012d8   Fail_Safe_Delay_data
+000012dc   dp_update
+000012de   gas_no_update
+000012e0   unit_count_update
+000012e1   sec_lmp_update
+000012e2   minute_lmp_update
+000012e3   hour_lmp_update
+000012e4   Fail_Safe_Delay_data_update
+000012e8   AL_Failsafe_update
+000012ea   Set_point1_data
+000012ee   Hysterisis1_data
+000012f2   Time_delay1_data
+000012f6   Set_point1_Negative
+000012f7   Use_AL1_update
+000012f8   Set_point1_data_update
+000012fc   Hysterisis1_data_update
+00001300   AL1_High_Logic_update
+00001301   AL1_Latch_update
+00001302   Time_delay1_data_update
+00001306   Set_point1_Negative_update
+00001308   Set_point2_data
+0000130c   Hysterisis2_data
+00001310   Time_delay2_data
+00001314   Set_point2_Negative
+00001315   Use_AL2_update
+00001316   Set_point2_data_update
+0000131a   Hysterisis2_data_update
+0000131e   AL2_High_Logic_update
+0000131f   AL2_Latch_update
+00001320   Time_delay2_data_update
+00001324   Set_point2_Negative_update
+00001326   Set_point3_data
+0000132a   Hysterisis3_data
+0000132e   Time_delay3_data
+00001332   Set_point3_Negative
+00001333   Use_AL3_update
+00001334   Set_point3_data_update
+00001338   Hysterisis3_data_update
+0000133c   AL3_High_Logic_update
+0000133d   AL3_Latch_update
+0000133e   Time_delay3_data_update
+00001342   Set_point3_Negative_update
+00001344   Set_point4_data
+00001348   Hysterisis4_data
+0000134c   Time_delay4_data
+00001350   Set_point4_Negative
+00001351   Use_AL4_update
+00001352   Set_point4_data_update
+00001356   Hysterisis4_data_update
+0000135a   AL4_High_Logic_update
+0000135b   AL4_Latch_update
+0000135c   Time_delay4_data_update
+00001360   Set_point4_Negative_update
+00001361   Buzzer_ON
+00001362   Buzzer_ON_update
+00001364   Output_Low_data
+00001368   Output_High_data
+0000136c   Output_High_Negative
+0000136d   Output_Low_Negative
+0000136e   Output_Type
+0000136f   Scale_Type
+00001370   correction_factor_3_7mA
+00001372   correction_factor_3_8mA
+00001374   correction_factor_4mA
+00001376   correction_factor_8mA
+00001378   correction_factor_12mA
+0000137a   correction_factor_16mA
+0000137c   correction_factor_20mA
+0000137e   correction_factor_21mA
+00001380   correction_factor_23mA
+00001382   Output_Low_data_update
+00001386   Output_High_data_update
+0000138a   Output_High_Negative_update
+0000138b   Output_Low_Negative_update
+0000138c   Output_Type_update
+0000138d   Scale_Type_update
+0000138e   correction_factor_3_8mA_update
+00001390   correction_factor_4mA_update
+00001392   correction_factor_8mA_update
+00001394   correction_factor_12mA_update
+00001396   correction_factor_16mA_update
+00001398   correction_factor_20mA_update
+0000139a   correction_factor_21mA_update
+0000139c   address_val
+000013a0   UART_RX_buf
+00001404   UART_TX_Buffer
+00001468   UART_rcv_count
+00001469   chTemp
+0000146a   timeout
+0000146c   timeout_temp
+0000146e   run_timer
+0000146f   timeout_flag
+00001470   UART1_RX_buf
+000014d4   UART1_TX_Buf
+00001538   UART1_rcv_count
+00001539   chTemp1
+0000153a   timeout1
+0000153b   run_timer1
+0000153c   timeout_flag1
+0000153d   StartCommCounterFlag
+0000153e   StartCommCounter
+00001540   Name_List
+00001594   Modbus_baudrate
+00001598   toggle_counter
+0000159a   set_polarity
+0000159b   Negative_value
+0000159c   Show_Peak1
+0000159d   Failsafe_ON
+0000159e   default_correction_factor
+000015a2   Logic
+000015a6   Status_Flag1
+000015a7   Status_Flag2
+000015a8   Buzzer_counter
+000015aa   Buzzer_Toggle
+000015ab   R_count
+000015ac   Leds
+000015ad   Power_on
+000015ae   key_pressed
+000015af   Timeout_Count1
+000015b0   one_sec_counter
+000015b2   remote_counter
+000015b4   Key_Counter
+000015b6   Flashing_Counter
+000015b8   Flash_Toggle
+000015b9   System_Chk_Flag
+000015ba   System_Chk_counter
+000015bc   System_Chk_counter1
+000015be   Show_Peak
+000015bf   Show_Clear_Peak
+000015c0   Peak_Counter
+000015c2   Peak_Counter1
+000015c4   Peak_Counter2
+000015c6   Peak_Counter3
+000015c8   damp_count
+000015ca   TimerA_off_count
+000015cc   relayy1_counter
+000015ce   relayy2_counter
+000015d0   relayy3_counter
+000015d2   relayy4_counter
+000015d4   relayy1
+000015d6   relayy2
+000015d8   relayy3
+000015da   relayy4
+000015dc   start_timer1
+000015dd   start_timer2
+000015de   start_timer3
+000015df   start_timer4
+000015e0   Buzzer_Flag
+000015e1   Buzzer_start
+000015e2   Buzzer_ack
+000015e3   Buzzer1_ack
+000015e4   Buzzer2_ack
+000015e5   Buzzer3_ack
+000015e6   Buzzer4_ack
+000015e7   Buzzer1_start
+000015e8   Buzzer2_start
+000015e9   Buzzer3_start
+000015ea   Buzzer4_start
+000015ec   Set_point1_temp
+000015f0   Set_point2_temp
+000015f4   Set_point3_temp
+000015f8   Set_point4_temp
+000015fc   logic_off
+000015fe   ack_counter
+00001600   query_no
+00001602   GF
+00001604   Current_Button
+00001605   Current_Menu
+00001606   Current_Serial
+00001608   Current_Display
+00001609   Current_Alarm
+0000160d   Current_Output
+0000160f   Current_Passward
+00001610   Current_Backlit
+00001611   Current_Test
+00001612   Next_Parameter
+00001613   Incr_Parameter
+00001614   Shift_Parameter
+00001615   sec_complete
+00001616   minute_complete
+00001617   hour_complete
+00001618   Button
+00001619   Menu
+0000161a   Backlit_Count
+0000161b   Backlit_Count_update
+0000161c   Backlit_damp
+0000161d   Timeout_Count
+0000161e   saving_value
+0000161f   number_of_digits1
+00001620   flash1
+00001622   passward_1
+00001624   Number
+00001628   range_temp
+0000162c   overrange_temp
+00001630   Hysterisis1_data_temp
+00001634   Hysterisis2_data_temp
+00001638   Position
+0000163a   Limit
+0000163e   upcount
+00001642   downcount
+00001646   channel
+00001648   Global_Counter
+0000164a   Global_Value
+0000164c   start_counting
+0000164e   str
+00001672   bcd
+0000167a   current_output
+0000167e   voltage_output
+00001682   Test_data
+00001686   Test_data_Negative
+00001688   dac_counts
+0000168a   N_HI
+0000168c   dac_concentration
+00001690   Output_low
+00001694   Output_high
+00001698   open_error
+00001699   under_error
+0000169a   over_error
+0000169b   undefined_error
+0000169c   comfail_error
+0000169e   process_value
+000016a2   Process_Negative
+000016a4   Peak_Gas_Concentration
+000016a8   Peak_Negative
+000016aa   Input4_20mA
+000016ae   Input4_20
+000016b0   process_range
+000016b4   Start_Failsafe_Timer
+000016b6   Logic_counter1
+000016b8   Logic_counter
+000016ba   damping_counter
+000016bb   toggle2
+000016bc   toggle2_counter
+000016be   update_counter
+000016c0   update_counter1
+000016c2   lmp_counter
+000016c4   Failsafe_Counter
+000016c6   Failsafe_Counter1
+000016c8   Fail_show
+000016c9   Power_on1
+000016ca   sec_count
+000016cb   minute_count
+000016cc   hour_count
+000016cd   Data_captured
+000016ce   eeprom_action_complete
+000016cf   eeprom_data_size
+000016d0   eeprom_data_pointer
+000016d4   eeprom_receive_pointer
+000016d8   data_to_eeprom_buffer
+000016de   data_from_eeprom_buffer
+000016e4   _lock
+000016e8   _unlock
+000016ec   _cleanup_ptr
+000016f0   _dtors_ptr
+000016f4   scanned_key
+000016f5   key_code
+000016f6   internal_count
+000016f7   count_delay
+000016f8   first_enter
+000016f9   first_enter2
+000016fa   Remote_Incr
+000016fc   data_received
+000016fe   ReceivedByteCount
+000016ff   ComFail
+00001700   ComFail_Count
+00001701   Com_data_recv
+00001702   Query_sent
+00001704   ms_1000_counter1
+00001706   ms_1000_counter2
+0000170a   PV_address
+0000170c   errno
+0000170e   __end__
+0000170e   end
+000030b0   _stack
+00003100   Timer_B
+00003100   __STACK_END
+0000355a   TA0_ISR
+0000396c   USCIB1TX_ISR
+00003a14   USCI0RX_ISR
+00003a70   USCI1RX_ISR
+00003ac8   PORT1_ISR
+00003af8   _c_int00
+00003af8   _c_int00_noexit
+00003b22   __cinit__
+00003b22   cinit
+00004280   Next_Routine
+0000601a   Start_up
+00007a36   DAC_Output
+0000895a   get_initial_eeprom_values
+000092a0   logic
+00009af4   Incr_Routine
+0000a270   logic1
+0000a972   send_data
+0000aeb0   DecodeMaster
+0000b3d6   Shift_Routine
+0000b7e2   display_with_dp_adv
+0000bb68   update_values
+0000beda   display
+0000c210   display_with_dp_adv1
+0000c50e   send_factory_eeprom_values
+0000c7fa   Display_units
+0000c9fe   main
+0000cb6a   DP_change_factory_values
+0000ccca   DecodeSlave
+0000ce10   _log
+0000cf42   __fs_sub
+0000cf48   __fs_add
+0000d072   led_display
+0000d196   exp
+0000d2b4   UARTInit_1
+0000d3d0   UARTInit
+0000d4e6   pow
+0000d5d6   Handle_Gas_Calculation
+0000d6be   break_digits
+0000d7a0   write_to_register
+0000d86c   __fs_mpy
+0000d922   send_request
+0000d9ca   ldexp
+0000da70   LcdInit
+0000db0e   Display_Name
+0000dbaa   scan_ir_keys
+0000dc42   make_digits
+0000dcd6   __fs_div
+0000dd64   Alarm_Flags_Reset
+0000ddee   modrtuChecksum
+0000de5c   __fs_toi
+0000dec4   modbusSendUARTPacket1
+0000df22   UpdateLcd
+0000df7e   _auto_init
+0000dfda   Init_Ports
+0000e032   __divul
+0000e032   __remul
+0000e08a   LcdPutCh_8bit
+0000e0e0   LcdSendCmd_8bit
+0000e136   frexp
+0000e18a   Key_Function
+0000e1da   send_echo
+0000e22a   Init_flags
+0000e278   __fs_toul
+0000e2c4   Logic_Flags_Reset
+0000e30e   __fs_cmp
+0000e358   __fs_ltof
+0000e3a2   Init_Module
+0000e3ea   __fs_tou
+0000e430   write_byte_memory
+0000e474   setup_spi_port
+0000e4b6   write_2byte_memory
+0000e4f8   modbusReturnException
+0000e538   read_2byte_memory
+0000e576   read_byte_memory
+0000e5b4   General_Flags_Reset
+0000e5ee   Output_Flags_Reset
+0000e628   Send_str
+0000e662   inc_digit
+0000e69c   delay_ms
+0000e6d4   inc_digit1
+0000e70c   __fs_itof
+0000e742   modbusSendUARTPacket
+0000e776   __fs_ultof
+0000e7a8   __mpyl_hw
+0000e7d8   Serial_Flags_Reset
+0000e806   Display_Flags_Reset
+0000e830   Menu_Flags_Reset
+0000e85a   memcpy
+0000e884   __fs_utof
+0000e8a8   wait_for_eeprom
+0000e8c2   Timer_B_init
+0000e8d8   __mpyi_hw
+0000e8ee   Clock_Init
+0000e900   Passward_Flags_Reset
+0000e912   Incr_Para_reset
+0000e922   Timer_A_init
+0000e932   eeprom_write_enable
+0000e942   Backlit_Flags_Reset
+0000e950   Button_Flags_Reset
+0000e95e   Global_Values_Reset
+0000e96c   eeprom_write_disable
+0000e97a   Key_Interrupt_Init
+0000e984   Test_Flags_Reset
+0000e98e   I_ASR
+0000e998   __fs_neg
+0000e9a2   I_LSR
+0000e9ac   Shift_Para_reset
+0000e9b2   _system_pre_init
+0000e9b6   C$$EXIT
+0000e9b6   abort
+0000e9ba   _nop
+0000f43a   auchCRCHi_exp
+0000f53a   auchCRCLo_exp
+0000fffe   _reset_vector
+ffffffff   .text
+ffffffff   __binit__
+ffffffff   __c_args__
+ffffffff   __etext__
+ffffffff   __pinit__
+ffffffff   __text__
+ffffffff   binit
+ffffffff   etext
+ffffffff   pinit
+
+[674 symbols]
